@@ -145,8 +145,13 @@ class Plugin
      */
     public static function getActivePlugins(): array
     {
-        $option = getOption('active_plugins', '[]');
-        $plugins = json_decode($option, true);
+        // getOption already decodes JSON, so we get an array directly
+        $plugins = getOption('active_plugins', []);
+        
+        // Handle case where it might be stored as string
+        if (is_string($plugins)) {
+            $plugins = json_decode($plugins, true);
+        }
         
         return is_array($plugins) ? $plugins : [];
     }

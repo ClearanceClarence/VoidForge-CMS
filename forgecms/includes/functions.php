@@ -107,9 +107,11 @@ function csrfField(): string
     return '<input type="hidden" name="csrf_token" value="' . csrfToken() . '">';
 }
 
-function verifyCsrf(): bool
+function verifyCsrf(?string $token = null): bool
 {
-    $token = $_POST['csrf_token'] ?? '';
+    if ($token === null) {
+        $token = $_POST['csrf_token'] ?? $_GET['csrf'] ?? '';
+    }
     return hash_equals($_SESSION['csrf_token'] ?? '', $token);
 }
 
@@ -207,17 +209,19 @@ function paginate(int $total, int $perPage, int $currentPage): array
 /**
  * Human readable file size
  */
-function formatFileSize(int $bytes): string
-{
-    $units = ['B', 'KB', 'MB', 'GB'];
-    $i = 0;
-    
-    while ($bytes >= 1024 && $i < count($units) - 1) {
-        $bytes /= 1024;
-        $i++;
+if (!function_exists('formatFileSize')) {
+    function formatFileSize(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $i = 0;
+        
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        
+        return round($bytes, 2) . ' ' . $units[$i];
     }
-    
-    return round($bytes, 2) . ' ' . $units[$i];
 }
 
 /**

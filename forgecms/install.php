@@ -1,9 +1,9 @@
 <?php
 /**
- * Forge CMS Installation Script
+ * Forge CMS Installation Wizard
+ * Beautiful step-by-step installation process
  */
 
-// Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -11,34 +11,51 @@ define('CMS_ROOT', __DIR__);
 define('CMS_NAME', 'Forge');
 define('CMS_VERSION', '1.0.2');
 
-// Check requirements
-$requirements = [];
-if (version_compare(PHP_VERSION, '8.0.0', '<')) {
-    $requirements[] = 'PHP 8.0 or higher required (you have ' . PHP_VERSION . ')';
-}
-if (!extension_loaded('pdo_mysql')) {
-    $requirements[] = 'PDO MySQL extension is required';
-}
-if (!is_writable(__DIR__)) {
-    $requirements[] = 'Installation directory is not writable';
-}
-if (!file_exists(__DIR__ . '/includes/config.php')) {
-    $requirements[] = 'includes/config.php is missing';
-} elseif (!is_writable(__DIR__ . '/includes/config.php')) {
-    $requirements[] = 'includes/config.php is not writable';
-}
-
 // Check if already installed
 if (file_exists(__DIR__ . '/.installed')) {
     header('Location: admin/');
     exit;
 }
 
+// Check requirements
+$requirements = [
+    'php' => [
+        'name' => 'PHP 8.0+',
+        'status' => version_compare(PHP_VERSION, '8.0.0', '>='),
+        'current' => PHP_VERSION,
+        'required' => '8.0.0'
+    ],
+    'pdo_mysql' => [
+        'name' => 'PDO MySQL',
+        'status' => extension_loaded('pdo_mysql'),
+        'current' => extension_loaded('pdo_mysql') ? 'Installed' : 'Not installed',
+        'required' => 'Required'
+    ],
+    'writable' => [
+        'name' => 'Directory Writable',
+        'status' => is_writable(__DIR__),
+        'current' => is_writable(__DIR__) ? 'Writable' : 'Not writable',
+        'required' => 'Required'
+    ],
+    'config' => [
+        'name' => 'Config File',
+        'status' => file_exists(__DIR__ . '/includes/config.php') && is_writable(__DIR__ . '/includes/config.php'),
+        'current' => file_exists(__DIR__ . '/includes/config.php') ? (is_writable(__DIR__ . '/includes/config.php') ? 'Ready' : 'Not writable') : 'Missing',
+        'required' => 'Writable'
+    ]
+];
+
+$allPassed = array_reduce($requirements, fn($carry, $req) => $carry && $req['status'], true);
+
+// Current step
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+if (!$allPassed && $step > 1) $step = 1;
+
 $errors = [];
 $success = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate input
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $dbHost = trim($_POST['db_host'] ?? '');
     $dbName = trim($_POST['db_name'] ?? '');
     $dbUser = trim($_POST['db_user'] ?? '');
@@ -53,21 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminPassConfirm = $_POST['admin_pass_confirm'] ?? '';
 
     // Validate
-    if (empty($dbHost)) $errors[] = 'Database host is required';
-    if (empty($dbName)) $errors[] = 'Database name is required';
-    if (empty($dbUser)) $errors[] = 'Database user is required';
-    if (empty($siteUrl)) $errors[] = 'Site URL is required';
-    if (empty($siteTitle)) $errors[] = 'Site title is required';
-    if (empty($adminUser)) $errors[] = 'Admin username is required';
-    if (empty($adminEmail)) $errors[] = 'Admin email is required';
-    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address';
-    if (empty($adminPass)) $errors[] = 'Admin password is required';
-    if (strlen($adminPass) < 8) $errors[] = 'Password must be at least 8 characters';
-    if ($adminPass !== $adminPassConfirm) $errors[] = 'Passwords do not match';
+    if (empty($dbHost)) $errors['db_host'] = 'Database host is required';
+    if (empty($dbName)) $errors['db_name'] = 'Database name is required';
+    if (empty($dbUser)) $errors['db_user'] = 'Database user is required';
+    if (empty($siteUrl)) $errors['site_url'] = 'Site URL is required';
+    if (empty($siteTitle)) $errors['site_title'] = 'Site title is required';
+    if (empty($adminUser)) $errors['admin_user'] = 'Username is required';
+    if (empty($adminEmail)) $errors['admin_email'] = 'Email is required';
+    if (!empty($adminEmail) && !filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) $errors['admin_email'] = 'Invalid email address';
+    if (empty($adminPass)) $errors['admin_pass'] = 'Password is required';
+    if (strlen($adminPass) < 8) $errors['admin_pass'] = 'Password must be at least 8 characters';
+    if ($adminPass !== $adminPassConfirm) $errors['admin_pass_confirm'] = 'Passwords do not match';
 
     if (empty($errors)) {
-        // Test database connection
         try {
+            // Test database connection
             $dsn = "mysql:host={$dbHost};charset=utf8mb4";
             $pdo = new PDO($dsn, $dbUser, $dbPass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -110,8 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     published_at DATETIME,
                     INDEX idx_type_status (post_type, status),
                     INDEX idx_slug (slug),
-                    INDEX idx_author (author_id),
-                    INDEX idx_parent (parent_id),
                     UNIQUE KEY unique_slug_type (slug, post_type)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
@@ -122,8 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     post_id INT UNSIGNED NOT NULL,
                     meta_key VARCHAR(255) NOT NULL,
                     meta_value LONGTEXT,
-                    INDEX idx_post_id (post_id),
-                    INDEX idx_meta_key (meta_key),
                     UNIQUE KEY unique_post_meta (post_id, meta_key)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
@@ -139,13 +152,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     height INT UNSIGNED,
                     alt_text VARCHAR(255),
                     title VARCHAR(255),
-                    caption TEXT,
                     folder_id INT UNSIGNED,
                     uploaded_by INT UNSIGNED,
-                    created_at DATETIME NOT NULL,
-                    INDEX idx_mime_type (mime_type),
-                    INDEX idx_uploaded_by (uploaded_by),
-                    INDEX idx_folder_id (folder_id)
+                    created_at DATETIME NOT NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
@@ -153,8 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 CREATE TABLE IF NOT EXISTS media_folders (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
-                    created_at DATETIME NOT NULL,
-                    INDEX idx_name (name)
+                    created_at DATETIME NOT NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
@@ -163,213 +171,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     option_name VARCHAR(255) NOT NULL UNIQUE,
                     option_value LONGTEXT,
-                    autoload TINYINT(1) NOT NULL DEFAULT 1,
-                    INDEX idx_autoload (autoload)
+                    autoload TINYINT(1) NOT NULL DEFAULT 1
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
             // Create admin user
             $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT, ['cost' => 12]);
-            $stmt = $pdo->prepare("
-                INSERT INTO users (username, email, password, display_name, role, created_at)
-                VALUES (?, ?, ?, ?, 'admin', NOW())
-            ");
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, display_name, role, created_at) VALUES (?, ?, ?, ?, 'admin', NOW())");
             $stmt->execute([$adminUser, $adminEmail, $hashedPass, $adminUser]);
 
             // Insert default options
-            $options = [
-                ['site_title', $siteTitle],
-                ['site_description', ''],
-                ['posts_per_page', '10'],
-                ['date_format', 'M j, Y'],
-                ['time_format', 'H:i'],
-                ['cms_version', CMS_VERSION],
-                ['last_update', date('Y-m-d H:i:s')],
-            ];
-
             $stmt = $pdo->prepare("INSERT INTO options (option_name, option_value) VALUES (?, ?)");
-            foreach ($options as $option) {
-                $stmt->execute($option);
-            }
+            $stmt->execute(['site_title', $siteTitle]);
+            $stmt->execute(['site_description', '']);
+            $stmt->execute(['posts_per_page', '10']);
+            $stmt->execute(['date_format', 'M j, Y']);
+            $stmt->execute(['time_format', 'H:i']);
+            $stmt->execute(['cms_version', CMS_VERSION]);
+            $stmt->execute(['active_plugins', '[]']);
 
-            // Create sample page with comprehensive HTML showcase
-            $samplePageContent = <<<'HTML'
-<h2>Welcome to Your New Website</h2>
-<p>This page demonstrates the various content elements you can use throughout your site. Feel free to edit or delete this page to start fresh.</p>
-
-<h3>Text Formatting</h3>
-<p>You can make text <strong>bold</strong>, <em>italic</em>, or <u>underlined</u>. You can also combine them for <strong><em>bold and italic</em></strong> text. Use <mark>highlights</mark> to draw attention to important information.</p>
-
-<blockquote>
-<p>"The best way to predict the future is to create it." — Peter Drucker</p>
-</blockquote>
-
-<h3>Lists and Organization</h3>
-<p>Organize your content with ordered and unordered lists:</p>
-
-<h4>Features of This CMS</h4>
-<ul>
-<li>Clean, modern admin interface</li>
-<li>Built-in media library</li>
-<li>User roles and permissions</li>
-<li>Custom CSS editor with live preview</li>
-</ul>
-
-<h4>Getting Started Steps</h4>
-<ol>
-<li>Explore the admin dashboard</li>
-<li>Create your first post</li>
-<li>Customize your site appearance</li>
-<li>Invite team members</li>
-</ol>
-
-<h3>Code Examples</h3>
-<p>Display code snippets with proper formatting:</p>
-<pre><code>function greet(name) {
-    return `Hello, ${name}!`;
-}
-
-console.log(greet('World'));</code></pre>
-
-<h3>Tables</h3>
-<p>Present data in organized tables:</p>
-<table>
-<thead>
-<tr>
-<th>Feature</th>
-<th>Status</th>
-<th>Version</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Posts &amp; Pages</td>
-<td>✓ Available</td>
-<td>1.0</td>
-</tr>
-<tr>
-<td>Media Library</td>
-<td>✓ Available</td>
-<td>1.0</td>
-</tr>
-<tr>
-<td>User Management</td>
-<td>✓ Available</td>
-<td>1.0</td>
-</tr>
-<tr>
-<td>Custom CSS</td>
-<td>✓ Available</td>
-<td>1.0</td>
-</tr>
-</tbody>
-</table>
-
-<h3>Links and Navigation</h3>
-<p>Create <a href="#">internal links</a> to other pages or <a href="https://example.com" target="_blank">external links</a> to other websites.</p>
-
-<hr>
-
-<p><em>This sample page was automatically created during installation. Feel free to customize or delete it.</em></p>
-HTML;
-
-            $stmt = $pdo->prepare("
-                INSERT INTO posts (post_type, title, slug, content, status, author_id, created_at, updated_at, published_at)
-                VALUES ('page', 'Sample Page', 'sample-page', ?, 'published', 1, NOW(), NOW(), NOW())
-            ");
-            $stmt->execute([$samplePageContent]);
-
-            // Create sample post with rich content
-            $samplePostContent = <<<'HTML'
-<p>Welcome to <strong>Forge CMS</strong>! This is your first post, designed to showcase what's possible with your new content management system.</p>
-
-<h2>Getting Started with Content Creation</h2>
-<p>Creating beautiful, well-structured content is easy. The visual editor supports all common formatting options, making it simple to craft professional-looking posts and pages.</p>
-
-<h3>Rich Media Support</h3>
-<p>Your content can include:</p>
-<ul>
-<li><strong>Images</strong> — Upload and embed images from your media library</li>
-<li><strong>Videos</strong> — Embed videos from popular platforms</li>
-<li><strong>Documents</strong> — Link to downloadable files</li>
-</ul>
-
-<h3>Structured Content</h3>
-<p>Use headings to create a clear hierarchy. This helps both readers and search engines understand your content structure.</p>
-
-<blockquote>
-<p>Well-organized content is easier to read, easier to remember, and more likely to achieve its purpose.</p>
-</blockquote>
-
-<h3>Example: A Simple Recipe</h3>
-<p>Here's how you might structure a recipe post:</p>
-
-<h4>Ingredients</h4>
-<ul>
-<li>2 cups all-purpose flour</li>
-<li>1 cup sugar</li>
-<li>3 eggs</li>
-<li>1/2 cup butter</li>
-</ul>
-
-<h4>Instructions</h4>
-<ol>
-<li>Preheat your oven to 350°F (175°C)</li>
-<li>Mix dry ingredients in a large bowl</li>
-<li>Add wet ingredients and stir until combined</li>
-<li>Pour into a greased pan and bake for 30 minutes</li>
-</ol>
-
-<h3>Code and Technical Content</h3>
-<p>If you're writing technical content, code blocks are fully supported:</p>
-<pre><code>&lt;article class="post"&gt;
-    &lt;h1&gt;{{ title }}&lt;/h1&gt;
-    &lt;div class="content"&gt;
-        {{ content }}
-    &lt;/div&gt;
-&lt;/article&gt;</code></pre>
-
-<h3>What's Next?</h3>
-<p>Now that you've seen what's possible, it's time to create your own content:</p>
-<ol>
-<li>Edit or delete this post</li>
-<li>Create new posts and pages</li>
-<li>Upload media to your library</li>
-<li>Customize your site's appearance</li>
-</ol>
-
-<p><em>Happy publishing!</em> 🚀</p>
-HTML;
-
-            $stmt = $pdo->prepare("
-                INSERT INTO posts (post_type, title, slug, content, status, author_id, created_at, updated_at, published_at)
-                VALUES ('post', 'Hello World', 'hello-world', ?, 'published', 1, NOW(), NOW(), NOW())
-            ");
-            $stmt->execute([$samplePostContent]);
+            // Create sample content
+            $stmt = $pdo->prepare("INSERT INTO posts (post_type, title, slug, content, status, author_id, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, 'published', 1, NOW(), NOW(), NOW())");
+            $stmt->execute(['page', 'Welcome', 'welcome', '<h2>Welcome to ' . $siteTitle . '</h2><p>This is your first page. Edit or delete it to get started!</p>']);
+            $stmt->execute(['post', 'Hello World', 'hello-world', '<p>Welcome to your new Forge CMS site! This is your first post. Edit or delete it, then start writing!</p>']);
 
             // Update config file
-            $configContent = file_get_contents(__DIR__ . '/includes/config.php');
-            $configContent = preg_replace("/define\('DB_HOST', '.*?'\);/", "define('DB_HOST', '{$dbHost}');", $configContent);
-            $configContent = preg_replace("/define\('DB_NAME', '.*?'\);/", "define('DB_NAME', '{$dbName}');", $configContent);
-            $configContent = preg_replace("/define\('DB_USER', '.*?'\);/", "define('DB_USER', '{$dbUser}');", $configContent);
-            $configContent = preg_replace("/define\('DB_PASS', '.*?'\);/", "define('DB_PASS', '{$dbPass}');", $configContent);
-            $configContent = preg_replace("/define\('SITE_URL', '.*?'\);/", "define('SITE_URL', '{$siteUrl}');", $configContent);
+            $configContent = "<?php\n";
+            $configContent .= "/**\n * Forge CMS Configuration\n * Generated: " . date('Y-m-d H:i:s') . "\n */\n\n";
+            $configContent .= "// Prevent direct access\n";
+            $configContent .= "defined('CMS_ROOT') or die('Direct access not allowed');\n\n";
+            $configContent .= "// Branding\n";
+            $configContent .= "define('CMS_NAME', 'Forge');\n";
+            $configContent .= "define('CMS_VERSION', '" . CMS_VERSION . "');\n\n";
+            $configContent .= "// Database settings\n";
+            $configContent .= "define('DB_HOST', " . var_export($dbHost, true) . ");\n";
+            $configContent .= "define('DB_NAME', " . var_export($dbName, true) . ");\n";
+            $configContent .= "define('DB_USER', " . var_export($dbUser, true) . ");\n";
+            $configContent .= "define('DB_PASS', " . var_export($dbPass, true) . ");\n";
+            $configContent .= "define('DB_CHARSET', 'utf8mb4');\n\n";
+            $configContent .= "// Site settings\n";
+            $configContent .= "define('SITE_URL', " . var_export($siteUrl, true) . ");\n";
+            $configContent .= "define('ADMIN_URL', SITE_URL . '/admin');\n\n";
+            $configContent .= "// Paths\n";
+            $configContent .= "define('INCLUDES_PATH', CMS_ROOT . '/includes');\n";
+            $configContent .= "define('ADMIN_PATH', CMS_ROOT . '/admin');\n";
+            $configContent .= "define('THEMES_PATH', CMS_ROOT . '/themes');\n";
+            $configContent .= "define('UPLOADS_PATH', CMS_ROOT . '/uploads');\n";
+            $configContent .= "define('UPLOADS_URL', SITE_URL . '/uploads');\n\n";
+            $configContent .= "// Current theme\n";
+            $configContent .= "define('CURRENT_THEME', 'default');\n";
+            $configContent .= "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);\n\n";
+            $configContent .= "// Session settings\n";
+            $configContent .= "define('SESSION_NAME', 'forge_session');\n";
+            $configContent .= "define('SESSION_LIFETIME', 86400);\n\n";
+            $configContent .= "// Security\n";
+            $configContent .= "define('HASH_COST', 12);\n\n";
+            $configContent .= "// Timezone\n";
+            $configContent .= "date_default_timezone_set('UTC');\n";
+
             file_put_contents(__DIR__ . '/includes/config.php', $configContent);
 
-            // Mark as installed
+            // Create uploads directory
+            if (!is_dir(__DIR__ . '/uploads')) {
+                mkdir(__DIR__ . '/uploads', 0755, true);
+            }
+
+            // Create installed flag
             file_put_contents(__DIR__ . '/.installed', date('Y-m-d H:i:s'));
 
             $success = true;
+            $step = 3;
 
         } catch (PDOException $e) {
-            $errors[] = 'Database error: ' . $e->getMessage();
+            $errors['database'] = 'Database error: ' . $e->getMessage();
         } catch (Exception $e) {
-            $errors[] = 'Error: ' . $e->getMessage();
-        } catch (Error $e) {
-            $errors[] = 'Fatal error: ' . $e->getMessage();
+            $errors['general'] = 'Installation error: ' . $e->getMessage();
         }
     }
 }
+
+// Auto-detect site URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$path = dirname($_SERVER['SCRIPT_NAME']);
+$defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -382,263 +267,616 @@ HTML;
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             min-height: 100vh;
-            display: flex;
+            color: #0f172a;
+            line-height: 1.6;
+        }
+        
+        .install-container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+        
+        .install-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .install-logo {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
         }
-        .container {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
-            width: 100%;
-            max-width: 480px;
-            padding: 2.5rem;
+        
+        .install-logo svg {
+            width: 36px;
+            height: 36px;
+            color: #fff;
         }
-        .header {
-            text-align: center;
+        
+        .install-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .install-header p {
+            color: #64748b;
+        }
+        
+        /* Steps indicator */
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
             margin-bottom: 2rem;
         }
-        .header .logo {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 14px;
+        
+        .step {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
+            gap: 0.5rem;
         }
-        .header svg {
+        
+        .step-number {
             width: 32px;
             height: 32px;
-            color: #fff;
-        }
-        h1 {
-            font-size: 1.5rem;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-            font-weight: 700;
-        }
-        .subtitle {
-            color: #64748b;
-            font-size: 0.9375rem;
-        }
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin: 2rem 0 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 0.375rem;
-        }
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="url"] {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 0.9375rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            transition: all 0.15s ease;
-            background: #f8fafc;
-        }
-        input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
-            background: #fff;
-        }
-        .btn {
-            display: inline-block;
-            padding: 0.875rem 1.5rem;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            text-decoration: none;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: #fff;
-            width: 100%;
-            margin-top: 1.5rem;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #4f46e5, #4338ca);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
-        }
-        .errors {
-            background: linear-gradient(135deg, #fef2f2, #fee2e2);
-            border: 1px solid #fecaca;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .errors ul {
-            margin: 0;
-            padding-left: 1.25rem;
-            color: #991b1b;
-            font-size: 0.875rem;
-        }
-        .success {
-            text-align: center;
-            padding: 2rem 0;
-        }
-        .success-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: #e2e8f0;
+            color: #64748b;
         }
+        
+        .step.active .step-number {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: #fff;
+        }
+        
+        .step-label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+        
+        .step.active .step-label {
+            color: #0f172a;
+        }
+        
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e2e8f0;
+        }
+        
+        /* Card */
+        .install-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-header svg {
+            width: 20px;
+            height: 20px;
+            color: #6366f1;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Requirements */
+        .req-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .req-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .req-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .req-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .req-icon.pass {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        
+        .req-icon.fail {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .req-name {
+            font-weight: 500;
+        }
+        
+        .req-value {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        /* Form */
+        .form-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .form-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .form-section-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.375rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9375rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        
+        .form-input.error {
+            border-color: #ef4444;
+        }
+        
+        .form-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        
+        .form-error {
+            font-size: 0.75rem;
+            color: #ef4444;
+            margin-top: 0.25rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #fff;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .card-footer {
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        /* Success */
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+        }
+        
         .success-icon svg {
-            width: 32px;
-            height: 32px;
-            stroke: #fff;
+            width: 40px;
+            height: 40px;
+            color: #fff;
         }
-        .success h2 {
-            color: #166534;
+        
+        .success-content {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .success-content h2 {
+            font-size: 1.5rem;
             margin-bottom: 0.5rem;
         }
-        .success p {
+        
+        .success-content p {
             color: #64748b;
             margin-bottom: 1.5rem;
         }
-        .success .btn {
-            width: auto;
+        
+        .success-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        /* Error box */
+        .error-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .step-label { display: none; }
+            .success-links { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <?php if ($success): ?>
-            <div class="success">
+    <div class="install-container">
+        <div class="install-header">
+            <div class="install-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+            </div>
+            <h1>Install <?= CMS_NAME ?></h1>
+            <p>Version <?= CMS_VERSION ?></p>
+        </div>
+        
+        <div class="steps">
+            <div class="step <?= $step >= 1 ? ($step > 1 ? 'completed' : 'active') : '' ?>">
+                <div class="step-number"><?= $step > 1 ? '✓' : '1' ?></div>
+                <span class="step-label">Requirements</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step <?= $step >= 2 ? ($step > 2 ? 'completed' : 'active') : '' ?>">
+                <div class="step-number"><?= $step > 2 ? '✓' : '2' ?></div>
+                <span class="step-label">Configuration</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step <?= $step >= 3 ? 'active' : '' ?>">
+                <div class="step-number">3</div>
+                <span class="step-label">Complete</span>
+            </div>
+        </div>
+        
+        <?php if ($step === 1): ?>
+        <!-- Step 1: Requirements -->
+        <div class="install-card">
+            <div class="card-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    System Requirements
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="req-list">
+                    <?php foreach ($requirements as $key => $req): ?>
+                    <div class="req-item">
+                        <div class="req-info">
+                            <div class="req-icon <?= $req['status'] ? 'pass' : 'fail' ?>">
+                                <?php if ($req['status']): ?>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <?php else: ?>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                <?php endif; ?>
+                            </div>
+                            <span class="req-name"><?= $req['name'] ?></span>
+                        </div>
+                        <span class="req-value"><?= $req['current'] ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="card-footer">
+                <?php if ($allPassed): ?>
+                <a href="?step=2" class="btn btn-primary">
+                    Continue
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+                <?php else: ?>
+                <button class="btn btn-primary" disabled>Fix Requirements First</button>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <?php elseif ($step === 2): ?>
+        <!-- Step 2: Configuration -->
+        <div class="install-card">
+            <div class="card-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Configuration
+                </h2>
+            </div>
+            
+            <form method="post">
+                <div class="card-body">
+                    <?php if (!empty($errors['database']) || !empty($errors['general'])): ?>
+                    <div class="error-box">
+                        <?= htmlspecialchars($errors['database'] ?? $errors['general']) ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="form-section">
+                        <div class="form-section-title">Database</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Host</label>
+                                <input type="text" name="db_host" class="form-input <?= isset($errors['db_host']) ? 'error' : '' ?>" 
+                                       value="<?= htmlspecialchars($_POST['db_host'] ?? 'localhost') ?>">
+                                <?php if (isset($errors['db_host'])): ?>
+                                <div class="form-error"><?= $errors['db_host'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Database Name</label>
+                                <input type="text" name="db_name" class="form-input <?= isset($errors['db_name']) ? 'error' : '' ?>" 
+                                       value="<?= htmlspecialchars($_POST['db_name'] ?? 'forge_cms') ?>">
+                                <?php if (isset($errors['db_name'])): ?>
+                                <div class="form-error"><?= $errors['db_name'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="db_user" class="form-input <?= isset($errors['db_user']) ? 'error' : '' ?>" 
+                                       value="<?= htmlspecialchars($_POST['db_user'] ?? 'root') ?>">
+                                <?php if (isset($errors['db_user'])): ?>
+                                <div class="form-error"><?= $errors['db_user'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="db_pass" class="form-input" 
+                                       value="<?= htmlspecialchars($_POST['db_pass'] ?? '') ?>">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="form-section-title">Site Settings</div>
+                        <div class="form-group">
+                            <label class="form-label">Site URL</label>
+                            <input type="url" name="site_url" class="form-input <?= isset($errors['site_url']) ? 'error' : '' ?>" 
+                                   value="<?= htmlspecialchars($_POST['site_url'] ?? $defaultUrl) ?>">
+                            <div class="form-hint">No trailing slash. Example: https://example.com</div>
+                            <?php if (isset($errors['site_url'])): ?>
+                            <div class="form-error"><?= $errors['site_url'] ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Site Title</label>
+                            <input type="text" name="site_title" class="form-input <?= isset($errors['site_title']) ? 'error' : '' ?>" 
+                                   value="<?= htmlspecialchars($_POST['site_title'] ?? 'My Website') ?>">
+                            <?php if (isset($errors['site_title'])): ?>
+                            <div class="form-error"><?= $errors['site_title'] ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="form-section-title">Admin Account</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="admin_user" class="form-input <?= isset($errors['admin_user']) ? 'error' : '' ?>" 
+                                       value="<?= htmlspecialchars($_POST['admin_user'] ?? 'admin') ?>">
+                                <?php if (isset($errors['admin_user'])): ?>
+                                <div class="form-error"><?= $errors['admin_user'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="admin_email" class="form-input <?= isset($errors['admin_email']) ? 'error' : '' ?>" 
+                                       value="<?= htmlspecialchars($_POST['admin_email'] ?? '') ?>">
+                                <?php if (isset($errors['admin_email'])): ?>
+                                <div class="form-error"><?= $errors['admin_email'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="admin_pass" class="form-input <?= isset($errors['admin_pass']) ? 'error' : '' ?>">
+                                <div class="form-hint">Minimum 8 characters</div>
+                                <?php if (isset($errors['admin_pass'])): ?>
+                                <div class="form-error"><?= $errors['admin_pass'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="admin_pass_confirm" class="form-input <?= isset($errors['admin_pass_confirm']) ? 'error' : '' ?>">
+                                <?php if (isset($errors['admin_pass_confirm'])): ?>
+                                <div class="form-error"><?= $errors['admin_pass_confirm'] ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <a href="?step=1" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-primary">
+                        Install Now
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <?php elseif ($step === 3): ?>
+        <!-- Step 3: Success -->
+        <div class="install-card">
+            <div class="success-content">
                 <div class="success-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
                 <h2>Installation Complete!</h2>
-                <p><?= CMS_NAME ?> has been installed successfully.</p>
-                <a href="admin/" class="btn btn-primary">Go to Admin Panel</a>
+                <p><?= CMS_NAME ?> has been successfully installed. You can now log in to your admin dashboard and start creating content.</p>
+                <div class="success-links">
+                    <a href="admin/" class="btn btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        Go to Dashboard
+                    </a>
+                    <a href="./" class="btn btn-secondary">View Site</a>
+                </div>
             </div>
-        <?php else: ?>
-            <div class="header">
-                <div class="logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                        <polyline points="2 17 12 22 22 17"></polyline>
-                        <polyline points="2 12 12 17 22 12"></polyline>
-                    </svg>
-                </div>
-                <h1>Install <?= CMS_NAME ?></h1>
-                <p class="subtitle">Complete the form below to set up your CMS.</p>
-            </div>
-
-            <?php if (!empty($requirements)): ?>
-                <div class="errors">
-                    <strong>System Requirements Not Met:</strong>
-                    <ul>
-                        <?php foreach ($requirements as $req): ?>
-                            <li><?= htmlspecialchars($req) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($errors)): ?>
-                <div class="errors">
-                    <ul>
-                        <?php foreach ($errors as $error): ?>
-                            <li><?= htmlspecialchars($error) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-
-            <form method="post" <?= !empty($requirements) ? 'style="opacity: 0.5; pointer-events: none;"' : '' ?>>
-                <div class="section-title">Database Settings</div>
-                
-                <div class="form-group">
-                    <label for="db_host">Database Host</label>
-                    <input type="text" id="db_host" name="db_host" value="<?= htmlspecialchars($_POST['db_host'] ?? 'localhost') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="db_name">Database Name</label>
-                    <input type="text" id="db_name" name="db_name" value="<?= htmlspecialchars($_POST['db_name'] ?? 'cms') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="db_user">Database User</label>
-                    <input type="text" id="db_user" name="db_user" value="<?= htmlspecialchars($_POST['db_user'] ?? 'root') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="db_pass">Database Password</label>
-                    <input type="password" id="db_pass" name="db_pass">
-                </div>
-
-                <div class="section-title">Site Settings</div>
-
-                <div class="form-group">
-                    <label for="site_url">Site URL</label>
-                    <input type="url" id="site_url" name="site_url" value="<?= htmlspecialchars($_POST['site_url'] ?? 'http://localhost/cms') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="site_title">Site Title</label>
-                    <input type="text" id="site_title" name="site_title" value="<?= htmlspecialchars($_POST['site_title'] ?? 'My Site') ?>" required>
-                </div>
-
-                <div class="section-title">Admin Account</div>
-
-                <div class="form-group">
-                    <label for="admin_user">Username</label>
-                    <input type="text" id="admin_user" name="admin_user" value="<?= htmlspecialchars($_POST['admin_user'] ?? 'admin') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="admin_email">Email</label>
-                    <input type="email" id="admin_email" name="admin_email" value="<?= htmlspecialchars($_POST['admin_email'] ?? '') ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="admin_pass">Password</label>
-                    <input type="password" id="admin_pass" name="admin_pass" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="admin_pass_confirm">Confirm Password</label>
-                    <input type="password" id="admin_pass_confirm" name="admin_pass_confirm" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Install CMS</button>
-            </form>
+        </div>
         <?php endif; ?>
     </div>
 </body>

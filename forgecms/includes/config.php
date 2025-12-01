@@ -30,6 +30,7 @@ define('UPLOADS_URL', SITE_URL . '/uploads');
 
 // Current theme
 define('CURRENT_THEME', 'default');
+define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);
 
 // Session settings
 define('SESSION_NAME', 'forge_session');

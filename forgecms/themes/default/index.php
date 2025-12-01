@@ -16,7 +16,7 @@ $siteTitle = getOption('site_title', 'Forge CMS');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= THEME_URL ?>/style.css">
+    <link rel="stylesheet" href="<?= THEME_URL ?>/assets/css/theme.css">
     <style>
         :root {
             --primary: #6366f1;
