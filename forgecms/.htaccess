@@ -1,0 +1,29 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Dynamically set base from current directory
+# RewriteBase will be auto-detected
+
+# Don't rewrite requests for existing files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Don't rewrite admin, uploads, or themes
+RewriteCond %{REQUEST_URI} !^.*/admin/
+RewriteCond %{REQUEST_URI} !^.*/uploads/
+RewriteCond %{REQUEST_URI} !^.*/themes/
+
+# Rewrite everything else to index.php
+RewriteRule ^(.*)$ index.php [L,QSA]
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# Set default charset
+AddDefaultCharset UTF-8
