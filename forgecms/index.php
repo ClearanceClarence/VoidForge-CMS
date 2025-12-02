@@ -10,6 +10,11 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
+
+// Initialize plugins
+Post::init();
+Plugin::init();
 
 // Get the base path from SITE_URL config
 $siteUrlPath = parse_url(SITE_URL, PHP_URL_PATH);

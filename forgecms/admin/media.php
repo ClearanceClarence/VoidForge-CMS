@@ -1,6 +1,7 @@
 <?php
 /**
- * Media Library - Forge CMS
+ * Media Library - Forge CMS v1.0.3
+ * Single-click selection with slide-in panel
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -11,904 +12,502 @@ require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 
+Post::init();
+
 User::startSession();
-User::requireRole('editor');
+User::requireLogin();
 
 $pageTitle = 'Media Library';
 
-// Handle AJAX requests
-if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-    header('Content-Type: application/json');
-    
-    $action = $_POST['action'] ?? $_GET['action'] ?? '';
-    
-    // Upload file
-    if ($action === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle uploads
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_FILES['media_upload'])) {
         if (!verifyCsrf()) {
-            echo json_encode(['success' => false, 'error' => 'Invalid token']);
-            exit;
+            setFlash('error', 'Invalid security token. Please try again.');
+            redirect(ADMIN_URL . '/media.php');
         }
+        $folderId = (int)($_POST['folder_id'] ?? 0);
+        $currentUser = User::current();
+        $userId = $currentUser ? $currentUser['id'] : null;
         
-        if (!isset($_FILES['file'])) {
-            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
-            exit;
-        }
+        $files = $_FILES['media_upload'];
+        $uploaded = 0;
+        $errors = [];
         
-        $folderId = isset($_POST['folder_id']) ? (int)$_POST['folder_id'] : 0;
-        $result = Media::upload($_FILES['file'], User::current()['id'], $folderId);
-        echo json_encode($result);
-        exit;
-    }
-    
-    // Create folder
-    if ($action === 'create_folder' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!verifyCsrf()) {
-            echo json_encode(['success' => false, 'error' => 'Invalid token']);
-            exit;
-        }
-        
-        $name = trim($_POST['name'] ?? '');
-        if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Folder name is required']);
-            exit;
-        }
-        
-        $result = Media::createFolder($name);
-        echo json_encode($result);
-        exit;
-    }
-    
-    // Update media
-    if ($action === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!verifyCsrf()) {
-            echo json_encode(['success' => false, 'error' => 'Invalid token']);
-            exit;
-        }
-        
-        $mediaId = (int)($_POST['media_id'] ?? 0);
-        $data = [
-            'title' => trim($_POST['title'] ?? ''),
-            'alt_text' => trim($_POST['alt_text'] ?? ''),
-            'folder_id' => (int)($_POST['folder_id'] ?? 0)
-        ];
-        
-        $result = Media::update($mediaId, $data);
-        echo json_encode($result);
-        exit;
-    }
-    
-    // Delete media
-    if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!verifyCsrf()) {
-            echo json_encode(['success' => false, 'error' => 'Invalid token']);
-            exit;
-        }
-        
-        $mediaId = (int)($_POST['media_id'] ?? 0);
-        $result = Media::delete($mediaId);
-        echo json_encode($result);
-        exit;
-    }
-    
-    // Get media details
-    if ($action === 'get' && isset($_GET['media_id'])) {
-        $mediaId = (int)$_GET['media_id'];
-        $media = Media::get($mediaId);
-        if ($media) {
-            echo json_encode(['success' => true, 'media' => $media]);
+        // Handle both single and multiple file uploads
+        if (is_array($files['name'])) {
+            for ($i = 0; $i < count($files['name']); $i++) {
+                if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                    $file = [
+                        'name' => $files['name'][$i],
+                        'type' => $files['type'][$i],
+                        'tmp_name' => $files['tmp_name'][$i],
+                        'size' => $files['size'][$i],
+                        'error' => $files['error'][$i],
+                    ];
+                    
+                    $result = Media::upload($file, $userId, $folderId);
+                    if ($result['success']) {
+                        $uploaded++;
+                    } else {
+                        $errors[] = $files['name'][$i] . ': ' . ($result['error'] ?? 'Unknown error');
+                    }
+                }
+            }
         } else {
-            echo json_encode(['success' => false, 'error' => 'Media not found']);
+            // Single file upload
+            if ($files['error'] === UPLOAD_ERR_OK) {
+                $result = Media::upload($files, $userId, $folderId);
+                if ($result['success']) {
+                    $uploaded++;
+                } else {
+                    $errors[] = $result['error'] ?? 'Unknown error';
+                }
+            }
         }
-        exit;
+        
+        if ($uploaded > 0) {
+            setFlash('success', $uploaded . ' file(s) uploaded successfully.');
+        } elseif (!empty($errors)) {
+            setFlash('error', 'Upload failed: ' . implode(', ', $errors));
+        } else {
+            setFlash('error', 'No files were uploaded. Please check file size and type.');
+        }
+        redirect(ADMIN_URL . '/media.php');
     }
     
-    // Get media list
-    if ($action === 'list') {
-        $folderId = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
-        $media = Media::getAll($folderId);
-        echo json_encode(['success' => true, 'media' => $media]);
-        exit;
+    // Handle media update
+    if (isset($_POST['action']) && $_POST['action'] === 'update') {
+        if (!verifyCsrf()) {
+            setFlash('error', 'Invalid security token.');
+            redirect(ADMIN_URL . '/media.php');
+        }
+        $mediaId = (int)$_POST['media_id'];
+        Media::update($mediaId, [
+            'title' => $_POST['title'] ?? '',
+            'alt_text' => $_POST['alt_text'] ?? '',
+        ]);
+        setFlash('success', 'Media updated successfully.');
+        redirect(ADMIN_URL . '/media.php');
     }
     
-    echo json_encode(['success' => false, 'error' => 'Invalid action']);
-    exit;
+    // Handle media delete
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        if (!verifyCsrf()) {
+            setFlash('error', 'Invalid security token.');
+            redirect(ADMIN_URL . '/media.php');
+        }
+        $mediaId = (int)$_POST['media_id'];
+        Media::delete($mediaId);
+        setFlash('success', 'Media deleted successfully.');
+        redirect(ADMIN_URL . '/media.php');
+    }
+    
+    // Handle folder creation
+    if (isset($_POST['action']) && $_POST['action'] === 'create_folder') {
+        if (!verifyCsrf()) {
+            setFlash('error', 'Invalid security token.');
+            redirect(ADMIN_URL . '/media.php');
+        }
+        $folderName = trim($_POST['folder_name'] ?? '');
+        if ($folderName) {
+            Media::createFolder($folderName);
+            setFlash('success', 'Folder created successfully.');
+        }
+        redirect(ADMIN_URL . '/media.php');
+    }
 }
 
-// Get folders and media for initial load
-$folders = Media::getFolders();
+// Get current folder
 $currentFolder = isset($_GET['folder']) ? (int)$_GET['folder'] : null;
-$media = Media::getAll($currentFolder);
+
+// Get folders and media
+$folders = Media::getFolders();
+$media = Media::query(['folder_id' => $currentFolder, 'limit' => 100]);
+$mediaCount = count($media);
 
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
-<style>
-/* Media page specific styles */
-.media-layout {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 1.5rem;
-    min-height: calc(100vh - 200px);
-}
-
-.media-sidebar {
-    background: var(--bg-card);
-    border-radius: var(--border-radius-lg);
-    border: 1px solid var(--border-color);
-    height: fit-content;
-    position: sticky;
-    top: calc(var(--header-height) + 2rem);
-}
-
-.media-sidebar-header {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.media-sidebar-title {
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.folder-list { padding: 0.5rem 0; }
-
-.folder-item {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 1rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-size: 0.875rem;
-}
-
-.folder-item:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.folder-item.active {
-    background: rgba(99, 102, 241, 0.08);
-    color: var(--forge-primary);
-}
-
-.folder-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-.folder-item span { flex: 1; }
-
-.folder-count {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    background: var(--bg-card-header);
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
-}
-
-.media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1rem;
-}
-
-.media-item {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    border: 2px solid var(--border-color);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.media-item:hover {
-    border-color: var(--forge-primary);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.media-item.selected {
-    border-color: var(--forge-primary);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-
-.media-item-preview {
-    aspect-ratio: 1;
-    background: var(--bg-card-header);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.media-item-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.media-item-preview svg {
-    width: 32px;
-    height: 32px;
-    color: var(--text-muted);
-}
-
-.media-item-info {
-    padding: 0.625rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.media-item-name {
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.media-item-meta {
-    font-size: 0.6875rem;
-    color: var(--text-muted);
-    margin-top: 0.125rem;
-}
-
-.upload-zone {
-    border: 2px dashed var(--border-color);
-    border-radius: var(--border-radius-lg);
-    padding: 2.5rem 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: var(--bg-card-header);
-}
-
-.upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--forge-primary);
-    background: rgba(99, 102, 241, 0.05);
-}
-
-.upload-zone svg {
-    width: 40px;
-    height: 40px;
-    color: var(--text-muted);
-    margin-bottom: 0.75rem;
-}
-
-.upload-zone p { margin: 0.25rem 0; color: var(--text-secondary); font-size: 0.875rem; }
-.upload-zone .highlight { color: var(--forge-primary); font-weight: 600; }
-
-/* Modal with high z-index */
-.media-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 1rem;
-}
-
-.media-modal-backdrop.active {
-    display: flex;
-}
-
-.media-modal {
-    background: var(--bg-card);
-    border-radius: var(--border-radius-lg);
-    width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-}
-
-.media-modal-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.media-modal-title {
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.media-modal-close {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius);
-}
-
-.media-modal-close:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.media-modal-body {
-    padding: 1.25rem;
-    overflow-y: auto;
-    max-height: calc(90vh - 140px);
-}
-
-.media-modal-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
-.media-modal .form-group {
-    margin-bottom: 1rem;
-}
-
-.media-modal .form-label {
-    display: block;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    margin-bottom: 0.375rem;
-}
-
-.media-modal .form-input,
-.media-modal select {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.9375rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-family: inherit;
-}
-
-.media-modal .form-input:focus,
-.media-modal select:focus {
-    outline: none;
-    border-color: var(--forge-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-.media-modal .form-hint {
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.media-preview-img {
-    width: 100%;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: var(--border-radius);
-    background: var(--bg-card-header);
-    margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-    .media-layout { grid-template-columns: 1fr; }
-    .media-sidebar { display: none; }
-}
-</style>
-
-<div class="page-header">
-    <h2>Media Library</h2>
-</div>
-
 <div class="media-layout">
-    <!-- Sidebar -->
-    <aside class="media-sidebar">
-        <div class="media-sidebar-header">
-            <span class="media-sidebar-title">Folders</span>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="openModal('newFolderModal')" title="New Folder">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </button>
+    <div class="media-main" id="mediaMain">
+        <div class="media-header">
+            <div class="media-header-left">
+                <h2>Media Library</h2>
+                <span class="media-count"><?= $mediaCount ?> items</span>
+            </div>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('newFolderModal').classList.add('active')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    New Folder
+                </button>
+                <label class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload
+                    <input type="file" id="fileInput" name="media_upload[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden>
+                </label>
+            </div>
         </div>
-        <div class="folder-list">
-            <div class="folder-item <?= $currentFolder === null ? 'active' : '' ?>" onclick="selectFolder(null)">
+
+        <div class="media-upload-zone" id="uploadZone">
+            <div class="media-upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <h3>Drop files here to upload</h3>
+            <p>or click "Upload" button above</p>
+        </div>
+
+        <?php if (!empty($folders) || $currentFolder): ?>
+        <div class="media-folders">
+            <a href="<?= ADMIN_URL ?>/media.php" class="media-folder <?= $currentFolder === null ? 'active' : '' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+                All Files
+            </a>
+            <?php foreach ($folders as $folder): ?>
+            <a href="<?= ADMIN_URL ?>/media.php?folder=<?= $folder['id'] ?>" class="media-folder <?= $currentFolder === (int)$folder['id'] ? 'active' : '' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <?= esc($folder['name']) ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (empty($media)): ?>
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <h3>No media files</h3>
+            <p>Upload your first file to get started.</p>
+        </div>
+        <?php else: ?>
+        <div class="media-grid" id="mediaGrid">
+            <?php foreach ($media as $item): ?>
+            <div class="media-item" 
+                 data-id="<?= $item['id'] ?>"
+                 data-filename="<?= esc($item['filename']) ?>"
+                 data-title="<?= esc($item['title'] ?? '') ?>"
+                 data-alt="<?= esc($item['alt_text'] ?? '') ?>"
+                 data-url="<?= esc($item['url']) ?>"
+                 data-mime="<?= esc($item['mime_type']) ?>"
+                 data-size="<?= $item['file_size'] ?>"
+                 data-width="<?= $item['width'] ?? '' ?>"
+                 data-height="<?= $item['height'] ?? '' ?>"
+                 data-date="<?= $item['created_at'] ?>"
+                 onclick="selectMedia(this)">
+                <div class="media-item-inner">
+                    <?php if (strpos($item['mime_type'], 'image/') === 0): ?>
+                    <img src="<?= esc($item['url']) ?>" alt="<?= esc($item['alt_text'] ?? $item['filename']) ?>" loading="lazy">
+                    <?php else: ?>
+                    <div class="media-item-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <span><?= strtoupper(pathinfo($item['filename'], PATHINFO_EXTENSION)) ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <div class="media-item-check">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div class="media-item-name"><?= esc($item['filename']) ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="media-panel" id="mediaPanel">
+        <div class="media-panel-header">
+            <div class="media-panel-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                     <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
-                <span>All Media</span>
-                <span class="folder-count"><?= count(Media::getAll()) ?></span>
+                File Details
             </div>
-            <?php foreach ($folders as $folder): ?>
-            <div class="folder-item <?= $currentFolder === $folder['id'] ? 'active' : '' ?>" onclick="selectFolder(<?= $folder['id'] ?>)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            <button type="button" class="media-panel-close" onclick="closePanel()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <span><?= esc($folder['name']) ?></span>
-                <span class="folder-count"><?= $folder['count'] ?? 0 ?></span>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </aside>
-
-    <!-- Main -->
-    <div class="media-main">
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
-            <button type="button" class="btn btn-primary" onclick="openModal('uploadModal')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                Upload Files
             </button>
-            <button type="button" class="btn btn-danger" id="deleteSelectedBtn" style="display: none;" onclick="deleteSelected()">
+        </div>
+        
+        <div class="media-panel-preview">
+            <div class="media-panel-preview-inner" id="panelPreview"></div>
+        </div>
+        
+        <div class="media-panel-body">
+            <form id="mediaEditForm" method="post">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="media_id" id="panelMediaId">
+                
+                <div class="media-panel-section">
+                    <div class="media-panel-section-title">File Information</div>
+                    <div class="media-panel-info">
+                        <div class="media-panel-info-row">
+                            <span class="media-panel-info-label">Filename</span>
+                            <span class="media-panel-info-value" id="panelFilename">-</span>
+                        </div>
+                        <div class="media-panel-info-row">
+                            <span class="media-panel-info-label">Type</span>
+                            <span class="media-panel-info-value" id="panelType">-</span>
+                        </div>
+                        <div class="media-panel-info-row">
+                            <span class="media-panel-info-label">Size</span>
+                            <span class="media-panel-info-value" id="panelSize">-</span>
+                        </div>
+                        <div class="media-panel-info-row" id="dimensionsRow">
+                            <span class="media-panel-info-label">Dimensions</span>
+                            <span class="media-panel-info-value" id="panelDimensions">-</span>
+                        </div>
+                        <div class="media-panel-info-row">
+                            <span class="media-panel-info-label">Uploaded</span>
+                            <span class="media-panel-info-value" id="panelDate">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="media-panel-section">
+                    <div class="media-panel-section-title">Edit Details</div>
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" id="panelTitle" class="form-input" placeholder="Enter title...">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Alt Text</label>
+                        <input type="text" name="alt_text" id="panelAlt" class="form-input" placeholder="Describe the image...">
+                        <p class="form-hint">Describe the image for accessibility.</p>
+                    </div>
+                </div>
+                
+                <div class="media-panel-section">
+                    <div class="media-panel-section-title">File URL</div>
+                    <div class="d-flex gap-1">
+                        <input type="text" id="panelUrl" class="form-input" readonly>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="copyUrl()" title="Copy URL">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="media-panel-footer">
+            <button type="button" class="btn btn-danger" onclick="deleteMedia()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
-                Delete Selected
+                Delete
             </button>
-            <span style="color: var(--text-muted); margin-left: auto;" id="mediaCount"><?= count($media) ?> items</span>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                <?php if (empty($media)): ?>
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
-                    <h3>No media files</h3>
-                    <p>Upload your first file to get started</p>
-                    <button type="button" class="btn btn-primary" onclick="openModal('uploadModal')">Upload Files</button>
-                </div>
-                <?php else: ?>
-                <div class="media-grid" id="mediaGrid">
-                    <?php foreach ($media as $item): ?>
-                    <div class="media-item" data-id="<?= $item['id'] ?>" onclick="selectItem(this, event)">
-                        <div class="media-item-preview">
-                            <?php if (strpos($item['mime_type'], 'image/') === 0): ?>
-                            <img src="<?= esc($item['url']) ?>" alt="<?= esc($item['alt_text'] ?? '') ?>" loading="lazy">
-                            <?php else: ?>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                            </svg>
-                            <?php endif; ?>
-                        </div>
-                        <div class="media-item-info">
-                            <div class="media-item-name"><?= esc($item['title'] ?: $item['filename']) ?></div>
-                            <div class="media-item-meta"><?= formatFileSize($item['file_size']) ?></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
+            <button type="submit" form="mediaEditForm" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Changes
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Upload Modal -->
-<div class="media-modal-backdrop" id="uploadModal">
-    <div class="media-modal" style="max-width: 550px;">
-        <div class="media-modal-header">
-            <h3 class="media-modal-title">Upload Files</h3>
-            <button type="button" class="media-modal-close" onclick="closeModal('uploadModal')">
+<form id="uploadForm" method="post" enctype="multipart/form-data" hidden>
+    <?= csrfField() ?>
+    <input type="hidden" name="folder_id" value="<?= $currentFolder ?? '' ?>">
+</form>
+
+<form id="deleteForm" method="post" hidden>
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="media_id" id="deleteMediaId">
+</form>
+
+<div class="modal-backdrop" id="newFolderModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Create New Folder</h3>
+            <button type="button" class="modal-close" onclick="document.getElementById('newFolderModal').classList.remove('active')">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
         </div>
-        <div class="media-modal-body">
-            <div class="upload-zone" id="uploadZone">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p>Drag and drop files here</p>
-                <p>or <span class="highlight">click to browse</span></p>
-            </div>
-            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip" style="display: none;">
-            <div id="uploadProgress" style="margin-top: 1rem;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- New Folder Modal -->
-<div class="media-modal-backdrop" id="newFolderModal">
-    <div class="media-modal" style="max-width: 400px;">
-        <div class="media-modal-header">
-            <h3 class="media-modal-title">New Folder</h3>
-            <button type="button" class="media-modal-close" onclick="closeModal('newFolderModal')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="media-modal-body">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Folder Name</label>
-                <input type="text" class="form-input" id="folderName" placeholder="Enter folder name">
-            </div>
-        </div>
-        <div class="media-modal-footer" style="justify-content: flex-end;">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('newFolderModal')">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="createFolder()">Create</button>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Media Modal -->
-<div class="media-modal-backdrop" id="editMediaModal">
-    <div class="media-modal">
-        <div class="media-modal-header">
-            <h3 class="media-modal-title">Edit Media</h3>
-            <button type="button" class="media-modal-close" onclick="closeModal('editMediaModal')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="media-modal-body">
-            <input type="hidden" id="editMediaId">
-            <div id="editMediaPreview" style="text-align: center; margin-bottom: 1rem;"></div>
-            
-            <div class="form-group">
-                <label class="form-label">Title</label>
-                <input type="text" class="form-input" id="editMediaTitle" placeholder="Enter title">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Alt Text</label>
-                <input type="text" class="form-input" id="editMediaAlt" placeholder="Describe this image">
-                <div class="form-hint">For accessibility and SEO</div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Folder</label>
-                <select class="form-input" id="editMediaFolder">
-                    <option value="0">No Folder</option>
-                    <?php foreach ($folders as $folder): ?>
-                    <option value="<?= $folder['id'] ?>"><?= esc($folder['name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">URL</label>
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" class="form-input" id="editMediaUrl" readonly style="font-size: 0.8125rem;">
-                    <button type="button" class="btn btn-secondary" onclick="copyUrl()">Copy</button>
+        <form method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="create_folder">
+            <div class="modal-body">
+                <div class="form-group mb-0">
+                    <label class="form-label">Folder Name</label>
+                    <input type="text" name="folder_name" class="form-input" placeholder="Enter folder name..." required autofocus>
                 </div>
             </div>
-        </div>
-        <div class="media-modal-footer">
-            <button type="button" class="btn btn-danger" onclick="deleteCurrentMedia()">Delete</button>
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('editMediaModal')">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveMedia()">Save</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('newFolderModal').classList.remove('active')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Folder</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 
 <script>
-const csrfToken = '<?= csrfToken() ?>';
-let currentFolder = <?= $currentFolder !== null ? $currentFolder : 'null' ?>;
-let selectedItems = new Set();
-let lastClickTime = 0;
-let lastClickId = null;
+let selectedMedia = null;
+const panel = document.getElementById('mediaPanel');
+const mainArea = document.getElementById('mediaMain');
 
-// Modal functions
-function openModal(id) {
-    document.getElementById(id).classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-// Close on backdrop click
-document.querySelectorAll('.media-modal-backdrop').forEach(backdrop => {
-    backdrop.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+function selectMedia(element) {
+    document.querySelectorAll('.media-item.selected').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedMedia = element;
+    
+    const data = element.dataset;
+    document.getElementById('panelMediaId').value = data.id;
+    document.getElementById('panelFilename').textContent = data.filename;
+    document.getElementById('panelType').textContent = data.mime;
+    document.getElementById('panelSize').textContent = formatFileSize(parseInt(data.size));
+    document.getElementById('panelTitle').value = data.title;
+    document.getElementById('panelAlt').value = data.alt;
+    document.getElementById('panelUrl').value = data.url;
+    document.getElementById('panelDate').textContent = new Date(data.date).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
     });
-});
-
-// Upload zone
-const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-
-uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
-});
-fileInput.addEventListener('change', () => {
-    if (fileInput.files.length) uploadFiles(fileInput.files);
-});
-
-// Upload files
-async function uploadFiles(files) {
-    const progress = document.getElementById('uploadProgress');
-    progress.innerHTML = '';
     
-    for (const file of files) {
-        const item = document.createElement('div');
-        item.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; background: var(--bg-card-header); border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.875rem;';
-        item.innerHTML = `<span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(file.name)}</span><span class="status"><span class="spinner spinner-dark"></span></span>`;
-        progress.appendChild(item);
-        
-        try {
-            const formData = new FormData();
-            formData.append('action', 'upload');
-            formData.append('file', file);
-            formData.append('csrf_token', csrfToken);
-            if (currentFolder) formData.append('folder_id', currentFolder);
-            
-            const res = await fetch(location.href, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            });
-            const data = await res.json();
-            
-            item.querySelector('.status').innerHTML = data.success 
-                ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-                : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-        } catch (e) {
-            item.querySelector('.status').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>';
-        }
-    }
-    
-    setTimeout(() => location.reload(), 800);
-}
-
-// Select folder
-function selectFolder(id) {
-    currentFolder = id;
-    document.querySelectorAll('.folder-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    loadMedia();
-}
-
-// Load media
-async function loadMedia() {
-    let url = location.pathname + '?action=list';
-    if (currentFolder !== null) url += '&folder_id=' + currentFolder;
-    
-    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-    const data = await res.json();
-    
-    if (data.success) renderMedia(data.media);
-}
-
-// Render media
-function renderMedia(media) {
-    const grid = document.getElementById('mediaGrid');
-    document.getElementById('mediaCount').textContent = media.length + ' items';
-    
-    if (!grid) return location.reload();
-    
-    if (media.length === 0) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><h3>No files</h3><p>Upload files to this folder</p></div>';
-        return;
-    }
-    
-    grid.innerHTML = media.map(item => `
-        <div class="media-item" data-id="${item.id}" onclick="selectItem(this, event)">
-            <div class="media-item-preview">
-                ${item.mime_type.startsWith('image/') 
-                    ? `<img src="${escapeHtml(item.url)}" alt="" loading="lazy">`
-                    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`}
-            </div>
-            <div class="media-item-info">
-                <div class="media-item-name">${escapeHtml(item.title || item.filename)}</div>
-                <div class="media-item-meta">${formatFileSize(item.file_size)}</div>
-            </div>
-        </div>
-    `).join('');
-    
-    selectedItems.clear();
-    updateDeleteButton();
-}
-
-// Select item (double-click to edit)
-function selectItem(el, e) {
-    const id = parseInt(el.dataset.id);
-    const now = Date.now();
-    
-    // Double click detection
-    if (lastClickId === id && now - lastClickTime < 400) {
-        editMedia(id);
-        return;
-    }
-    
-    lastClickTime = now;
-    lastClickId = id;
-    
-    // Single click - toggle selection
-    if (e.ctrlKey || e.metaKey) {
-        el.classList.toggle('selected');
-        if (el.classList.contains('selected')) {
-            selectedItems.add(id);
-        } else {
-            selectedItems.delete(id);
-        }
+    const dimensionsRow = document.getElementById('dimensionsRow');
+    if (data.width && data.height) {
+        document.getElementById('panelDimensions').textContent = data.width + ' × ' + data.height + ' px';
+        dimensionsRow.style.display = 'flex';
     } else {
-        document.querySelectorAll('.media-item').forEach(item => item.classList.remove('selected'));
-        selectedItems.clear();
-        el.classList.add('selected');
-        selectedItems.add(id);
+        dimensionsRow.style.display = 'none';
     }
     
-    updateDeleteButton();
-}
-
-function updateDeleteButton() {
-    document.getElementById('deleteSelectedBtn').style.display = selectedItems.size > 0 ? 'inline-flex' : 'none';
-}
-
-// Edit media
-async function editMedia(id) {
-    try {
-        const res = await fetch(`?action=get&media_id=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const data = await res.json();
-        
-        if (!data.success) return alert(data.error);
-        
-        const m = data.media;
-        document.getElementById('editMediaId').value = m.id;
-        document.getElementById('editMediaTitle').value = m.title || '';
-        document.getElementById('editMediaAlt').value = m.alt_text || '';
-        document.getElementById('editMediaFolder').value = m.folder_id || 0;
-        document.getElementById('editMediaUrl').value = m.url;
-        
-        const preview = document.getElementById('editMediaPreview');
-        if (m.mime_type.startsWith('image/')) {
-            preview.innerHTML = `<img src="${escapeHtml(m.url)}" class="media-preview-img">`;
-        } else {
-            preview.innerHTML = `<div style="padding:2rem;background:var(--bg-card-header);border-radius:8px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>`;
-        }
-        
-        openModal('editMediaModal');
-    } catch (e) {
-        alert('Failed to load media');
-    }
-}
-
-// Save media
-async function saveMedia() {
-    const id = document.getElementById('editMediaId').value;
-    const formData = new FormData();
-    formData.append('action', 'update');
-    formData.append('media_id', id);
-    formData.append('title', document.getElementById('editMediaTitle').value);
-    formData.append('alt_text', document.getElementById('editMediaAlt').value);
-    formData.append('folder_id', document.getElementById('editMediaFolder').value);
-    formData.append('csrf_token', csrfToken);
-    
-    const res = await fetch(location.href, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData
-    });
-    const data = await res.json();
-    
-    if (data.success) {
-        closeModal('editMediaModal');
-        loadMedia();
+    const preview = document.getElementById('panelPreview');
+    if (data.mime.startsWith('image/')) {
+        preview.innerHTML = '<img src="' + data.url + '" alt="">';
     } else {
-        alert(data.error || 'Failed to save');
-    }
-}
-
-// Delete current media
-async function deleteCurrentMedia() {
-    if (!confirm('Delete this file?')) return;
-    
-    const id = document.getElementById('editMediaId').value;
-    const formData = new FormData();
-    formData.append('action', 'delete');
-    formData.append('media_id', id);
-    formData.append('csrf_token', csrfToken);
-    
-    const res = await fetch(location.href, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData
-    });
-    
-    closeModal('editMediaModal');
-    loadMedia();
-}
-
-// Delete selected
-async function deleteSelected() {
-    if (!confirm(`Delete ${selectedItems.size} file(s)?`)) return;
-    
-    for (const id of selectedItems) {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('media_id', id);
-        formData.append('csrf_token', csrfToken);
-        await fetch(location.href, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: formData
-        });
+        preview.innerHTML = '<div class="media-panel-preview-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>' + data.filename.split('.').pop().toUpperCase() + '</span></div>';
     }
     
-    loadMedia();
+    openPanel();
 }
 
-// Create folder
-async function createFolder() {
-    const name = document.getElementById('folderName').value.trim();
-    if (!name) return alert('Enter folder name');
-    
-    const formData = new FormData();
-    formData.append('action', 'create_folder');
-    formData.append('name', name);
-    formData.append('csrf_token', csrfToken);
-    
-    const res = await fetch(location.href, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData
-    });
-    const data = await res.json();
-    
-    if (data.success) {
-        location.reload();
-    } else {
-        alert(data.error || 'Failed');
-    }
+function openPanel() {
+    panel.classList.add('open');
+    mainArea.classList.add('panel-open');
 }
 
-// Copy URL
+function closePanel() {
+    panel.classList.remove('open');
+    mainArea.classList.remove('panel-open');
+    document.querySelectorAll('.media-item.selected').forEach(el => el.classList.remove('selected'));
+    selectedMedia = null;
+}
+
 function copyUrl() {
-    const url = document.getElementById('editMediaUrl').value;
-    navigator.clipboard.writeText(url);
-    alert('URL copied!');
+    const url = document.getElementById('panelUrl');
+    url.select();
+    document.execCommand('copy');
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    setTimeout(() => btn.innerHTML = originalHTML, 1500);
 }
 
-// Helpers
+function deleteMedia() {
+    if (!selectedMedia) return;
+    if (confirm('Are you sure you want to delete this file?')) {
+        document.getElementById('deleteMediaId').value = selectedMedia.dataset.id;
+        document.getElementById('deleteForm').submit();
+    }
+}
+
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+const uploadForm = document.getElementById('uploadForm');
+
+fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) uploadFiles(this.files);
+});
+
+uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
+});
+
+function uploadFiles(files) {
+    const formData = new FormData(uploadForm);
+    for (let i = 0; i < files.length; i++) {
+        formData.append('media_upload[]', files[i]);
+    }
+    uploadZone.innerHTML = '<div class="animate-pulse"><p>Uploading...</p></div>';
+    fetch('<?= ADMIN_URL ?>/media.php', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    }).then(response => {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Upload failed. Please try again.');
+            window.location.reload();
+        }
+    }).catch(error => {
+        console.error('Upload error:', error);
+        alert('Upload failed. Please try again.');
+        window.location.reload();
+    });
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+});
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

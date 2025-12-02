@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Migrations - Forge CMS v1.0.2
+ * Database Migrations - Forge CMS v1.0.3
  * Run automatically during update process
  */
 
@@ -42,5 +42,5 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '1.0.2');
+setOption('cms_version', '1.0.3');
 setOption('last_update', date('Y-m-d H:i:s'));

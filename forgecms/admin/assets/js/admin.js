@@ -1,6 +1,23 @@
 /**
- * Forge CMS Admin JavaScript v1.0.2
+ * Forge CMS Admin JavaScript v1.0.3
  */
+
+// Global toggle functions
+function toggleSidebar() {
+    const sidebar = document.getElementById('adminSidebar');
+    const body = document.body;
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+        body.classList.toggle('sidebar-open');
+    }
+}
+
+function toggleUserDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Sidebar toggle (mobile)
@@ -23,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', function(e) {
-        document.querySelectorAll('.dropdown.active').forEach(function(dropdown) {
+        document.querySelectorAll('.dropdown.active, .user-dropdown.active').forEach(function(dropdown) {
             if (!dropdown.contains(e.target)) {
                 dropdown.classList.remove('active');
             }

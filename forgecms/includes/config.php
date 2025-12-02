@@ -8,7 +8,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.2');
+define('CMS_VERSION', '1.0.3');
 
 // Database settings
 define('DB_HOST', 'localhost');
@@ -27,6 +27,7 @@ define('ADMIN_PATH', CMS_ROOT . '/admin');
 define('THEMES_PATH', CMS_ROOT . '/themes');
 define('UPLOADS_PATH', CMS_ROOT . '/uploads');
 define('UPLOADS_URL', SITE_URL . '/uploads');
+define('PLUGINS_PATH', CMS_ROOT . '/plugins');
 
 // Current theme
 define('CURRENT_THEME', 'default');

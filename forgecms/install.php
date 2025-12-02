@@ -9,7 +9,7 @@ ini_set('display_errors', 1);
 
 define('CMS_ROOT', __DIR__);
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.2');
+define('CMS_VERSION', '1.0.3');
 
 // Check if already installed
 if (file_exists(__DIR__ . '/.installed')) {
@@ -217,7 +217,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             $configContent .= "define('ADMIN_PATH', CMS_ROOT . '/admin');\n";
             $configContent .= "define('THEMES_PATH', CMS_ROOT . '/themes');\n";
             $configContent .= "define('UPLOADS_PATH', CMS_ROOT . '/uploads');\n";
-            $configContent .= "define('UPLOADS_URL', SITE_URL . '/uploads');\n\n";
+            $configContent .= "define('UPLOADS_URL', SITE_URL . '/uploads');\n";
+            $configContent .= "define('PLUGINS_PATH', CMS_ROOT . '/plugins');\n\n";
             $configContent .= "// Current theme\n";
             $configContent .= "define('CURRENT_THEME', 'default');\n";
             $configContent .= "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);\n\n";
@@ -319,6 +320,7 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
         .steps {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 0.5rem;
             margin-bottom: 2rem;
         }
@@ -340,6 +342,7 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             font-weight: 600;
             background: #e2e8f0;
             color: #64748b;
+            flex-shrink: 0;
         }
         
         .step.active .step-number {
@@ -367,6 +370,8 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             width: 40px;
             height: 2px;
             background: #e2e8f0;
+            flex-shrink: 0;
+            align-self: center;
         }
         
         /* Card */

@@ -81,14 +81,29 @@ function currentUrl(): string
  */
 function setFlash(string $type, string $message): void
 {
-    $_SESSION['flash'] = ['type' => $type, 'message' => $message];
+    $_SESSION['flash'][$type] = $message;
 }
 
-function getFlash(): ?array
+function getFlash(?string $type = null): mixed
 {
+    if ($type !== null) {
+        $message = $_SESSION['flash'][$type] ?? null;
+        unset($_SESSION['flash'][$type]);
+        return $message;
+    }
+    
     $flash = $_SESSION['flash'] ?? null;
     unset($_SESSION['flash']);
     return $flash;
+}
+
+/**
+ * Get Gravatar URL for email
+ */
+function getGravatarUrl(string $email, int $size = 80): string
+{
+    $hash = md5(strtolower(trim($email)));
+    return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=mp";
 }
 
 /**
@@ -238,6 +253,19 @@ function getExtension(string $filename): string
 function isImage(string $mimeType): bool
 {
     return str_starts_with($mimeType, 'image/');
+}
+
+/**
+ * Output content with tags processed
+ * Use in themes: <?= content($post['content']) ?>
+ */
+function content(string $content): string
+{
+    // Process plugin tags
+    $content = process_tags($content);
+    
+    // Apply content filters
+    return apply_filters('the_content', $content);
 }
 
 /**

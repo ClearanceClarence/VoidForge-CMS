@@ -213,8 +213,14 @@ class Post
         }
 
         if ($args['status']) {
-            $where[] = 'status = ?';
-            $params[] = $args['status'];
+            if (is_array($args['status'])) {
+                $placeholders = implode(',', array_fill(0, count($args['status']), '?'));
+                $where[] = "status IN ({$placeholders})";
+                $params = array_merge($params, $args['status']);
+            } else {
+                $where[] = 'status = ?';
+                $params[] = $args['status'];
+            }
         }
 
         if ($args['author']) {

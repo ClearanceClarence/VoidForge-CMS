@@ -1,7 +1,7 @@
 <?php
 /**
  * System Updates - Forge CMS
- * Simple synchronous update process
+ * Improved update process with better error handling
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -11,6 +11,8 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+
+Post::init();
 
 User::startSession();
 User::requireRole('admin');
@@ -23,11 +25,133 @@ $lastUpdate = getOption('last_update', 'Never');
 $updateResult = null;
 $updateLog = [];
 
+/**
+ * Safely run database migrations
+ */
+function runMigrations(): array {
+    $log = [];
+    
+    try {
+        // Ensure database connection
+        $pdo = Database::getInstance();
+        
+        // Create media_folders table if it doesn't exist
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS media_folders (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                created_at DATETIME NOT NULL,
+                INDEX idx_name (name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked media_folders table';
+        
+        // Add folder_id column to media table if it doesn't exist
+        $columns = $pdo->query("SHOW COLUMNS FROM media LIKE 'folder_id'")->fetchAll();
+        if (empty($columns)) {
+            $pdo->exec("ALTER TABLE media ADD COLUMN folder_id INT UNSIGNED DEFAULT NULL");
+            $pdo->exec("ALTER TABLE media ADD INDEX idx_folder_id (folder_id)");
+            $log[] = '  → Added folder_id column to media';
+        }
+        
+        // Add title column to media table if it doesn't exist
+        $columns = $pdo->query("SHOW COLUMNS FROM media LIKE 'title'")->fetchAll();
+        if (empty($columns)) {
+            $pdo->exec("ALTER TABLE media ADD COLUMN title VARCHAR(255) DEFAULT NULL AFTER alt_text");
+            $log[] = '  → Added title column to media';
+        }
+        
+        // Add caption column to media table if it doesn't exist
+        $columns = $pdo->query("SHOW COLUMNS FROM media LIKE 'caption'")->fetchAll();
+        if (empty($columns)) {
+            $pdo->exec("ALTER TABLE media ADD COLUMN caption TEXT DEFAULT NULL AFTER title");
+            $log[] = '  → Added caption column to media';
+        }
+        
+        // Ensure options table exists
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS options (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                option_name VARCHAR(255) NOT NULL UNIQUE,
+                option_value LONGTEXT,
+                INDEX idx_name (option_name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked options table';
+        
+        // Ensure custom_post_types table exists
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS custom_post_types (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                slug VARCHAR(50) NOT NULL UNIQUE,
+                config JSON NOT NULL,
+                created_at DATETIME NOT NULL,
+                INDEX idx_slug (slug)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked custom_post_types table';
+        
+    } catch (Exception $e) {
+        $log[] = '  ⚠ Migration warning: ' . $e->getMessage();
+    }
+    
+    return $log;
+}
+
+/**
+ * Recursive copy that handles errors gracefully
+ */
+function safeCopy($source, $dest): bool {
+    if (is_dir($source)) {
+        if (!is_dir($dest)) {
+            @mkdir($dest, 0755, true);
+        }
+        $items = @scandir($source);
+        if ($items === false) return false;
+        
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') continue;
+            safeCopy($source . '/' . $item, $dest . '/' . $item);
+        }
+        return true;
+    } else {
+        $destDir = dirname($dest);
+        if (!is_dir($destDir)) {
+            @mkdir($destDir, 0755, true);
+        }
+        return @copy($source, $dest);
+    }
+}
+
+/**
+ * Recursive delete that handles errors gracefully
+ */
+function safeDelete($path): bool {
+    if (!file_exists($path)) return true;
+    
+    if (is_dir($path)) {
+        $items = @scandir($path);
+        if ($items === false) return false;
+        
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') continue;
+            safeDelete($path . '/' . $item);
+        }
+        return @rmdir($path);
+    } else {
+        return @unlink($path);
+    }
+}
+
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
-    // Increase limits
-    set_time_limit(300);
-    ini_set('memory_limit', '256M');
+    // Increase limits significantly
+    set_time_limit(600);
+    ini_set('memory_limit', '512M');
+    ini_set('max_execution_time', '600');
+    
+    // Disable output buffering for real-time feedback
+    while (ob_get_level()) ob_end_clean();
     
     try {
         // Check file upload
@@ -53,12 +177,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
         
         $updateLog[] = '✓ File uploaded: ' . $file['name'] . ' (' . formatFileSize($file['size']) . ')';
         
-        $tempDir = CMS_ROOT . '/backups/temp_update_' . uniqid();
-        $backupDir = CMS_ROOT . '/backups/backup_' . date('Y-m-d_H-i-s');
+        // Setup directories
+        $backupsDir = CMS_ROOT . '/backups';
+        $tempDir = $backupsDir . '/temp_update_' . uniqid();
+        $backupDir = $backupsDir . '/backup_' . date('Y-m-d_H-i-s');
         
-        // Create directories
-        if (!is_dir(CMS_ROOT . '/backups')) {
-            mkdir(CMS_ROOT . '/backups', 0755, true);
+        // Create backups directory
+        if (!is_dir($backupsDir)) {
+            if (!@mkdir($backupsDir, 0755, true)) {
+                throw new Exception('Cannot create backups directory. Check permissions.');
+            }
         }
         
         // Extract zip
@@ -68,33 +196,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
             throw new Exception('Failed to open ZIP file. Error code: ' . $zipResult);
         }
         
-        if (!is_dir($tempDir)) {
-            mkdir($tempDir, 0755, true);
+        if (!@mkdir($tempDir, 0755, true)) {
+            $zip->close();
+            throw new Exception('Cannot create temporary directory');
         }
         
         if (!$zip->extractTo($tempDir)) {
             $zip->close();
+            safeDelete($tempDir);
             throw new Exception('Failed to extract ZIP contents');
         }
         $zip->close();
         
         $updateLog[] = '✓ Extracted ZIP file';
         
-        // Find CMS root in extracted files
+        // Find CMS root in extracted files (handle nested directories)
         $extractedRoot = $tempDir;
-        $items = scandir($tempDir);
-        foreach ($items as $item) {
-            if ($item !== '.' && $item !== '..' && is_dir($tempDir . '/' . $item)) {
-                if (file_exists($tempDir . '/' . $item . '/includes/config.php') || 
-                    file_exists($tempDir . '/' . $item . '/admin/index.php')) {
-                    $extractedRoot = $tempDir . '/' . $item;
-                    $updateLog[] = '✓ Found CMS files in: ' . $item;
-                    break;
+        $items = @scandir($tempDir);
+        if ($items) {
+            foreach ($items as $item) {
+                if ($item !== '.' && $item !== '..' && is_dir($tempDir . '/' . $item)) {
+                    // Check for CMS structure
+                    if (file_exists($tempDir . '/' . $item . '/includes/config.php') || 
+                        file_exists($tempDir . '/' . $item . '/admin/index.php') ||
+                        file_exists($tempDir . '/' . $item . '/index.php')) {
+                        $extractedRoot = $tempDir . '/' . $item;
+                        $updateLog[] = '✓ Found CMS root in: ' . $item;
+                        break;
+                    }
                 }
             }
         }
         
-        // Files to preserve
+        // Verify it's a valid CMS package
+        if (!file_exists($extractedRoot . '/index.php') && !file_exists($extractedRoot . '/admin/index.php')) {
+            safeDelete($tempDir);
+            throw new Exception('Invalid CMS package - could not find core files');
+        }
+        
+        // Files/directories to preserve (never overwrite)
         $preserve = [
             'includes/config.php',
             'uploads',
@@ -103,30 +243,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
             '.htaccess',
         ];
         
-        // Create backup
-        mkdir($backupDir, 0755, true);
+        // Create backup of preserved files
+        if (!@mkdir($backupDir, 0755, true)) {
+            safeDelete($tempDir);
+            throw new Exception('Cannot create backup directory');
+        }
         
         foreach ($preserve as $item) {
             $source = CMS_ROOT . '/' . $item;
             $dest = $backupDir . '/' . $item;
             
             if (file_exists($source)) {
-                if (is_dir($source)) {
-                    recursiveCopy($source, $dest);
-                } else {
-                    $destDir = dirname($dest);
-                    if (!is_dir($destDir)) {
-                        mkdir($destDir, 0755, true);
-                    }
-                    copy($source, $dest);
-                }
+                safeCopy($source, $dest);
             }
         }
         
         $updateLog[] = '✓ Created backup: ' . basename($backupDir);
         
-        // Copy new files
+        // Copy new files (skip preserved items)
         $fileCount = 0;
+        $dirCount = 0;
+        
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($extractedRoot, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
@@ -151,58 +288,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
             
             if ($item->isDir()) {
                 if (!is_dir($destPath)) {
-                    mkdir($destPath, 0755, true);
+                    @mkdir($destPath, 0755, true);
+                    $dirCount++;
                 }
             } else {
                 $destDir = dirname($destPath);
                 if (!is_dir($destDir)) {
-                    mkdir($destDir, 0755, true);
+                    @mkdir($destDir, 0755, true);
                 }
-                copy($item, $destPath);
-                $fileCount++;
+                if (@copy($item->getPathname(), $destPath)) {
+                    $fileCount++;
+                }
             }
         }
         
-        $updateLog[] = '✓ Installed ' . $fileCount . ' files';
+        $updateLog[] = '✓ Installed ' . $fileCount . ' files, ' . $dirCount . ' directories';
         
-        // Restore preserved files
+        // Restore preserved files from backup
         foreach ($preserve as $item) {
             $source = $backupDir . '/' . $item;
             $dest = CMS_ROOT . '/' . $item;
             
             if (file_exists($source)) {
-                if (is_dir($source)) {
-                    recursiveCopy($source, $dest);
-                } else {
-                    $destDir = dirname($dest);
-                    if (!is_dir($destDir)) {
-                        mkdir($destDir, 0755, true);
-                    }
-                    copy($source, $dest);
-                }
+                safeCopy($source, $dest);
             }
         }
         
-        $updateLog[] = '✓ Restored configuration';
+        $updateLog[] = '✓ Restored configuration files';
         
-        // Run migrations if they exist
-        $migrationsFile = CMS_ROOT . '/includes/migrations.php';
-        if (file_exists($migrationsFile)) {
-            include $migrationsFile;
-            $updateLog[] = '✓ Ran database migrations';
-        }
+        // Run database migrations
+        $updateLog[] = '✓ Running database migrations...';
+        $migrationLog = runMigrations();
+        $updateLog = array_merge($updateLog, $migrationLog);
         
         // Clean up temp directory
-        recursiveDelete($tempDir);
+        safeDelete($tempDir);
         $updateLog[] = '✓ Cleaned up temporary files';
         
-        // Update version in database
-        setOption('cms_version', CMS_VERSION);
-        setOption('last_update', date('Y-m-d H:i:s'));
+        // Update version info in database
+        try {
+            setOption('last_update', date('Y-m-d H:i:s'));
+            
+            // Try to read new version from config
+            $configContent = @file_get_contents(CMS_ROOT . '/includes/config.php');
+            if ($configContent && preg_match("/define\s*\(\s*'CMS_VERSION'\s*,\s*'([^']+)'/", $configContent, $matches)) {
+                setOption('cms_version', $matches[1]);
+                $updateLog[] = '✓ Updated to version: ' . $matches[1];
+            }
+        } catch (Exception $e) {
+            $updateLog[] = '⚠ Could not update version info: ' . $e->getMessage();
+        }
         
         $updateResult = 'success';
         $updateLog[] = '';
         $updateLog[] = '🎉 Update completed successfully!';
+        $updateLog[] = '';
+        $updateLog[] = '⚠️ Please refresh this page to load the new version.';
         
     } catch (Exception $e) {
         $updateResult = 'error';
@@ -211,136 +352,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
         
         // Clean up on error
         if (isset($tempDir) && is_dir($tempDir)) {
-            recursiveDelete($tempDir);
+            safeDelete($tempDir);
         }
-    }
-}
-
-/**
- * Copy directory recursively
- */
-function recursiveCopy($source, $dest) {
-    if (!is_dir($dest)) {
-        mkdir($dest, 0755, true);
-    }
-    
-    $dir = opendir($source);
-    while (($file = readdir($dir)) !== false) {
-        if ($file === '.' || $file === '..') continue;
         
-        $srcPath = $source . '/' . $file;
-        $dstPath = $dest . '/' . $file;
-        
-        if (is_dir($srcPath)) {
-            recursiveCopy($srcPath, $dstPath);
-        } else {
-            copy($srcPath, $dstPath);
+        // Try to restore from backup
+        if (isset($backupDir) && is_dir($backupDir)) {
+            $updateLog[] = '';
+            $updateLog[] = '⚠️ Attempting to restore from backup...';
+            
+            foreach ($preserve as $item) {
+                $source = $backupDir . '/' . $item;
+                $dest = CMS_ROOT . '/' . $item;
+                
+                if (file_exists($source)) {
+                    safeCopy($source, $dest);
+                }
+            }
+            
+            $updateLog[] = '✓ Restored preserved files from backup';
         }
     }
-    closedir($dir);
-}
-
-/**
- * Delete directory recursively
- */
-function recursiveDelete($dir) {
-    if (!is_dir($dir)) {
-        return;
-    }
-    
-    $items = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST
-    );
-    
-    foreach ($items as $item) {
-        if ($item->isDir()) {
-            @rmdir($item);
-        } else {
-            @unlink($item);
-        }
-    }
-    
-    @rmdir($dir);
 }
 
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
-<div class="page-header">
-    <h2>System Update</h2>
-    <p style="color: var(--text-secondary); margin-top: 0.25rem;">Upload and install new versions of <?= CMS_NAME ?></p>
-</div>
-
-<?php if ($updateResult === 'success'): ?>
-<!-- Success Result -->
-<div class="card" style="margin-bottom: 1.5rem; border-color: var(--forge-success);">
-    <div class="card-header" style="background: rgba(16, 185, 129, 0.1);">
-        <h3 class="card-title" style="color: var(--forge-success);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -4px; margin-right: 0.5rem;">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            Update Successful
+<!-- Update Result -->
+<?php if ($updateResult): ?>
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header" style="background: <?= $updateResult === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' ?>;">
+        <h3 class="card-title" style="color: <?= $updateResult === 'success' ? '#10b981' : '#ef4444' ?>;">
+            <?= $updateResult === 'success' ? '✓ Update Successful' : '✕ Update Failed' ?>
         </h3>
     </div>
     <div class="card-body">
-        <div style="background: var(--bg-card-header); padding: 1rem; border-radius: var(--border-radius); font-family: monospace; font-size: 0.875rem; line-height: 1.8;">
-            <?php foreach ($updateLog as $line): ?>
-                <div><?= esc($line) ?></div>
-            <?php endforeach; ?>
-        </div>
+        <pre style="background: #0f172a; color: #e2e8f0; padding: 1.25rem; border-radius: 8px; font-family: 'Monaco', 'Consolas', monospace; font-size: 0.8125rem; line-height: 1.8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto;"><?= implode("\n", array_map('htmlspecialchars', $updateLog)) ?></pre>
+        
+        <?php if ($updateResult === 'success'): ?>
         <div style="margin-top: 1rem;">
-            <a href="<?= ADMIN_URL ?>" class="btn btn-primary">Return to Dashboard</a>
-            <a href="<?= ADMIN_URL ?>/update.php" class="btn">Upload Another Update</a>
+            <a href="<?= ADMIN_URL ?>/update.php" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+                Refresh Page
+            </a>
+            <a href="<?= ADMIN_URL ?>/" class="btn btn-secondary">Go to Dashboard</a>
         </div>
-    </div>
-</div>
-
-<?php elseif ($updateResult === 'error'): ?>
-<!-- Error Result -->
-<div class="card" style="margin-bottom: 1.5rem; border-color: var(--forge-danger);">
-    <div class="card-header" style="background: rgba(239, 68, 68, 0.1);">
-        <h3 class="card-title" style="color: var(--forge-danger);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -4px; margin-right: 0.5rem;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
-            Update Failed
-        </h3>
-    </div>
-    <div class="card-body">
-        <div style="background: var(--bg-card-header); padding: 1rem; border-radius: var(--border-radius); font-family: monospace; font-size: 0.875rem; line-height: 1.8;">
-            <?php foreach ($updateLog as $line): ?>
-                <div><?= esc($line) ?></div>
-            <?php endforeach; ?>
-        </div>
-        <div style="margin-top: 1rem;">
-            <a href="<?= ADMIN_URL ?>/update.php" class="btn btn-primary">Try Again</a>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
 
-<!-- Current Version Info -->
+<!-- Current Status -->
 <div class="card" style="margin-bottom: 1.5rem;">
     <div class="card-header">
-        <h3 class="card-title">Current Installation</h3>
+        <h3 class="card-title">System Status</h3>
     </div>
     <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-            <div>
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Version</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--forge-primary);"><?= esc($currentVersion) ?></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
+                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Current Version</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--forge-primary);"><?= CMS_VERSION ?></div>
             </div>
-            <div>
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Last Updated</div>
-                <div style="font-size: 1.125rem; font-weight: 600;"><?= $lastUpdate !== 'Never' ? formatDate($lastUpdate, 'M j, Y \a\t H:i') : 'Never' ?></div>
+            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
+                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Last Update</div>
+                <div style="font-size: 1.125rem; font-weight: 600;"><?= $lastUpdate !== 'Never' ? formatDate($lastUpdate, 'M j, Y g:i A') : 'Never' ?></div>
             </div>
-            <div>
+            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
                 <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">PHP Version</div>
                 <div style="font-size: 1.125rem; font-weight: 600;"><?= PHP_VERSION ?></div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
+                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">ZipArchive</div>
+                <div style="font-size: 1.125rem; font-weight: 600; color: <?= $zipAvailable ? '#10b981' : '#ef4444' ?>;">
+                    <?= $zipAvailable ? '✓ Available' : '✕ Missing' ?>
+                </div>
             </div>
         </div>
     </div>
@@ -428,15 +515,24 @@ include ADMIN_PATH . '/includes/header.php';
             <li>Drag and drop the ZIP file to the upload area above, or click to browse</li>
             <li>Click "Install Update" to begin the process</li>
             <li>Wait for the update to complete — <strong>do not close this page</strong></li>
-            <li>After completion, verify your site is working correctly</li>
+            <li>After completion, click "Refresh Page" to load the new version</li>
         </ol>
         <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
             <strong>⚡ What gets preserved:</strong>
             <ul style="padding-left: 1.25rem; margin-top: 0.5rem;">
+                <li>Your database and all content</li>
                 <li>Your configuration (includes/config.php)</li>
                 <li>All uploaded media (uploads/)</li>
                 <li>Previous backups (backups/)</li>
                 <li>Your .htaccess rules</li>
+            </ul>
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border-radius: var(--border-radius); border-left: 4px solid #ef4444;">
+            <strong>⚠️ Important:</strong>
+            <ul style="padding-left: 1.25rem; margin-top: 0.5rem;">
+                <li>Always backup your database before updating</li>
+                <li>If update fails, your preserved files will be restored automatically</li>
+                <li>Check the backups/ directory for timestamped backups</li>
             </ul>
         </div>
     </div>
@@ -544,7 +640,7 @@ function formatBytes(bytes) {
 if (updateForm) {
     updateForm.addEventListener('submit', function() {
         installBtn.disabled = true;
-        btnText.textContent = 'Installing... Please wait';
+        btnText.textContent = 'Installing... Please wait (this may take a minute)';
         installBtn.style.opacity = '0.7';
     });
 }

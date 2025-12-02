@@ -11,6 +11,8 @@ require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 
+Post::init();
+
 User::startSession();
 
 $type = $_GET['type'] ?? 'frontend';

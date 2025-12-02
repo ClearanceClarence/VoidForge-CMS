@@ -43,7 +43,7 @@ include __DIR__ . '/header.php';
         </header>
         
         <div class="content">
-            <?= $post['content'] ?>
+            <?= process_tags($post['content']) ?>
         </div>
     </article>
     

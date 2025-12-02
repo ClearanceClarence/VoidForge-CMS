@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin System - Forge CMS
- * Provides hooks and filters for extending CMS functionality
+ * Plugin System - Forge CMS v1.0.3
+ * Provides hooks, filters, and content tags for extending CMS functionality
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
@@ -13,6 +13,9 @@ class Plugin
     
     /** @var array Registered filters */
     private static array $filters = [];
+    
+    /** @var array Registered content tags */
+    private static array $tags = [];
     
     /** @var array Loaded plugins */
     private static array $plugins = [];
@@ -140,15 +143,169 @@ class Plugin
         return !empty(self::$filters[$hook]);
     }
 
+    // =========================================================================
+    // Content Tag System
+    // =========================================================================
+
+    /**
+     * Register a content tag
+     * 
+     * Tags can be used in content like: {tagname} or {tagname param="value"}
+     * Or with content: {tagname}inner content{/tagname}
+     * 
+     * @param string $name Tag name (alphanumeric, underscores, hyphens)
+     * @param callable $callback Function that returns the replacement HTML
+     *                           Receives: (array $attrs, string $content, string $tagName)
+     * @param array $options Tag options:
+     *                       - 'has_content' => bool (whether tag wraps content)
+     *                       - 'description' => string (for documentation)
+     */
+    public static function registerTag(string $name, callable $callback, array $options = []): void
+    {
+        $name = strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $name));
+        
+        self::$tags[$name] = [
+            'callback' => $callback,
+            'has_content' => $options['has_content'] ?? false,
+            'description' => $options['description'] ?? '',
+        ];
+    }
+
+    /**
+     * Remove a registered tag
+     */
+    public static function removeTag(string $name): void
+    {
+        unset(self::$tags[strtolower($name)]);
+    }
+
+    /**
+     * Check if a tag is registered
+     */
+    public static function hasTag(string $name): bool
+    {
+        return isset(self::$tags[strtolower($name)]);
+    }
+
+    /**
+     * Get all registered tags
+     */
+    public static function getTags(): array
+    {
+        return self::$tags;
+    }
+
+    /**
+     * Process content and replace all tags
+     * 
+     * Syntax:
+     *   {tagname}
+     *   {tagname attr="value" attr2="value2"}
+     *   {tagname attr="value"}content here{/tagname}
+     */
+    public static function processContent(string $content): string
+    {
+        if (empty(self::$tags) || strpos($content, '{') === false) {
+            return $content;
+        }
+
+        // Process tags with content first: {tag}...{/tag}
+        foreach (self::$tags as $name => $tag) {
+            if ($tag['has_content']) {
+                $pattern = '/\{' . preg_quote($name, '/') . '(\s+[^}]*)?\}(.*?)\{\/' . preg_quote($name, '/') . '\}/s';
+                $content = preg_replace_callback($pattern, function($matches) use ($name, $tag) {
+                    $attrs = self::parseTagAttributes($matches[1] ?? '');
+                    $innerContent = $matches[2] ?? '';
+                    return self::executeTag($name, $attrs, $innerContent);
+                }, $content);
+            }
+        }
+
+        // Process self-closing tags: {tag} or {tag attr="value"}
+        $pattern = '/\{([a-zA-Z0-9_-]+)(\s+[^}]*)?\}/';
+        $content = preg_replace_callback($pattern, function($matches) {
+            $name = strtolower($matches[1]);
+            
+            // Skip if it looks like a closing tag
+            if (strpos($name, '/') === 0) {
+                return $matches[0];
+            }
+            
+            if (!isset(self::$tags[$name])) {
+                return $matches[0]; // Return original if tag not found
+            }
+            
+            // Skip content tags (already processed)
+            if (self::$tags[$name]['has_content']) {
+                return $matches[0];
+            }
+            
+            $attrs = self::parseTagAttributes($matches[2] ?? '');
+            return self::executeTag($name, $attrs, '');
+        }, $content);
+
+        return $content;
+    }
+
+    /**
+     * Parse tag attributes from string
+     * Supports: attr="value" attr='value' attr=value
+     */
+    private static function parseTagAttributes(string $attrString): array
+    {
+        $attrs = [];
+        $attrString = trim($attrString);
+        
+        if (empty($attrString)) {
+            return $attrs;
+        }
+
+        // Match attribute patterns
+        $pattern = '/([a-zA-Z_][a-zA-Z0-9_-]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s}]+))/';
+        
+        if (preg_match_all($pattern, $attrString, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $key = $match[1];
+                $value = $match[2] ?? $match[3] ?? $match[4] ?? '';
+                $attrs[$key] = $value;
+            }
+        }
+
+        return $attrs;
+    }
+
+    /**
+     * Execute a tag callback
+     */
+    private static function executeTag(string $name, array $attrs, string $content): string
+    {
+        if (!isset(self::$tags[$name])) {
+            return '';
+        }
+
+        try {
+            $result = call_user_func(self::$tags[$name]['callback'], $attrs, $content, $name);
+            return is_string($result) ? $result : '';
+        } catch (\Throwable $e) {
+            // Log error in development, return empty in production
+            if (defined('CMS_DEBUG') && CMS_DEBUG) {
+                return '<!-- Tag error: ' . htmlspecialchars($e->getMessage()) . ' -->';
+            }
+            return '';
+        }
+    }
+
+    // =========================================================================
+    // Plugin Management
+    // =========================================================================
+
     /**
      * Get list of active plugins from database
      */
     public static function getActivePlugins(): array
     {
-        // getOption already decodes JSON, so we get an array directly
         $plugins = getOption('active_plugins', []);
         
-        // Handle case where it might be stored as string
         if (is_string($plugins)) {
             $plugins = json_decode($plugins, true);
         }
@@ -290,7 +447,9 @@ class Plugin
     }
 }
 
-// Helper functions for easier access
+// =========================================================================
+// Helper Functions
+// =========================================================================
 
 /**
  * Add an action hook
@@ -322,4 +481,29 @@ function add_filter(string $hook, callable $callback, int $priority = 10): void
 function apply_filters(string $hook, mixed $value, ...$args): mixed
 {
     return Plugin::applyFilters($hook, $value, ...$args);
+}
+
+/**
+ * Register a content tag
+ * 
+ * Example:
+ *   register_tag('button', function($attrs, $content) {
+ *       $class = $attrs['class'] ?? 'btn';
+ *       $href = $attrs['href'] ?? '#';
+ *       return '<a href="' . esc($href) . '" class="' . esc($class) . '">' . $content . '</a>';
+ *   }, ['has_content' => true]);
+ * 
+ * Usage in content: {button href="/contact" class="btn-primary"}Click Me{/button}
+ */
+function register_tag(string $name, callable $callback, array $options = []): void
+{
+    Plugin::registerTag($name, $callback, $options);
+}
+
+/**
+ * Process content tags
+ */
+function process_tags(string $content): string
+{
+    return Plugin::processContent($content);
 }
