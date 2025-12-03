@@ -9,7 +9,7 @@ ini_set('display_errors', 1);
 
 define('CMS_ROOT', __DIR__);
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.3');
+define('CMS_VERSION', '1.0.4');
 
 // Check if already installed
 if (file_exists(__DIR__ . '/.installed')) {
@@ -20,10 +20,10 @@ if (file_exists(__DIR__ . '/.installed')) {
 // Check requirements
 $requirements = [
     'php' => [
-        'name' => 'PHP 8.0+',
-        'status' => version_compare(PHP_VERSION, '8.0.0', '>='),
+        'name' => 'PHP 7.4+ (8.1+ recommended)',
+        'status' => version_compare(PHP_VERSION, '7.4.0', '>='),
         'current' => PHP_VERSION,
-        'required' => '8.0.0'
+        'required' => '7.4.0'
     ],
     'pdo_mysql' => [
         'name' => 'PDO MySQL',
@@ -45,7 +45,13 @@ $requirements = [
     ]
 ];
 
-$allPassed = array_reduce($requirements, fn($carry, $req) => $carry && $req['status'], true);
+$allPassed = true;
+foreach ($requirements as $req) {
+    if (!$req['status']) {
+        $allPassed = false;
+        break;
+    }
+}
 
 // Current step
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
@@ -60,6 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $dbName = trim($_POST['db_name'] ?? '');
     $dbUser = trim($_POST['db_user'] ?? '');
     $dbPass = $_POST['db_pass'] ?? '';
+    $dbPrefix = trim($_POST['db_prefix'] ?? 'forge_');
+    
+    // Sanitize prefix - only allow alphanumeric and underscore
+    $dbPrefix = preg_replace('/[^a-zA-Z0-9_]/', '', $dbPrefix);
+    if (empty($dbPrefix)) $dbPrefix = 'forge_';
+    if (substr($dbPrefix, -1) !== '_') $dbPrefix .= '_';
     
     $siteUrl = rtrim(trim($_POST['site_url'] ?? ''), '/');
     $siteTitle = trim($_POST['site_title'] ?? '');
@@ -94,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             $pdo->exec("USE `{$dbName}`");
 
-            // Create tables
+            // Create tables with prefix
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}users (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     username VARCHAR(50) NOT NULL UNIQUE,
                     email VARCHAR(255) NOT NULL UNIQUE,
@@ -110,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             ");
 
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS posts (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}posts (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     post_type VARCHAR(50) NOT NULL DEFAULT 'post',
                     title VARCHAR(255) NOT NULL,
@@ -132,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             ");
 
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS post_meta (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}post_meta (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     post_id INT UNSIGNED NOT NULL,
                     meta_key VARCHAR(255) NOT NULL,
@@ -142,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             ");
 
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS media (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}media (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     filename VARCHAR(255) NOT NULL,
                     filepath VARCHAR(500) NOT NULL,
@@ -159,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             ");
 
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS media_folders (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}media_folders (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
                     created_at DATETIME NOT NULL
@@ -167,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             ");
 
             $pdo->exec("
-                CREATE TABLE IF NOT EXISTS options (
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}options (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                     option_name VARCHAR(255) NOT NULL UNIQUE,
                     option_value LONGTEXT,
@@ -177,11 +189,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
 
             // Create admin user
             $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT, ['cost' => 12]);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, display_name, role, created_at) VALUES (?, ?, ?, ?, 'admin', NOW())");
+            $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}users (username, email, password, display_name, role, created_at) VALUES (?, ?, ?, ?, 'admin', NOW())");
             $stmt->execute([$adminUser, $adminEmail, $hashedPass, $adminUser]);
 
             // Insert default options
-            $stmt = $pdo->prepare("INSERT INTO options (option_name, option_value) VALUES (?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}options (option_name, option_value) VALUES (?, ?)");
             $stmt->execute(['site_title', $siteTitle]);
             $stmt->execute(['site_description', '']);
             $stmt->execute(['posts_per_page', '10']);
@@ -191,9 +203,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             $stmt->execute(['active_plugins', '[]']);
 
             // Create sample content
-            $stmt = $pdo->prepare("INSERT INTO posts (post_type, title, slug, content, status, author_id, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, 'published', 1, NOW(), NOW(), NOW())");
-            $stmt->execute(['page', 'Welcome', 'welcome', '<h2>Welcome to ' . $siteTitle . '</h2><p>This is your first page. Edit or delete it to get started!</p>']);
-            $stmt->execute(['post', 'Hello World', 'hello-world', '<p>Welcome to your new Forge CMS site! This is your first post. Edit or delete it, then start writing!</p>']);
+            $welcomeContent = '<h2>Welcome to ' . $siteTitle . '</h2>
+<p>Congratulations on setting up your new Forge CMS website! This is your homepage, and you can customize it however you like.</p>
+
+<h3>Getting Started</h3>
+<p>Here are a few things you can do to get started:</p>
+<ul>
+<li><strong>Customize your site</strong> – Visit the Settings page to update your site title, description, and other options.</li>
+<li><strong>Create content</strong> – Add new posts and pages from the admin panel to build out your site.</li>
+<li><strong>Upload media</strong> – Use the Media Library to upload images and files for your content.</li>
+<li><strong>Explore plugins</strong> – Check out the Plugins page to extend your site\'s functionality.</li>
+</ul>
+
+<h3>Need Help?</h3>
+<p>Forge CMS is designed to be simple and intuitive. If you need assistance, check out the documentation or reach out to our community.</p>
+
+<p>Happy building!</p>';
+
+            $helloContent = '<p>Welcome to your new Forge CMS website! This is your first blog post, and it\'s here to help you get familiar with how posts work.</p>
+
+<h2>What is Forge CMS?</h2>
+<p>Forge CMS is a modern, lightweight content management system built with PHP. It\'s designed to be simple, fast, and developer-friendly – giving you all the tools you need without the bloat.</p>
+
+<h2>Key Features</h2>
+<p>Here\'s what makes Forge CMS special:</p>
+<ul>
+<li><strong>Clean Admin Interface</strong> – A modern, intuitive dashboard that\'s a pleasure to use.</li>
+<li><strong>Posts &amp; Pages</strong> – Full content management with a rich text editor.</li>
+<li><strong>Media Library</strong> – Drag-and-drop uploads with easy organization.</li>
+<li><strong>Plugin System</strong> – Extend functionality with hooks, filters, and content tags.</li>
+<li><strong>Theme Support</strong> – Customizable themes with a live CSS editor.</li>
+</ul>
+
+<h2>What\'s Next?</h2>
+<p>Now that you\'ve seen your first post, why not create your own? Head over to the admin panel and click "Add New" under Posts to write something amazing.</p>
+
+<p>You can edit or delete this post anytime – it\'s just here to get you started. Happy writing!</p>';
+
+            $welcomeExcerpt = 'Welcome to your new Forge CMS website. Get started by customizing your site, creating content, and exploring all the features.';
+            $helloExcerpt = 'Welcome to Forge CMS! This is your first post. Learn about the key features and get started with creating your own content.';
+
+            $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}posts (post_type, title, slug, content, excerpt, status, author_id, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, ?, 'published', 1, NOW(), NOW(), NOW())");
+            $stmt->execute(['page', 'Welcome', 'welcome', $welcomeContent, $welcomeExcerpt]);
+            $stmt->execute(['post', 'Hello World', 'hello-world', $helloContent, $helloExcerpt]);
 
             // Update config file
             $configContent = "<?php\n";
@@ -208,7 +260,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             $configContent .= "define('DB_NAME', " . var_export($dbName, true) . ");\n";
             $configContent .= "define('DB_USER', " . var_export($dbUser, true) . ");\n";
             $configContent .= "define('DB_PASS', " . var_export($dbPass, true) . ");\n";
-            $configContent .= "define('DB_CHARSET', 'utf8mb4');\n\n";
+            $configContent .= "define('DB_CHARSET', 'utf8mb4');\n";
+            $configContent .= "define('DB_PREFIX', " . var_export($dbPrefix, true) . ");\n\n";
             $configContent .= "// Site settings\n";
             $configContent .= "define('SITE_URL', " . var_export($siteUrl, true) . ");\n";
             $configContent .= "define('ADMIN_URL', SITE_URL . '/admin');\n\n";
@@ -780,6 +833,13 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
                                 <label class="form-label">Password</label>
                                 <input type="password" name="db_pass" class="form-input" 
                                        value="<?= htmlspecialchars($_POST['db_pass'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Table Prefix</label>
+                                <input type="text" name="db_prefix" class="form-input" 
+                                       value="<?= htmlspecialchars($_POST['db_prefix'] ?? 'forge_') ?>"
+                                       pattern="[a-zA-Z0-9_]+" style="max-width: 200px;">
+                                <div class="form-hint">Letters, numbers, underscores only. End with underscore. Default: forge_</div>
                             </div>
                         </div>
                     </div>

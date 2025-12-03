@@ -1,11 +1,20 @@
 <?php
 /**
  * Default Theme - Landing Page
- * Forge CMS v1.0.2
+ * Forge CMS v1.0.3
  */
 
 defined('CMS_ROOT') or die;
 $siteTitle = getOption('site_title', 'Forge CMS');
+
+// Get latest posts for blog section
+$latestPosts = Post::query([
+    'post_type' => 'post',
+    'status' => 'published',
+    'limit' => 3,
+    'orderby' => 'created_at',
+    'order' => 'DESC'
+]);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,6 +22,7 @@ $siteTitle = getOption('site_title', 'Forge CMS');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($siteTitle) ?></title>
+    <link rel="icon" type="image/svg+xml" href="<?= SITE_URL ?>/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -500,16 +510,46 @@ $siteTitle = getOption('site_title', 'Forge CMS');
         <div class="container hero-inner">
             <div class="hero-content">
                 <div class="hero-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; margin-right: 0.25rem;">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
                     Version <?= CMS_VERSION ?> — Now Available
                 </div>
-                <h1>Build Beautiful Websites with Ease</h1>
-                <p>Forge is a modern, lightweight content management system built with PHP. Simple, fast, and developer-friendly.</p>
+                <h1>Build Beautiful<br><span style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Websites</span> with Ease</h1>
+                <p>Forge is a modern, lightweight content management system built with PHP. Simple, fast, and developer-friendly — the perfect foundation for your next project.</p>
                 <div class="hero-buttons">
-                    <a href="<?= ADMIN_URL ?>/" class="btn btn-primary">Open Dashboard</a>
-                    <a href="#features" class="btn btn-secondary">Explore Features</a>
+                    <a href="<?= ADMIN_URL ?>/" class="btn btn-primary" style="padding: 0.875rem 1.75rem; font-size: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+                        </svg>
+                        Open Dashboard
+                    </a>
+                    <a href="#features" class="btn btn-secondary" style="padding: 0.875rem 1.75rem; font-size: 1rem;">
+                        Explore Features
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 2rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">&lt;500KB</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em;">Total Size</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">0</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em;">Dependencies</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--gray-900);">PHP 8+</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em;">Native Code</div>
+                    </div>
                 </div>
             </div>
             <div class="demo-card">
@@ -517,20 +557,43 @@ $siteTitle = getOption('site_title', 'Forge CMS');
                     <div class="demo-dot red"></div>
                     <div class="demo-dot yellow"></div>
                     <div class="demo-dot green"></div>
+                    <div style="flex: 1; margin-left: 1rem; padding: 0.375rem 0.75rem; background: rgba(0,0,0,0.1); border-radius: 6px; font-size: 0.6875rem; color: var(--gray-500); font-family: monospace;">forge-cms/admin</div>
                 </div>
                 <div class="demo-content">
-                    <div style="background: var(--gray-100); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                        <div style="width: 60%; height: 12px; background: var(--gray-300); border-radius: 4px; margin-bottom: 0.75rem;"></div>
-                        <div style="width: 40%; height: 8px; background: var(--gray-200); border-radius: 4px;"></div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 8px; padding: 1.5rem; color: #fff;">
-                            <div style="font-size: 1.5rem; font-weight: 700;">12</div>
-                            <div style="font-size: 0.75rem; opacity: 0.8;">Posts</div>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <div style="width: 44px; height: 100%; background: var(--gray-800); border-radius: 6px; padding: 0.75rem 0;">
+                            <div style="width: 20px; height: 20px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 4px;"></div>
+                            <div style="width: 16px; height: 16px; margin: 0.375rem auto; background: var(--gray-600); border-radius: 4px;"></div>
+                            <div style="width: 16px; height: 16px; margin: 0.375rem auto; background: var(--gray-600); border-radius: 4px;"></div>
+                            <div style="width: 16px; height: 16px; margin: 0.375rem auto; background: var(--gray-600); border-radius: 4px;"></div>
                         </div>
-                        <div style="background: var(--gray-100); border-radius: 8px; padding: 1.5rem;">
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900);">5</div>
-                            <div style="font-size: 0.75rem; color: var(--gray-500);">Pages</div>
+                        <div style="flex: 1;">
+                            <div style="background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <div style="width: 8px; height: 8px; background: var(--success); border-radius: 50%;"></div>
+                                    <div style="font-size: 0.6875rem; font-weight: 600; color: var(--gray-700);">Dashboard</div>
+                                </div>
+                                <div style="width: 70%; height: 6px; background: var(--gray-200); border-radius: 3px; margin-bottom: 0.375rem;"></div>
+                                <div style="width: 45%; height: 6px; background: var(--gray-100); border-radius: 3px;"></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 8px; padding: 1rem; color: #fff;">
+                                    <div style="font-size: 1.25rem; font-weight: 700;">12</div>
+                                    <div style="font-size: 0.625rem; opacity: 0.8;">Posts</div>
+                                </div>
+                                <div style="background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--gray-900);">5</div>
+                                    <div style="font-size: 0.625rem; color: var(--gray-500);">Pages</div>
+                                </div>
+                                <div style="background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--gray-900);">24</div>
+                                    <div style="font-size: 0.625rem; color: var(--gray-500);">Media</div>
+                                </div>
+                                <div style="background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);">3</div>
+                                    <div style="font-size: 0.625rem; color: var(--gray-500);">Users</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -711,6 +774,64 @@ $siteTitle = getOption('site_title', 'Forge CMS');
             </div>
         </div>
     </section>
+
+    <!-- Latest Posts -->
+    <?php if (!empty($latestPosts)): ?>
+    <section class="posts-section" id="blog" style="padding: 5rem 0; background: var(--gray-50);">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--gray-900);">Latest Posts</h2>
+                <p style="font-size: 1.125rem; color: var(--gray-500);">Stay updated with our latest content and news.</p>
+            </div>
+            <div class="posts-list" style="max-width: 900px; margin: 0 auto;">
+                <?php foreach ($latestPosts as $latestPost): 
+                    $author = User::find($latestPost['author_id']);
+                    $authorName = $author ? $author['display_name'] : 'Unknown';
+                    $excerpt = !empty($latestPost['excerpt']) ? $latestPost['excerpt'] : wp_trim_words(strip_tags($latestPost['content']), 30);
+                ?>
+                <article class="post-item" style="padding: 2rem 0; border-bottom: 1px solid var(--gray-200);">
+                    <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--gray-500);">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <?= formatDate($latestPost['created_at'], 'M j, Y') ?>
+                                </span>
+                                <span style="color: var(--gray-300);">•</span>
+                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--gray-500);">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <?= esc($authorName) ?>
+                                </span>
+                            </div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.625rem; line-height: 1.3;">
+                                <a href="<?= SITE_URL ?>/post/<?= esc($latestPost['slug']) ?>" style="color: inherit; text-decoration: none; transition: color 0.2s;"><?= esc($latestPost['title']) ?></a>
+                            </h3>
+                            <p style="font-size: 1rem; color: var(--gray-600); line-height: 1.7; margin-bottom: 1rem;">
+                                <?= esc($excerpt) ?>
+                            </p>
+                            <a href="<?= SITE_URL ?>/post/<?= esc($latestPost['slug']) ?>" style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.9375rem; font-weight: 600; color: var(--primary); text-decoration: none; transition: gap 0.2s;">
+                                Continue reading
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- CTA -->
     <section class="cta">

@@ -240,6 +240,66 @@ include ADMIN_PATH . '/includes/header.php';
         grid-template-columns: 1fr;
     }
 }
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.strength-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.strength-fill.weak { width: 25%; background: #ef4444; }
+.strength-fill.fair { width: 50%; background: #f59e0b; }
+.strength-fill.good { width: 75%; background: #10b981; }
+.strength-fill.strong { width: 100%; background: #22c55e; }
+
+.strength-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.strength-text.weak { color: #ef4444; }
+.strength-text.fair { color: #f59e0b; }
+.strength-text.good { color: #10b981; }
+.strength-text.strong { color: #22c55e; }
+
+/* Password Match Indicator */
+.password-match {
+    margin-top: 0.375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+}
+
+.password-match.match {
+    color: #10b981;
+}
+
+.password-match.no-match {
+    color: #ef4444;
+}
+
+.password-match .match-icon {
+    flex-shrink: 0;
+}
 </style>
 
 <div class="page-header" style="margin-bottom: 1.5rem;">
@@ -357,15 +417,36 @@ include ADMIN_PATH . '/includes/header.php';
                     </label>
                     <input type="password" id="password" name="password" class="form-input" 
                            placeholder="<?= $user ? 'Leave blank to keep current' : 'Enter password' ?>"
-                           <?= !$user ? 'required' : '' ?>>
+                           <?= !$user ? 'required' : '' ?> autocomplete="new-password">
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="password-strength" id="passwordStrength" style="display: none;">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <span class="strength-text" id="strengthText"></span>
+                    </div>
+                    
                     <?php if ($user): ?>
                         <div class="form-hint">Leave blank to keep current password.</div>
-                    <?php else: ?>
-                        <div class="form-hint">Minimum 8 characters.</div>
                     <?php endif; ?>
                     <?php if (isset($errors['password'])): ?>
                         <div class="form-error"><?= esc($errors['password']) ?></div>
                     <?php endif; ?>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password_confirm" class="form-label">
+                        Confirm Password
+                    </label>
+                    <input type="password" id="password_confirm" name="password_confirm" class="form-input" 
+                           placeholder="Confirm password" autocomplete="new-password">
+                    <div class="password-match" id="passwordMatch" style="display: none;">
+                        <svg class="match-icon" id="matchIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="matchText"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -385,3 +466,104 @@ include ADMIN_PATH . '/includes/header.php';
 </div>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirm');
+    const strengthDiv = document.getElementById('passwordStrength');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    const matchDiv = document.getElementById('passwordMatch');
+    const matchIcon = document.getElementById('matchIcon');
+    const matchText = document.getElementById('matchText');
+    const form = document.querySelector('form');
+    
+    // Password strength checker
+    function checkStrength(password) {
+        let score = 0;
+        
+        if (password.length >= 8) score++;
+        if (password.length >= 12) score++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+        if (/\d/.test(password)) score++;
+        if (/[^a-zA-Z0-9]/.test(password)) score++;
+        
+        if (score <= 1) return { level: 'weak', text: 'Weak' };
+        if (score === 2) return { level: 'fair', text: 'Fair' };
+        if (score === 3) return { level: 'good', text: 'Good' };
+        return { level: 'strong', text: 'Strong' };
+    }
+    
+    // Update strength indicator
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        
+        if (password.length === 0) {
+            strengthDiv.style.display = 'none';
+            return;
+        }
+        
+        strengthDiv.style.display = 'flex';
+        const result = checkStrength(password);
+        
+        strengthFill.className = 'strength-fill ' + result.level;
+        strengthText.className = 'strength-text ' + result.level;
+        strengthText.textContent = result.text;
+        
+        // Also check match if confirm has value
+        if (confirmInput.value) {
+            checkMatch();
+        }
+    });
+    
+    // Check password match
+    function checkMatch() {
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+        
+        if (confirm.length === 0) {
+            matchDiv.style.display = 'none';
+            return;
+        }
+        
+        matchDiv.style.display = 'flex';
+        
+        if (password === confirm) {
+            matchDiv.className = 'password-match match';
+            matchIcon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+            matchText.textContent = 'Passwords match';
+        } else {
+            matchDiv.className = 'password-match no-match';
+            matchIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+            matchText.textContent = 'Passwords do not match';
+        }
+    }
+    
+    confirmInput.addEventListener('input', checkMatch);
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+        const isNewUser = <?= $user ? 'false' : 'true' ?>;
+        
+        // Only validate if password is being set
+        if (password.length > 0 || isNewUser) {
+            if (password !== confirm) {
+                e.preventDefault();
+                alert('Passwords do not match. Please check and try again.');
+                confirmInput.focus();
+                return false;
+            }
+            
+            if (password.length > 0 && password.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long.');
+                passwordInput.focus();
+                return false;
+            }
+        }
+    });
+});
+</script>

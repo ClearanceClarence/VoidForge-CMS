@@ -1,8 +1,153 @@
 <?php
 /**
- * Media Library - Forge CMS v1.0.3
+ * Media Library - Forge CMS v1.0.4
  * Single-click selection with slide-in panel
  */
+
+// Debug endpoint - access with ?action=debug
+if (isset($_GET['action']) && $_GET['action'] === 'debug') {
+    header('Content-Type: application/json');
+    define('CMS_ROOT', dirname(__DIR__));
+    
+    $debug = [
+        'php_version' => PHP_VERSION,
+        'php_sapi' => PHP_SAPI,
+        'errors' => []
+    ];
+    
+    try {
+        require_once CMS_ROOT . '/includes/config.php';
+        $debug['config'] = 'OK';
+        $debug['db_prefix'] = defined('DB_PREFIX') ? DB_PREFIX : '(not set - using no prefix)';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'config.php: ' . $e->getMessage();
+    }
+    
+    try {
+        require_once CMS_ROOT . '/includes/database.php';
+        $debug['database_class'] = 'OK';
+        $debug['table_media'] = Database::table('media');
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'database.php: ' . $e->getMessage();
+    }
+    
+    try {
+        require_once CMS_ROOT . '/includes/functions.php';
+        $debug['functions'] = 'OK';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'functions.php: ' . $e->getMessage();
+    }
+    
+    try {
+        require_once CMS_ROOT . '/includes/user.php';
+        $debug['user_class'] = 'OK';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'user.php: ' . $e->getMessage();
+    }
+    
+    try {
+        require_once CMS_ROOT . '/includes/post.php';
+        $debug['post_class'] = 'OK';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'post.php: ' . $e->getMessage();
+    }
+    
+    try {
+        require_once CMS_ROOT . '/includes/media.php';
+        $debug['media_class'] = 'OK';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'media.php: ' . $e->getMessage();
+    }
+    
+    try {
+        Database::getInstance();
+        $debug['db_connection'] = 'OK';
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'DB Connection: ' . $e->getMessage();
+    }
+    
+    try {
+        $table = Database::table('media');
+        $count = Database::queryValue("SELECT COUNT(*) FROM {$table}");
+        $debug['media_count'] = (int)$count;
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'Media query: ' . $e->getMessage();
+    }
+    
+    try {
+        $media = Media::query(['type' => 'image', 'limit' => 1]);
+        $debug['media_query'] = 'OK - found ' . count($media) . ' image(s)';
+        if (!empty($media[0])) {
+            $debug['sample_media'] = [
+                'id' => $media[0]['id'],
+                'filename' => $media[0]['filename'],
+                'mime_type' => $media[0]['mime_type'] ?? 'NULL',
+                'filepath' => $media[0]['filepath'] ?? 'NULL'
+            ];
+        }
+    } catch (Throwable $e) {
+        $debug['errors'][] = 'Media::query: ' . $e->getMessage();
+    }
+    
+    echo json_encode($debug, JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Simple test endpoint - bypasses login to test media listing
+// Access with ?action=test_list
+if (isset($_GET['action']) && $_GET['action'] === 'test_list') {
+    header('Content-Type: application/json');
+    define('CMS_ROOT', dirname(__DIR__));
+    
+    // Catch ALL errors including fatal
+    set_error_handler(function($severity, $message, $file, $line) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    });
+    
+    try {
+        require_once CMS_ROOT . '/includes/config.php';
+        require_once CMS_ROOT . '/includes/database.php';
+        require_once CMS_ROOT . '/includes/functions.php';
+        require_once CMS_ROOT . '/includes/media.php';
+        
+        $media = Media::query(['type' => 'image', 'limit' => 5]);
+        
+        // Process each item
+        foreach ($media as &$item) {
+            if (empty($item['url'])) {
+                $item['url'] = Media::getUrl($item);
+            }
+            $item['thumbnail_url'] = $item['url'];
+            if (!empty($item['mime_type']) && strpos($item['mime_type'], 'image/') === 0) {
+                try {
+                    $thumbUrl = Media::getThumbnailUrl($item, 'medium');
+                    if ($thumbUrl) {
+                        $item['thumbnail_url'] = $thumbUrl;
+                    }
+                } catch (Throwable $e) {
+                    $item['thumb_error'] = $e->getMessage();
+                }
+            }
+        }
+        
+        echo json_encode(['success' => true, 'media' => $media], JSON_PRETTY_PRINT);
+    } catch (Throwable $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ], JSON_PRETTY_PRINT);
+    }
+    exit;
+}
+
+// Suppress errors for AJAX requests (they'll be caught and returned as JSON)
+if (isset($_GET['action'])) {
+    error_reporting(0);
+    ini_set('display_errors', '0');
+}
 
 define('CMS_ROOT', dirname(__DIR__));
 require_once CMS_ROOT . '/includes/config.php';
@@ -16,6 +161,102 @@ Post::init();
 
 User::startSession();
 User::requireLogin();
+
+// AJAX endpoint for listing media (used by media selector modals)
+if (isset($_GET['action']) && $_GET['action'] === 'list') {
+    // Prevent any output before JSON
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+    
+    // Catch all errors
+    set_error_handler(function($severity, $message, $file, $line) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    });
+    
+    try {
+        $type = $_GET['type'] ?? null;
+        $folderId = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
+        $search = $_GET['search'] ?? null;
+        
+        $args = [
+            'orderby' => 'created_at',
+            'order' => 'DESC',
+        ];
+        
+        if ($type === 'image') {
+            $args['type'] = 'image';
+        }
+        
+        if ($folderId !== null) {
+            $args['folder_id'] = $folderId;
+        }
+        
+        if ($search) {
+            $args['search'] = $search;
+        }
+        
+        $media = Media::query($args);
+        
+        // Add thumbnail URLs if available
+        foreach ($media as &$item) {
+            // Ensure URL is set
+            if (empty($item['url'])) {
+                $item['url'] = Media::getUrl($item);
+            }
+            // Try to get thumbnail, fall back gracefully
+            $item['thumbnail_url'] = $item['url'];
+            if (!empty($item['mime_type']) && strpos($item['mime_type'], 'image/') === 0) {
+                try {
+                    $thumbUrl = Media::getThumbnailUrl($item, 'medium');
+                    if ($thumbUrl) {
+                        $item['thumbnail_url'] = $thumbUrl;
+                    }
+                } catch (Throwable $e) {
+                    // Keep original URL as thumbnail
+                }
+            }
+        }
+        
+        restore_error_handler();
+        echo json_encode(['success' => true, 'media' => $media]);
+    } catch (Throwable $e) {
+        restore_error_handler();
+        echo json_encode([
+            'success' => false, 
+            'error' => $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ]);
+    }
+    exit;
+}
+
+// AJAX endpoint for regenerating thumbnails
+if (isset($_GET['action']) && $_GET['action'] === 'regenerate_thumbnails') {
+    header('Content-Type: application/json');
+    
+    try {
+        $mediaId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($mediaId) {
+            // Regenerate for single item
+            $result = Media::regenerateThumbnails($mediaId);
+            echo json_encode($result);
+        } else {
+            // Regenerate all
+            $result = Media::regenerateAllThumbnails();
+            echo json_encode([
+                'success' => true,
+                'regenerated' => $result['success'],
+                'failed' => $result['failed'],
+                'message' => "Regenerated thumbnails for {$result['success']} images" . ($result['failed'] > 0 ? ", {$result['failed']} failed" : "")
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
 
 $pageTitle = 'Media Library';
 
@@ -116,6 +357,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         redirect(ADMIN_URL . '/media.php');
     }
+    
+    // Handle bulk regenerate thumbnails
+    if (isset($_POST['action']) && $_POST['action'] === 'regenerate_all_thumbnails') {
+        if (!verifyCsrf()) {
+            setFlash('error', 'Invalid security token.');
+            redirect(ADMIN_URL . '/media.php');
+        }
+        $result = Media::regenerateAllThumbnails();
+        setFlash('success', "Regenerated thumbnails for {$result['success']} images" . ($result['failed'] > 0 ? " ({$result['failed']} failed)" : ""));
+        redirect(ADMIN_URL . '/media.php');
+    }
 }
 
 // Get current folder
@@ -137,6 +389,24 @@ include ADMIN_PATH . '/includes/header.php';
                 <span class="media-count"><?= $mediaCount ?> items</span>
             </div>
             <div class="d-flex gap-1">
+                <div class="dropdown" style="position: relative;">
+                    <button type="button" class="btn btn-secondary" onclick="this.nextElementSibling.classList.toggle('show')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" style="position: absolute; right: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 0.25rem 0; min-width: 200px; z-index: 100; display: none; box-shadow: var(--shadow-lg);">
+                        <button type="button" class="dropdown-item" onclick="regenerateAllThumbnails()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Regenerate All Thumbnails
+                        </button>
+                    </div>
+                </div>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('newFolderModal').classList.add('active')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -321,13 +591,22 @@ include ADMIN_PATH . '/includes/header.php';
         </div>
         
         <div class="media-panel-footer">
-            <button type="button" class="btn btn-danger" onclick="deleteMedia()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Delete
-            </button>
+            <div class="media-panel-footer-left">
+                <button type="button" class="btn btn-danger" onclick="deleteMedia()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnRegenerateThumbs" onclick="regenerateThumbnails()" style="display: none;" title="Regenerate thumbnails for this image">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Thumbnails
+                </button>
+            </div>
             <button type="submit" form="mediaEditForm" class="btn btn-primary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -410,10 +689,14 @@ function selectMedia(element) {
     }
     
     const preview = document.getElementById('panelPreview');
-    if (data.mime.startsWith('image/')) {
+    const regenBtn = document.getElementById('btnRegenerateThumbs');
+    
+    if (data.mime.startsWith('image/') && !data.mime.includes('svg')) {
         preview.innerHTML = '<img src="' + data.url + '" alt="">';
+        regenBtn.style.display = 'inline-flex';
     } else {
         preview.innerHTML = '<div class="media-panel-preview-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>' + data.filename.split('.').pop().toUpperCase() + '</span></div>';
+        regenBtn.style.display = 'none';
     }
     
     openPanel();
@@ -446,6 +729,37 @@ function deleteMedia() {
     if (confirm('Are you sure you want to delete this file?')) {
         document.getElementById('deleteMediaId').value = selectedMedia.dataset.id;
         document.getElementById('deleteForm').submit();
+    }
+}
+
+async function regenerateThumbnails() {
+    if (!selectedMedia) return;
+    
+    const btn = document.getElementById('btnRegenerateThumbs');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Regenerating...';
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch('media.php?action=regenerate_thumbnails&id=' + selectedMedia.dataset.id);
+        const result = await res.json();
+        
+        if (result.success) {
+            // Flash success
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Done!';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 1500);
+        } else {
+            alert('Error: ' + (result.error || 'Failed to regenerate thumbnails'));
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
     }
 }
 
@@ -508,6 +822,66 @@ function uploadFiles(files) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
 });
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    }
+});
+
+// Regenerate all thumbnails
+async function regenerateAllThumbnails() {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    
+    if (!confirm('This will regenerate thumbnails for all images. This may take a while. Continue?')) {
+        return;
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Processing...';
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch('media.php?action=regenerate_thumbnails');
+        const data = await res.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Failed to regenerate thumbnails: ' + e.message);
+    }
+    
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+}
 </script>
+
+<style>
+.dropdown-menu.show { display: block !important; }
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+}
+.dropdown-item:hover { background: var(--bg-card-header); }
+.media-panel-footer { display: flex; justify-content: space-between; align-items: center; }
+.media-panel-footer-left { display: flex; gap: 0.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

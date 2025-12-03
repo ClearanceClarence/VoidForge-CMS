@@ -8,7 +8,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.3');
+define('CMS_VERSION', '1.0.4');
 
 // Database settings
 define('DB_HOST', 'localhost');
@@ -16,6 +16,7 @@ define('DB_NAME', 'forge_cms');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
+define('DB_PREFIX', ''); // Table prefix (e.g., 'forge_') - set during installation
 
 // Site settings
 define('SITE_URL', 'http://localhost/forge');

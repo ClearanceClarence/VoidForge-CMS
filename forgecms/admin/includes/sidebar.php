@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Sidebar - Forge CMS v1.0.3
+ * Admin Sidebar - Forge CMS v1.0.4
  * Premium design with enhanced visual styling
  */
 
@@ -16,10 +16,17 @@ $postTypes = Post::getTypes();
         <div class="sidebar-header">
             <a href="<?= ADMIN_URL ?>/" class="sidebar-logo">
                 <div class="logo-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                        <polyline points="2 17 12 22 22 17"></polyline>
-                        <polyline points="2 12 12 17 22 12"></polyline>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                        <defs>
+                            <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="100%" style="stop-color:#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="2" y="2" width="28" height="28" rx="6" fill="url(#sidebarLogoGradient)"/>
+                        <path d="M9 7 L9 25 L13 25 L13 17 L21 17 L21 13 L13 13 L13 11 L23 11 L23 7 Z" fill="white"/>
+                        <circle cx="22" cy="21" r="2" fill="white" opacity="0.8"/>
+                        <circle cx="25" cy="18" r="1.5" fill="white" opacity="0.6"/>
                     </svg>
                 </div>
                 <div class="logo-text">

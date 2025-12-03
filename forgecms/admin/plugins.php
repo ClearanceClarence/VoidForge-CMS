@@ -51,6 +51,18 @@ include ADMIN_PATH . '/includes/header.php';
     <p style="color: var(--text-secondary); margin-top: 0.25rem;">Extend your site's functionality with plugins.</p>
 </div>
 
+<div class="alert alert-info" style="margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 0.125rem;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <div>
+        <strong>Plugin System in Development</strong>
+        <p style="margin: 0.25rem 0 0 0; opacity: 0.9;">The plugin architecture is actively being developed. Current features include hooks, filters, and content tags. More functionality coming soon!</p>
+    </div>
+</div>
+
 <div class="card">
     <?php if (empty($plugins)): ?>
     <div class="card-body">
@@ -65,51 +77,130 @@ include ADMIN_PATH . '/includes/header.php';
         </div>
     </div>
     <?php else: ?>
-    <div class="table-wrapper">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Plugin</th>
-                    <th>Description</th>
-                    <th>Version</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($plugins as $plugin): ?>
-                <tr>
-                    <td>
-                        <strong><?= esc($plugin['name']) ?></strong>
-                        <?php if ($plugin['author']): ?>
-                        <div style="font-size: 0.8125rem; color: var(--text-muted);">by <?= esc($plugin['author']) ?></div>
-                        <?php endif; ?>
-                    </td>
-                    <td style="color: var(--text-secondary);"><?= esc($plugin['description']) ?></td>
-                    <td><?= esc($plugin['version']) ?></td>
-                    <td>
-                        <?php if ($plugin['active']): ?>
-                        <span class="badge badge-success">Active</span>
-                        <?php else: ?>
-                        <span class="badge badge-warning">Inactive</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php if ($plugin['active']): ?>
-                        <a href="?action=deactivate&plugin=<?= urlencode($plugin['slug']) ?>&csrf=<?= csrfToken() ?>" 
-                           class="btn btn-secondary btn-sm">Deactivate</a>
-                        <?php else: ?>
-                        <a href="?action=activate&plugin=<?= urlencode($plugin['slug']) ?>&csrf=<?= csrfToken() ?>" 
-                           class="btn btn-primary btn-sm">Activate</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+    <div class="plugins-grid">
+        <?php foreach ($plugins as $plugin): ?>
+        <div class="plugin-card <?= $plugin['active'] ? 'active' : '' ?>">
+            <div class="plugin-header">
+                <div class="plugin-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                </div>
+                <div class="plugin-info">
+                    <h4 class="plugin-name"><?= esc($plugin['name']) ?></h4>
+                    <?php if ($plugin['author']): ?>
+                    <span class="plugin-author">by <?= esc($plugin['author']) ?></span>
+                    <?php endif; ?>
+                </div>
+                <span class="plugin-version">v<?= esc($plugin['version']) ?></span>
+            </div>
+            <p class="plugin-description"><?= esc($plugin['description']) ?></p>
+            <div class="plugin-footer">
+                <?php if ($plugin['active']): ?>
+                <a href="?action=deactivate&plugin=<?= urlencode($plugin['slug']) ?>&csrf=<?= csrfToken() ?>" 
+                   class="btn btn-secondary btn-sm">Deactivate</a>
+                <?php else: ?>
+                <a href="?action=activate&plugin=<?= urlencode($plugin['slug']) ?>&csrf=<?= csrfToken() ?>" 
+                   class="btn btn-primary btn-sm">Activate</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 </div>
+
+<style>
+.plugins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.plugin-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem;
+    transition: all 0.2s;
+}
+
+.plugin-card:hover {
+    border-color: var(--forge-primary);
+}
+
+.plugin-card.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-color: var(--forge-primary);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.plugin-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    margin-bottom: 0.875rem;
+}
+
+.plugin-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-card-header);
+    color: var(--text-muted);
+}
+
+.plugin-card.active .plugin-icon {
+    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-primary-dark) 100%);
+    color: #fff;
+}
+
+.plugin-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.plugin-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.125rem 0;
+    color: var(--text-primary);
+}
+
+.plugin-author {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.plugin-version {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-card-header);
+    border-radius: 9999px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.plugin-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+}
+
+.plugin-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+</style>
 
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header">

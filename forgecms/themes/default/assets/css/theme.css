@@ -150,6 +150,14 @@ body {
     color: var(--primary);
 }
 
+.nav-links a.btn {
+    color: #fff;
+}
+
+.nav-links a.btn:hover {
+    color: #fff;
+}
+
 /* ============================================
    Buttons
    ============================================ */
@@ -820,6 +828,199 @@ select.form-control {
 
 .footer-link:hover {
     text-decoration: underline;
+}
+
+/* ============================================
+   Blog Posts Grid
+   ============================================ */
+
+.posts-section {
+    padding: 5rem 0;
+    background: var(--bg-body);
+}
+
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.post-card {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.post-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--gray-300);
+    transform: translateY(-4px);
+}
+
+.post-card-image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.post-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-card-image svg {
+    width: 48px;
+    height: 48px;
+}
+
+.post-card-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.post-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.post-card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.post-card-meta-item svg {
+    width: 14px;
+    height: 14px;
+}
+
+.post-card-category {
+    display: inline-flex;
+    padding: 0.25rem 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.post-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.post-card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.post-card-title a:hover {
+    color: var(--primary);
+}
+
+.post-card-excerpt {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    flex: 1;
+}
+
+.post-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.post-card-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.post-card-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.post-card-author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.post-card-author-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.post-card-author-role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.post-card-read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    transition: gap var(--transition);
+}
+
+.post-card-read-more:hover {
+    gap: 0.625rem;
+}
+
+.post-card-read-more svg {
+    width: 16px;
+    height: 16px;
+    transition: transform var(--transition);
+}
+
+.post-card-read-more:hover svg {
+    transform: translateX(2px);
+}
+
+/* View All Posts Link */
+.posts-footer {
+    text-align: center;
+    margin-top: 3rem;
 }
 
 /* ============================================

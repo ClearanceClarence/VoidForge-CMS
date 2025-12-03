@@ -2,7 +2,7 @@
 
 A modern, lightweight content management system built with PHP. Simple, fast, and developer-friendly.
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-purple.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -11,10 +11,11 @@ A modern, lightweight content management system built with PHP. Simple, fast, an
 - **Clean Admin Interface** - Modern dark sidebar with purple accents
 - **Posts & Pages** - Full content management with rich text editor
 - **Custom Post Types** - Create your own content types
-- **Media Library** - Drag-and-drop uploads with slide-in panel
-- **User Management** - Multiple roles (Admin, Editor, Author, Subscriber)
+- **Media Library** - Drag-and-drop uploads with folder organization
+- **User Management** - Multiple roles with password strength validation
 - **Plugin System** - Extend functionality with hooks, filters, and content tags
 - **Theme Support** - Customizable themes with live CSS editor
+- **Search** - Built-in frontend search with highlighted results
 - **Auto Updates** - Upload ZIP to update, preserves your data
 - **No Framework Required** - Pure PHP, easy to understand and modify
 

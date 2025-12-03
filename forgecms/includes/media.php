@@ -1,6 +1,6 @@
 <?php
 /**
- * Media Library Management with Folder Support
+ * Media Library Management with Folder Support and Thumbnails
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
@@ -24,17 +24,142 @@ class Media
     ];
 
     public const MAX_FILE_SIZE = 10485760; // 10MB
+    
+    /**
+     * Default thumbnail sizes (cannot be removed, but can be disabled)
+     * Format: name => [width, height, crop, enabled]
+     */
+    public const DEFAULT_THUMBNAIL_SIZES = [
+        'thumbnail' => [150, 150, true, true],    // Square crop
+        'small'     => [300, 300, false, true],   // Fit within
+        'medium'    => [600, 600, false, true],   // Fit within
+        'large'     => [1200, 1200, false, true], // Fit within
+    ];
+    
+    /** @var array|null Cached thumbnail sizes */
+    private static $thumbnailSizes = null;
+    
+    /**
+     * Get all thumbnail sizes (defaults + custom, respecting enabled status)
+     */
+    public static function getThumbnailSizes(bool $includeDisabled = false): array
+    {
+        if (self::$thumbnailSizes === null) {
+            self::$thumbnailSizes = self::loadThumbnailSizes();
+        }
+        
+        if ($includeDisabled) {
+            return self::$thumbnailSizes;
+        }
+        
+        // Filter to only enabled sizes
+        return array_filter(self::$thumbnailSizes, function($size) {
+            return !isset($size[3]) || $size[3] === true;
+        });
+    }
+    
+    /**
+     * Load thumbnail sizes from database
+     */
+    private static function loadThumbnailSizes(): array
+    {
+        $sizes = self::DEFAULT_THUMBNAIL_SIZES;
+        
+        // Load custom sizes and overrides from options
+        $customSizes = getOption('thumbnail_sizes');
+        if ($customSizes) {
+            $custom = json_decode($customSizes, true);
+            if (is_array($custom)) {
+                // Merge custom sizes with defaults (custom overrides defaults)
+                foreach ($custom as $name => $config) {
+                    $sizes[$name] = $config;
+                }
+            }
+        }
+        
+        return $sizes;
+    }
+    
+    /**
+     * Save thumbnail sizes to database
+     */
+    public static function saveThumbnailSizes(array $sizes): bool
+    {
+        // Validate sizes
+        foreach ($sizes as $name => $config) {
+            if (!is_array($config) || count($config) < 3) {
+                return false;
+            }
+        }
+        
+        setOption('thumbnail_sizes', json_encode($sizes));
+        self::$thumbnailSizes = null; // Clear cache
+        return true;
+    }
+    
+    /**
+     * Add or update a thumbnail size
+     */
+    public static function setThumbnailSize(string $name, int $width, int $height, bool $crop = false, bool $enabled = true): bool
+    {
+        $sizes = self::getThumbnailSizes(true);
+        $sizes[$name] = [$width, $height, $crop, $enabled];
+        return self::saveThumbnailSizes($sizes);
+    }
+    
+    /**
+     * Enable or disable a thumbnail size
+     */
+    public static function toggleThumbnailSize(string $name, bool $enabled): bool
+    {
+        $sizes = self::getThumbnailSizes(true);
+        if (!isset($sizes[$name])) {
+            return false;
+        }
+        $sizes[$name][3] = $enabled;
+        return self::saveThumbnailSizes($sizes);
+    }
+    
+    /**
+     * Remove a custom thumbnail size (cannot remove defaults)
+     */
+    public static function removeThumbnailSize(string $name): bool
+    {
+        // Cannot remove default sizes
+        if (isset(self::DEFAULT_THUMBNAIL_SIZES[$name])) {
+            return false;
+        }
+        
+        $sizes = self::getThumbnailSizes(true);
+        if (!isset($sizes[$name])) {
+            return false;
+        }
+        
+        unset($sizes[$name]);
+        return self::saveThumbnailSizes($sizes);
+    }
+    
+    /**
+     * Check if a size is a default (cannot be removed)
+     */
+    public static function isDefaultSize(string $name): bool
+    {
+        return isset(self::DEFAULT_THUMBNAIL_SIZES[$name]);
+    }
 
     /**
      * Get single media item
+     * @return array|null
      */
-    public static function get(int $id): ?array
+    public static function get(int $id)
     {
-        $media = Database::queryOne("SELECT * FROM media WHERE id = ?", [$id]);
+        $table = Database::table('media');
+        $media = Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$id]);
         
         if ($media) {
             $media['url'] = self::getUrl($media);
             $media['path'] = self::getPath($media);
+            $media['thumbnails'] = self::getThumbnails($media);
         }
         
         return $media;
@@ -42,8 +167,9 @@ class Media
 
     /**
      * Alias for get()
+     * @return array|null
      */
-    public static function find(int $id): ?array
+    public static function find(int $id)
     {
         return self::get($id);
     }
@@ -51,8 +177,9 @@ class Media
     /**
      * Get all media, optionally filtered by folder
      */
-    public static function getAll(?int $folderId = null): array
+    public static function getAll($folderId = null): array
     {
+        $table = Database::table('media');
         $where = '1=1';
         $params = [];
         
@@ -62,7 +189,7 @@ class Media
         }
         
         $items = Database::query(
-            "SELECT * FROM media WHERE {$where} ORDER BY created_at DESC",
+            "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC",
             $params
         );
 
@@ -112,8 +239,9 @@ class Media
 
         $whereClause = implode(' AND ', $where);
         $orderClause = $args['orderby'] . ' ' . $args['order'];
+        $table = Database::table('media');
 
-        $sql = "SELECT * FROM media WHERE {$whereClause} ORDER BY {$orderClause}";
+        $sql = "SELECT * FROM {$table} WHERE {$whereClause} ORDER BY {$orderClause}";
 
         if ($args['limit']) {
             $sql .= " LIMIT {$args['limit']} OFFSET {$args['offset']}";
@@ -147,7 +275,8 @@ class Media
         }
 
         $whereClause = implode(' AND ', $where);
-        return (int) Database::queryValue("SELECT COUNT(*) FROM media WHERE {$whereClause}", $params);
+        $table = Database::table('media');
+        return (int) Database::queryValue("SELECT COUNT(*) FROM {$table} WHERE {$whereClause}", $params);
     }
 
     /**
@@ -204,7 +333,7 @@ class Media
             }
         }
 
-        $id = Database::insert('media', [
+        $id = Database::insert(Database::table('media'), [
             'filename' => $filename,
             'filepath' => $filepath,
             'mime_type' => $mimeType,
@@ -217,6 +346,12 @@ class Media
             'uploaded_by' => $userId,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+
+        // Generate thumbnails for images
+        $media = self::get($id);
+        if ($media && self::isImage($media) && $extension !== 'svg') {
+            self::generateThumbnails($media);
+        }
 
         return [
             'success' => true,
@@ -246,7 +381,7 @@ class Media
             return ['success' => false, 'error' => 'No data to update'];
         }
 
-        Database::update('media', $updateData, 'id = ?', [$id]);
+        Database::update(Database::table('media'), $updateData, 'id = ?', [$id]);
         return ['success' => true];
     }
 
@@ -260,17 +395,22 @@ class Media
             return ['success' => false, 'error' => 'Media not found'];
         }
 
+        // Delete thumbnails first
+        self::deleteThumbnails($media);
+
+        // Delete main file
         $path = self::getPath($media);
         if (file_exists($path)) {
             @unlink($path);
         }
 
+        $postsTable = Database::table('posts');
         Database::execute(
-            "UPDATE posts SET featured_image_id = NULL WHERE featured_image_id = ?",
+            "UPDATE {$postsTable} SET featured_image_id = NULL WHERE featured_image_id = ?",
             [$id]
         );
 
-        Database::delete('media', 'id = ?', [$id]);
+        Database::delete(Database::table('media'), 'id = ?', [$id]);
         return ['success' => true];
     }
 
@@ -279,7 +419,8 @@ class Media
      */
     public static function getFolders(): array
     {
-        $folders = Database::query("SELECT * FROM media_folders ORDER BY name ASC");
+        $table = Database::table('media_folders');
+        $folders = Database::query("SELECT * FROM {$table} ORDER BY name ASC");
         
         foreach ($folders as &$folder) {
             $folder['count'] = self::count(['folder_id' => $folder['id']]);
@@ -298,8 +439,9 @@ class Media
             return ['success' => false, 'error' => 'Folder name is required'];
         }
 
+        $table = Database::table('media_folders');
         $existing = Database::queryOne(
-            "SELECT id FROM media_folders WHERE name = ?",
+            "SELECT id FROM {$table} WHERE name = ?",
             [$name]
         );
 
@@ -307,7 +449,7 @@ class Media
             return ['success' => false, 'error' => 'A folder with this name already exists'];
         }
 
-        $id = Database::insert('media_folders', [
+        $id = Database::insert(Database::table('media_folders'), [
             'name' => $name,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
@@ -321,12 +463,13 @@ class Media
     public static function deleteFolder(int $id): array
     {
         // Move all media in folder to root
+        $mediaTable = Database::table('media');
         Database::execute(
-            "UPDATE media SET folder_id = NULL WHERE folder_id = ?",
+            "UPDATE {$mediaTable} SET folder_id = NULL WHERE folder_id = ?",
             [$id]
         );
 
-        Database::delete('media_folders', 'id = ?', [$id]);
+        Database::delete(Database::table('media_folders'), 'id = ?', [$id]);
         return ['success' => true];
     }
 
@@ -335,6 +478,9 @@ class Media
      */
     public static function getUrl(array $media): string
     {
+        if (empty($media['filepath'])) {
+            return '';
+        }
         return UPLOADS_URL . '/' . $media['filepath'];
     }
 
@@ -343,7 +489,351 @@ class Media
      */
     public static function getPath(array $media): string
     {
+        if (empty($media['filepath'])) {
+            return '';
+        }
         return UPLOADS_PATH . '/' . $media['filepath'];
+    }
+
+    /**
+     * Get all thumbnail URLs for a media item
+     */
+    public static function getThumbnails(array $media): array
+    {
+        if (!self::isImage($media)) {
+            return [];
+        }
+        
+        if (!empty($media['mime_type']) && strpos($media['mime_type'], 'svg') !== false) {
+            return [];
+        }
+        
+        if (empty($media['filepath'])) {
+            return [];
+        }
+        
+        $thumbnails = [];
+        $pathInfo = pathinfo($media['filepath']);
+        
+        if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+            return [];
+        }
+        
+        $thumbDir = ($pathInfo['dirname'] ?? '.') . '/thumbs';
+        $baseName = $pathInfo['filename'];
+        $ext = $pathInfo['extension'];
+        
+        foreach (self::getThumbnailSizes() as $size => $dims) {
+            $thumbPath = $thumbDir . '/' . $baseName . '-' . $size . '.' . $ext;
+            $fullPath = UPLOADS_PATH . '/' . $thumbPath;
+            
+            if (file_exists($fullPath)) {
+                $thumbnails[$size] = UPLOADS_URL . '/' . $thumbPath;
+            }
+        }
+        
+        return $thumbnails;
+    }
+
+    /**
+     * Get a specific thumbnail URL, with fallback to original
+     */
+    public static function getThumbnailUrl(array $media, string $size = 'medium'): string
+    {
+        // Safety checks for required fields
+        if (empty($media['filepath'])) {
+            return '';
+        }
+        
+        if (!self::isImage($media)) {
+            return self::getUrl($media);
+        }
+        
+        // SVGs don't need thumbnails
+        if (!empty($media['mime_type']) && strpos($media['mime_type'], 'svg') !== false) {
+            return self::getUrl($media);
+        }
+        
+        $pathInfo = pathinfo($media['filepath']);
+        
+        // Check required path components exist
+        if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+            return self::getUrl($media);
+        }
+        
+        $thumbDir = ($pathInfo['dirname'] ?? '.') . '/thumbs';
+        $baseName = $pathInfo['filename'];
+        $ext = $pathInfo['extension'];
+        
+        $thumbPath = $thumbDir . '/' . $baseName . '-' . $size . '.' . $ext;
+        $fullPath = UPLOADS_PATH . '/' . $thumbPath;
+        
+        if (file_exists($fullPath)) {
+            return UPLOADS_URL . '/' . $thumbPath;
+        }
+        
+        // Try to generate on the fly if missing
+        $sizes = self::getThumbnailSizes();
+        if (isset($sizes[$size])) {
+            self::generateThumbnail($media, $size);
+            if (file_exists($fullPath)) {
+                return UPLOADS_URL . '/' . $thumbPath;
+            }
+        }
+        
+        // Fall back to original
+        return self::getUrl($media);
+    }
+
+    /**
+     * Generate all thumbnails for a media item
+     */
+    public static function generateThumbnails(array $media): bool
+    {
+        if (!self::isImage($media)) {
+            return false;
+        }
+        
+        if (!empty($media['mime_type']) && strpos($media['mime_type'], 'svg') !== false) {
+            return false;
+        }
+        
+        if (empty($media['filepath'])) {
+            return false;
+        }
+        
+        $success = true;
+        foreach (self::getThumbnailSizes() as $size => $dims) {
+            if (!self::generateThumbnail($media, $size)) {
+                $success = false;
+            }
+        }
+        
+        return $success;
+    }
+
+    /**
+     * Generate a single thumbnail
+     */
+    public static function generateThumbnail(array $media, string $size): bool
+    {
+        $sizes = self::getThumbnailSizes();
+        if (!isset($sizes[$size])) {
+            return false;
+        }
+        
+        if (empty($media['filepath'])) {
+            return false;
+        }
+        
+        $sourcePath = self::getPath($media);
+        if (empty($sourcePath) || !file_exists($sourcePath)) {
+            return false;
+        }
+        
+        $sizeConfig = $sizes[$size];
+        $maxWidth = $sizeConfig[0];
+        $maxHeight = $sizeConfig[1];
+        $crop = isset($sizeConfig[2]) ? $sizeConfig[2] : false;
+        
+        $pathInfo = pathinfo($media['filepath']);
+        
+        if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+            return false;
+        }
+        $thumbDir = UPLOADS_PATH . '/' . $pathInfo['dirname'] . '/thumbs';
+        $baseName = $pathInfo['filename'];
+        $ext = strtolower($pathInfo['extension']);
+        
+        // Create thumbs directory
+        if (!is_dir($thumbDir)) {
+            @mkdir($thumbDir, 0755, true);
+        }
+        
+        $thumbPath = $thumbDir . '/' . $baseName . '-' . $size . '.' . $ext;
+        
+        // Get source image info
+        $imageInfo = @getimagesize($sourcePath);
+        if (!$imageInfo) {
+            return false;
+        }
+        
+        [$srcWidth, $srcHeight, $type] = $imageInfo;
+        
+        // Don't upscale - if source is smaller than target, just copy
+        if ($srcWidth <= $maxWidth && $srcHeight <= $maxHeight && !$crop) {
+            return @copy($sourcePath, $thumbPath);
+        }
+        
+        // Create source image resource
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $sourceImage = @imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $sourceImage = @imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $sourceImage = @imagecreatefromgif($sourcePath);
+                break;
+            case IMAGETYPE_WEBP:
+                $sourceImage = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($sourcePath) : false;
+                break;
+            default:
+                $sourceImage = false;
+        }
+        
+        if (!$sourceImage) {
+            return false;
+        }
+        
+        // Calculate dimensions
+        if ($crop) {
+            // Crop to exact dimensions (center crop)
+            $srcRatio = $srcWidth / $srcHeight;
+            $destRatio = $maxWidth / $maxHeight;
+            
+            if ($srcRatio > $destRatio) {
+                // Source is wider - crop sides
+                $cropWidth = (int)($srcHeight * $destRatio);
+                $cropHeight = $srcHeight;
+                $cropX = (int)(($srcWidth - $cropWidth) / 2);
+                $cropY = 0;
+            } else {
+                // Source is taller - crop top/bottom
+                $cropWidth = $srcWidth;
+                $cropHeight = (int)($srcWidth / $destRatio);
+                $cropX = 0;
+                $cropY = (int)(($srcHeight - $cropHeight) / 2);
+            }
+            
+            $destWidth = $maxWidth;
+            $destHeight = $maxHeight;
+        } else {
+            // Fit within dimensions (maintain aspect ratio)
+            $ratio = min($maxWidth / $srcWidth, $maxHeight / $srcHeight);
+            $destWidth = (int)($srcWidth * $ratio);
+            $destHeight = (int)($srcHeight * $ratio);
+            $cropX = 0;
+            $cropY = 0;
+            $cropWidth = $srcWidth;
+            $cropHeight = $srcHeight;
+        }
+        
+        // Create destination image
+        $destImage = imagecreatetruecolor($destWidth, $destHeight);
+        
+        // Preserve transparency for PNG and GIF
+        if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_GIF) {
+            imagealphablending($destImage, false);
+            imagesavealpha($destImage, true);
+            $transparent = imagecolorallocatealpha($destImage, 0, 0, 0, 127);
+            imagefill($destImage, 0, 0, $transparent);
+        }
+        
+        // Resize/crop
+        imagecopyresampled(
+            $destImage, $sourceImage,
+            0, 0, $cropX, $cropY,
+            $destWidth, $destHeight, $cropWidth, $cropHeight
+        );
+        
+        // Save thumbnail
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $result = imagejpeg($destImage, $thumbPath, 85);
+                break;
+            case IMAGETYPE_PNG:
+                $result = imagepng($destImage, $thumbPath, 8);
+                break;
+            case IMAGETYPE_GIF:
+                $result = imagegif($destImage, $thumbPath);
+                break;
+            case IMAGETYPE_WEBP:
+                $result = function_exists('imagewebp') ? imagewebp($destImage, $thumbPath, 85) : false;
+                break;
+            default:
+                $result = false;
+        }
+        
+        // Cleanup
+        imagedestroy($sourceImage);
+        imagedestroy($destImage);
+        
+        return $result;
+    }
+
+    /**
+     * Delete thumbnails for a media item
+     */
+    public static function deleteThumbnails(array $media): void
+    {
+        $pathInfo = pathinfo($media['filepath']);
+        $thumbDir = UPLOADS_PATH . '/' . $pathInfo['dirname'] . '/thumbs';
+        $baseName = $pathInfo['filename'];
+        $ext = $pathInfo['extension'];
+        
+        foreach (self::getThumbnailSizes(true) as $size => $dims) {
+            $thumbPath = $thumbDir . '/' . $baseName . '-' . $size . '.' . $ext;
+            if (file_exists($thumbPath)) {
+                @unlink($thumbPath);
+            }
+        }
+    }
+    
+    /**
+     * Regenerate thumbnails for a single media item
+     */
+    public static function regenerateThumbnails(int $id): array
+    {
+        $media = self::get($id);
+        if (!$media) {
+            return ['success' => false, 'error' => 'Media not found'];
+        }
+        
+        if (!self::isImage($media)) {
+            return ['success' => false, 'error' => 'Not an image'];
+        }
+        
+        if (!empty($media['mime_type']) && strpos($media['mime_type'], 'svg') !== false) {
+            return ['success' => false, 'error' => 'SVG images do not need thumbnails'];
+        }
+        
+        // Delete existing thumbnails first
+        self::deleteThumbnails($media);
+        
+        // Regenerate
+        $success = self::generateThumbnails($media);
+        
+        return [
+            'success' => $success,
+            'message' => $success ? 'Thumbnails regenerated successfully' : 'Some thumbnails failed to generate'
+        ];
+    }
+
+    /**
+     * Regenerate all thumbnails for all media
+     */
+    public static function regenerateAllThumbnails(): array
+    {
+        $media = self::query(['type' => 'image']);
+        $success = 0;
+        $failed = 0;
+        
+        foreach ($media as $item) {
+            // Skip SVGs
+            if (strpos($item['mime_type'], 'svg') !== false) {
+                continue;
+            }
+            
+            if (self::generateThumbnails($item)) {
+                $success++;
+            } else {
+                $failed++;
+            }
+        }
+        
+        return ['success' => $success, 'failed' => $failed];
     }
 
     /**
@@ -351,6 +841,9 @@ class Media
      */
     public static function isImage(array $media): bool
     {
+        if (empty($media['mime_type'])) {
+            return false;
+        }
         return strpos($media['mime_type'], 'image/') === 0;
     }
 
@@ -371,15 +864,23 @@ class Media
      */
     private static function getUploadError(int $code): string
     {
-        return match ($code) {
-            UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize directive',
-            UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE directive',
-            UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
-            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-            UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
-            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload',
-            default => 'Unknown upload error',
-        };
+        switch ($code) {
+            case UPLOAD_ERR_INI_SIZE:
+                return 'File exceeds upload_max_filesize directive';
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'File exceeds MAX_FILE_SIZE directive';
+            case UPLOAD_ERR_PARTIAL:
+                return 'File was only partially uploaded';
+            case UPLOAD_ERR_NO_FILE:
+                return 'No file was uploaded';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Missing temporary folder';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Failed to write file to disk';
+            case UPLOAD_ERR_EXTENSION:
+                return 'A PHP extension stopped the file upload';
+            default:
+                return 'Unknown upload error';
+        }
     }
 }

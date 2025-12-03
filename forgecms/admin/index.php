@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Dashboard - Forge CMS v1.0.3
+ * Admin Dashboard - Forge CMS v1.0.4
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -24,7 +24,7 @@ $postsCount = Post::count(['post_type' => 'post', 'status' => 'published']);
 $pagesCount = Post::count(['post_type' => 'page', 'status' => 'published']);
 $draftsCount = Post::count(['status' => 'draft']);
 $mediaCount = Media::count();
-$usersCount = (int)Database::queryValue("SELECT COUNT(*) FROM users");
+$usersCount = (int)Database::queryValue("SELECT COUNT(*) FROM " . Database::table('users'));
 
 // Get recent posts
 $recentPosts = Post::query([
@@ -37,7 +37,7 @@ $recentPosts = Post::query([
 $recentPages = Post::query([
     'post_type' => 'page',
     'status' => ['published', 'draft'],
-    'limit' => 3,
+    'limit' => 5,
 ]);
 
 // Get recent media
@@ -161,110 +161,134 @@ include ADMIN_PATH . '/includes/header.php';
 
 <div class="dashboard-grid">
     <!-- Recent Posts -->
-    <div class="dashboard-main">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Recent Posts</h3>
-                <a href="<?= ADMIN_URL ?>/posts.php?type=post" class="btn btn-secondary btn-sm">View All</a>
-            </div>
-            <?php if (empty($recentPosts)): ?>
-                <div class="card-body">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        <h3>No posts yet</h3>
-                        <p>Create your first post to get started.</p>
-                        <a href="<?= ADMIN_URL ?>/post-edit.php?type=post" class="btn btn-primary">Create Post</a>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="table-wrapper">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentPosts as $post): ?>
-                                <tr>
-                                    <td>
-                                        <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $post['id'] ?>" class="table-title-link">
-                                            <?= esc($post['title'] ?: '(no title)') ?>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-<?= $post['status'] === 'published' ? 'success' : 'warning' ?>">
-                                            <?= ucfirst($post['status']) ?>
-                                        </span>
-                                    </td>
-                                    <td class="text-muted text-sm">
-                                        <?= formatDate($post['created_at'], 'M j') ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Posts</h3>
+            <a href="<?= ADMIN_URL ?>/posts.php?type=post" class="btn btn-secondary btn-sm">View All</a>
         </div>
+        <?php if (empty($recentPosts)): ?>
+            <div class="card-body">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <h3>No posts yet</h3>
+                    <p>Create your first post to get started.</p>
+                    <a href="<?= ADMIN_URL ?>/post-edit.php?type=post" class="btn btn-primary">Create Post</a>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentPosts as $post): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $post['id'] ?>" class="table-title-link">
+                                        <?= esc($post['title'] ?: '(no title)') ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= $post['status'] === 'published' ? 'success' : 'warning' ?>">
+                                        <?= ucfirst($post['status']) ?>
+                                    </span>
+                                </td>
+                                <td class="text-muted text-sm">
+                                    <?= formatDate($post['created_at'], 'M j') ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </div>
 
-    <!-- Sidebar -->
-    <div class="dashboard-sidebar">
-        <!-- System Info -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">System Info</h3>
-            </div>
+    <!-- Recent Pages -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Pages</h3>
+            <a href="<?= ADMIN_URL ?>/posts.php?type=page" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <?php if (empty($recentPages)): ?>
             <div class="card-body">
-                <div class="info-list">
-                    <div class="info-row">
-                        <span class="info-label">Forge CMS</span>
-                        <span class="info-value"><?= CMS_VERSION ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">PHP Version</span>
-                        <span class="info-value"><?= PHP_VERSION ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Users</span>
-                        <span class="info-value"><?= $usersCount ?></span>
-                    </div>
-                    <div class="info-row no-border">
-                        <span class="info-label">Your Role</span>
-                        <span class="badge badge-info"><?= ucfirst($currentUser['role']) ?></span>
-                    </div>
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <h3>No pages yet</h3>
+                    <p>Create your first page to get started.</p>
+                    <a href="<?= ADMIN_URL ?>/post-edit.php?type=page" class="btn btn-primary">Create Page</a>
                 </div>
             </div>
-        </div>
-
-        <!-- Recent Pages -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Pages</h3>
-                <a href="<?= ADMIN_URL ?>/posts.php?type=page" class="btn btn-secondary btn-sm">All</a>
-            </div>
-            <div class="card-body p-0">
-                <?php if (empty($recentPages)): ?>
-                    <div class="empty-message">No pages created yet</div>
-                <?php else: ?>
-                    <div class="page-list">
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <?php foreach ($recentPages as $page): ?>
-                        <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $page['id'] ?>" class="page-list-item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                            </svg>
-                            <span><?= esc($page['title'] ?: '(no title)') ?></span>
-                        </a>
+                            <tr>
+                                <td>
+                                    <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $page['id'] ?>" class="table-title-link">
+                                        <?= esc($page['title'] ?: '(no title)') ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= $page['status'] === 'published' ? 'success' : 'warning' ?>">
+                                        <?= ucfirst($page['status']) ?>
+                                    </span>
+                                </td>
+                                <td class="text-muted text-sm">
+                                    <?= formatDate($page['created_at'], 'M j') ?>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- System Info & Quick Stats -->
+<div class="dashboard-grid mt-3">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">System Info</h3>
+        </div>
+        <div class="card-body">
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Forge CMS</span>
+                    <span class="info-value"><?= CMS_VERSION ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">PHP Version</span>
+                    <span class="info-value"><?= PHP_VERSION ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Users</span>
+                    <span class="info-value"><?= $usersCount ?></span>
+                </div>
+                <div class="info-row no-border">
+                    <span class="info-label">Your Role</span>
+                    <span class="badge badge-info"><?= ucfirst($currentUser['role']) ?></span>
+                </div>
             </div>
         </div>
     </div>

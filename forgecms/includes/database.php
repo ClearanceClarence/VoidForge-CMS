@@ -7,7 +7,8 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 class Database
 {
-    private static ?PDO $instance = null;
+    /** @var PDO|null */
+    private static $instance = null;
 
     public static function getInstance(): PDO
     {
@@ -29,6 +30,16 @@ class Database
     }
 
     /**
+     * Get prefixed table name
+     * For backward compatibility, defaults to empty prefix if DB_PREFIX not defined
+     */
+    public static function table(string $name): string
+    {
+        $prefix = defined('DB_PREFIX') ? DB_PREFIX : '';
+        return $prefix . $name;
+    }
+
+    /**
      * Execute a query and return all results
      */
     public static function query(string $sql, array $params = []): array
@@ -40,8 +51,9 @@ class Database
 
     /**
      * Execute a query and return single row
+     * @return array|null
      */
-    public static function queryOne(string $sql, array $params = []): ?array
+    public static function queryOne(string $sql, array $params = [])
     {
         $stmt = self::getInstance()->prepare($sql);
         $stmt->execute($params);
@@ -51,6 +63,7 @@ class Database
 
     /**
      * Execute a query and return single value
+     * @return mixed
      */
     public static function queryValue(string $sql, array $params = [])
     {

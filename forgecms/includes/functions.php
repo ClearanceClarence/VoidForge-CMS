@@ -14,6 +14,24 @@ function esc(string $string): string
 }
 
 /**
+ * Trim text to a specified number of words
+ */
+function wp_trim_words(string $text, int $numWords = 55, string $more = '...'): string
+{
+    $text = strip_tags($text);
+    $words = preg_split('/\s+/', $text, $numWords + 1);
+    
+    if (count($words) > $numWords) {
+        array_pop($words);
+        $text = implode(' ', $words) . $more;
+    } else {
+        $text = implode(' ', $words);
+    }
+    
+    return $text;
+}
+
+/**
  * Generate a URL-friendly slug
  */
 function slugify(string $text): string
@@ -31,13 +49,14 @@ function slugify(string $text): string
 /**
  * Ensure slug is unique for a post type
  */
-function uniqueSlug(string $slug, string $postType, ?int $excludeId = null): string
+function uniqueSlug(string $slug, string $postType, $excludeId = null): string
 {
     $originalSlug = $slug;
     $counter = 1;
+    $table = Database::table('posts');
     
     while (true) {
-        $sql = "SELECT id FROM posts WHERE slug = ? AND post_type = ?";
+        $sql = "SELECT id FROM {$table} WHERE slug = ? AND post_type = ?";
         $params = [$slug, $postType];
         
         if ($excludeId) {
@@ -160,11 +179,13 @@ function truncate(string $text, int $length = 150, string $suffix = '...'): stri
 
 /**
  * Get option from database
+ * @return mixed
  */
 function getOption(string $name, $default = null)
 {
+    $table = Database::table('options');
     $option = Database::queryOne(
-        "SELECT option_value FROM options WHERE option_name = ?",
+        "SELECT option_value FROM {$table} WHERE option_name = ?",
         [$name]
     );
     
@@ -186,15 +207,16 @@ function setOption(string $name, $value): void
         $value = json_encode($value);
     }
     
+    $table = Database::table('options');
     $existing = Database::queryOne(
-        "SELECT id FROM options WHERE option_name = ?",
+        "SELECT id FROM {$table} WHERE option_name = ?",
         [$name]
     );
     
     if ($existing) {
-        Database::update('options', ['option_value' => $value], 'option_name = ?', [$name]);
+        Database::update(Database::table('options'), ['option_value' => $value], 'option_name = ?', [$name]);
     } else {
-        Database::insert('options', [
+        Database::insert(Database::table('options'), [
             'option_name' => $name,
             'option_value' => $value
         ]);

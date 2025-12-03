@@ -692,21 +692,65 @@ async function loadMedia() {
     grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</p>';
     
     try {
-        const res = await fetch('<?= ADMIN_URL ?>/media.php?action=list', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        // Use relative URL to avoid cross-origin issues
+        const res = await fetch('media.php?action=list&type=image', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
         });
-        const data = await res.json();
         
-        if (!data.media || data.media.length === 0) {
-            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">No images found</p>';
+        // Check if response is OK
+        if (!res.ok) {
+            throw new Error('Server returned ' + res.status + ': ' + res.statusText);
+        }
+        
+        // Get response text first for debugging
+        const text = await res.text();
+        
+        // Try to parse as JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (parseError) {
+            console.error('JSON parse error. Response:', text.substring(0, 1000));
+            // Check if there's a PHP error
+            if (text.includes('Fatal error') || text.includes('Warning') || text.includes('Notice')) {
+                throw new Error('PHP error occurred. Check server logs.');
+            }
+            throw new Error('Invalid response from server. Please refresh the page.');
+        }
+        
+        if (!data.success) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--forge-danger);padding:2rem;">Error: ' + (data.error || 'Unknown error') + '</p>';
             return;
         }
         
-        grid.innerHTML = data.media.filter(m => m.mime_type.startsWith('image/')).map(m => 
-            `<div class="media-select-item" data-id="${m.id}" data-url="${m.url}" onclick="selectMediaItem(this)"><img src="${m.url}" alt=""></div>`
-        ).join('');
+        if (!data.media || data.media.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">No images found. <a href="media.php" target="_blank">Upload media</a></p>';
+            return;
+        }
+        
+        // Filter and render images
+        const images = data.media.filter(m => m.mime_type && m.mime_type.startsWith('image/'));
+        
+        if (images.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">No images found. <a href="media.php" target="_blank">Upload media</a></p>';
+            return;
+        }
+        
+        grid.innerHTML = images.map(m => {
+            const thumbUrl = m.thumbnail_url || m.url;
+            const displayUrl = thumbUrl || m.url;
+            return `<div class="media-select-item" data-id="${m.id}" data-url="${m.url}" onclick="selectMediaItem(this)">
+                <img src="${displayUrl}" alt="${m.alt_text || ''}" loading="lazy" onerror="this.onerror=null; this.src='${m.url}';">
+            </div>`;
+        }).join('');
+        
     } catch (e) {
-        grid.innerHTML = '<p style="text-align:center;color:var(--forge-danger);padding:2rem;">Failed to load</p>';
+        console.error('Media load error:', e);
+        grid.innerHTML = `<div style="text-align:center;padding:2rem;">
+            <p style="color:var(--forge-danger);margin-bottom:1rem;">${e.message}</p>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadMedia()">Try Again</button>
+        </div>`;
     }
 }
 

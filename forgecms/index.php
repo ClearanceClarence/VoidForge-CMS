@@ -32,7 +32,11 @@ if ($basePath && strpos($path, $basePath) === 0) {
 $path = trim($path, '/');
 
 // Route to appropriate template
-if (empty($path)) {
+if (!empty($_GET['s'])) {
+    // Search results
+    $searchQuery = trim($_GET['s']);
+    include THEMES_PATH . '/' . CURRENT_THEME . '/search.php';
+} elseif (empty($path)) {
     // Homepage - show latest posts
     include THEMES_PATH . '/' . CURRENT_THEME . '/index.php';
 } elseif (preg_match('#^post/([^/]+)$#', $path, $matches)) {

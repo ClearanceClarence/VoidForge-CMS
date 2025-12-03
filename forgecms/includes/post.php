@@ -18,7 +18,8 @@ class Post
     ];
 
     // Registered post types
-    private static array $postTypes = [];
+    /** @var array */
+    private static $postTypes = [];
 
     /**
      * Initialize default post types
@@ -89,10 +90,12 @@ class Post
 
     /**
      * Find a post by ID
+     * @return array|null
      */
-    public static function find(int $id): ?array
+    public static function find(int $id)
     {
-        $post = Database::queryOne("SELECT * FROM posts WHERE id = ?", [$id]);
+        $table = Database::table('posts');
+        $post = Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$id]);
         
         if ($post) {
             $post['meta'] = self::getMeta($id);
@@ -103,11 +106,13 @@ class Post
 
     /**
      * Find a post by slug and type
+     * @return array|null
      */
-    public static function findBySlug(string $slug, string $type = 'post'): ?array
+    public static function findBySlug(string $slug, string $type = 'post')
     {
+        $table = Database::table('posts');
         $post = Database::queryOne(
-            "SELECT * FROM posts WHERE slug = ? AND post_type = ?",
+            "SELECT * FROM {$table} WHERE slug = ? AND post_type = ?",
             [$slug, $type]
         );
         
@@ -182,8 +187,9 @@ class Post
 
         $whereClause = implode(' AND ', $where);
         $orderClause = $args['orderby'] . ' ' . $args['order'];
+        $table = Database::table('posts');
 
-        $sql = "SELECT * FROM posts WHERE {$whereClause} ORDER BY {$orderClause}";
+        $sql = "SELECT * FROM {$table} WHERE {$whereClause} ORDER BY {$orderClause}";
 
         if ($args['limit']) {
             $sql .= " LIMIT {$args['limit']} OFFSET {$args['offset']}";
@@ -229,8 +235,9 @@ class Post
         }
 
         $whereClause = implode(' AND ', $where);
+        $table = Database::table('posts');
         return (int) Database::queryValue(
-            "SELECT COUNT(*) FROM posts WHERE {$whereClause}",
+            "SELECT COUNT(*) FROM {$table} WHERE {$whereClause}",
             $params
         );
     }
@@ -248,7 +255,7 @@ class Post
         }
         $slug = uniqueSlug($slug, $data['post_type'] ?? 'post');
 
-        $id = Database::insert('posts', [
+        $id = Database::insert(Database::table('posts'), [
             'post_type' => $data['post_type'] ?? 'post',
             'title' => $data['title'] ?? '',
             'slug' => $slug,
@@ -324,7 +331,7 @@ class Post
             $updateData['featured_image_id'] = $data['featured_image_id'];
         }
 
-        $result = Database::update('posts', $updateData, 'id = ?', [$id]) >= 0;
+        $result = Database::update(Database::table('posts'), $updateData, 'id = ?', [$id]) >= 0;
 
         // Update meta
         if (!empty($data['meta']) && is_array($data['meta'])) {
@@ -343,8 +350,8 @@ class Post
     {
         if ($permanent) {
             // Delete meta first
-            Database::delete('post_meta', 'post_id = ?', [$id]);
-            return Database::delete('posts', 'id = ?', [$id]) > 0;
+            Database::delete(Database::table('post_meta'), 'post_id = ?', [$id]);
+            return Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
         }
 
         return self::update($id, ['status' => self::STATUS_TRASH]);
@@ -360,12 +367,14 @@ class Post
 
     /**
      * Get post meta
+     * @return mixed
      */
-    public static function getMeta(int $postId, ?string $key = null)
+    public static function getMeta(int $postId, $key = null)
     {
+        $table = Database::table('post_meta');
         if ($key) {
             $meta = Database::queryOne(
-                "SELECT meta_value FROM post_meta WHERE post_id = ? AND meta_key = ?",
+                "SELECT meta_value FROM {$table} WHERE post_id = ? AND meta_key = ?",
                 [$postId, $key]
             );
             
@@ -378,7 +387,7 @@ class Post
         }
 
         $metas = Database::query(
-            "SELECT meta_key, meta_value FROM post_meta WHERE post_id = ?",
+            "SELECT meta_key, meta_value FROM {$table} WHERE post_id = ?",
             [$postId]
         );
 
@@ -400,15 +409,16 @@ class Post
             $value = json_encode($value);
         }
 
+        $table = Database::table('post_meta');
         $existing = Database::queryOne(
-            "SELECT id FROM post_meta WHERE post_id = ? AND meta_key = ?",
+            "SELECT id FROM {$table} WHERE post_id = ? AND meta_key = ?",
             [$postId, $key]
         );
 
         if ($existing) {
-            Database::update('post_meta', ['meta_value' => $value], 'id = ?', [$existing['id']]);
+            Database::update(Database::table('post_meta'), ['meta_value' => $value], 'id = ?', [$existing['id']]);
         } else {
-            Database::insert('post_meta', [
+            Database::insert(Database::table('post_meta'), [
                 'post_id' => $postId,
                 'meta_key' => $key,
                 'meta_value' => $value,
@@ -421,23 +431,25 @@ class Post
      */
     public static function deleteMeta(int $postId, string $key): bool
     {
-        return Database::delete('post_meta', 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
+        return Database::delete(Database::table('post_meta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
     }
 
     /**
      * Get author of a post
+     * @return array|null
      */
-    public static function getAuthor(array $post): ?array
+    public static function getAuthor(array $post)
     {
         return User::find($post['author_id']);
     }
 
     /**
      * Get featured image
+     * @return array|null
      */
-    public static function getFeaturedImage(array $post): ?array
+    public static function getFeaturedImage(array $post)
     {
-        if (!$post['featured_image_id']) {
+        if (empty($post['featured_image_id'])) {
             return null;
         }
         return Media::find($post['featured_image_id']);
@@ -446,8 +458,9 @@ class Post
     /**
      * Get parent pages for dropdown
      */
-    public static function getParentOptions(string $postType, ?int $excludeId = null): array
+    public static function getParentOptions(string $postType, $excludeId = null): array
     {
+        $table = Database::table('posts');
         $where = 'post_type = ?';
         $params = [$postType];
 
@@ -457,7 +470,7 @@ class Post
         }
 
         return Database::query(
-            "SELECT id, title, parent_id FROM posts WHERE {$where} ORDER BY menu_order, title",
+            "SELECT id, title, parent_id FROM {$table} WHERE {$where} ORDER BY menu_order, title",
             $params
         );
     }

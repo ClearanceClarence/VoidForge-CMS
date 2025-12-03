@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Header - Forge CMS v1.0.3
+ * Admin Header - Forge CMS v1.0.4
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');

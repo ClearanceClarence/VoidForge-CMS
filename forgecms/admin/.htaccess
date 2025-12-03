@@ -1,0 +1,27 @@
+# Forge CMS Admin - Extended Timeouts for Updates
+<IfModule mod_php7.c>
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 256M
+    php_value post_max_size 64M
+    php_value upload_max_filesize 64M
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 256M
+    php_value post_max_size 64M
+    php_value upload_max_filesize 64M
+</IfModule>
+
+# For Apache mod_fcgid
+<IfModule mod_fcgid.c>
+    FcgidIOTimeout 300
+    FcgidBusyTimeout 300
+</IfModule>
+
+# Disable browser caching for admin
+<FilesMatch "\.(php)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate"
+</FilesMatch>

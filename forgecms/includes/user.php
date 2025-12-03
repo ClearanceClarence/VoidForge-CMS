@@ -22,7 +22,8 @@ class User
         'admin' => 'Administrator',
     ];
 
-    private static ?array $currentUser = null;
+    /** @var array|null */
+    private static $currentUser = null;
 
     /**
      * Start session if not already started
@@ -112,8 +113,9 @@ class User
      */
     public static function login(string $username, string $password): bool
     {
+        $table = Database::table('users');
         $user = Database::queryOne(
-            "SELECT * FROM users WHERE username = ? OR email = ?",
+            "SELECT * FROM {$table} WHERE username = ? OR email = ?",
             [$username, $username]
         );
 
@@ -125,7 +127,7 @@ class User
         self::$currentUser = $user;
 
         // Update last login
-        Database::update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+        Database::update(Database::table('users'), ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
 
         return true;
     }
@@ -152,25 +154,28 @@ class User
     /**
      * Find user by ID
      */
-    public static function find(int $id): ?array
+    public static function find(int $id)
     {
-        return Database::queryOne("SELECT * FROM users WHERE id = ?", [$id]);
+        $table = Database::table('users');
+        return Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$id]);
     }
 
     /**
      * Find user by email
      */
-    public static function findByEmail(string $email): ?array
+    public static function findByEmail(string $email)
     {
-        return Database::queryOne("SELECT * FROM users WHERE email = ?", [$email]);
+        $table = Database::table('users');
+        return Database::queryOne("SELECT * FROM {$table} WHERE email = ?", [$email]);
     }
 
     /**
      * Find user by username
      */
-    public static function findByUsername(string $username): ?array
+    public static function findByUsername(string $username)
     {
-        return Database::queryOne("SELECT * FROM users WHERE username = ?", [$username]);
+        $table = Database::table('users');
+        return Database::queryOne("SELECT * FROM {$table} WHERE username = ?", [$username]);
     }
 
     /**
@@ -178,7 +183,8 @@ class User
      */
     public static function all(): array
     {
-        return Database::query("SELECT * FROM users ORDER BY created_at DESC");
+        $table = Database::table('users');
+        return Database::query("SELECT * FROM {$table} ORDER BY created_at DESC");
     }
 
     /**
@@ -186,7 +192,7 @@ class User
      */
     public static function create(array $data): int
     {
-        return Database::insert('users', [
+        return Database::insert(Database::table('users'), [
             'username' => $data['username'],
             'email' => $data['email'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT, ['cost' => HASH_COST]),
@@ -223,7 +229,7 @@ class User
             return false;
         }
 
-        return Database::update('users', $updateData, 'id = ?', [$id]) > 0;
+        return Database::update(Database::table('users'), $updateData, 'id = ?', [$id]) > 0;
     }
 
     /**
@@ -233,16 +239,17 @@ class User
     {
         // Prevent deleting the last admin
         $user = self::find($id);
+        $table = Database::table('users');
         if ($user && $user['role'] === 'admin') {
             $adminCount = Database::queryValue(
-                "SELECT COUNT(*) FROM users WHERE role = 'admin'"
+                "SELECT COUNT(*) FROM {$table} WHERE role = 'admin'"
             );
             if ($adminCount <= 1) {
                 return false;
             }
         }
 
-        return Database::delete('users', 'id = ?', [$id]) > 0;
+        return Database::delete(Database::table('users'), 'id = ?', [$id]) > 0;
     }
 
     /**

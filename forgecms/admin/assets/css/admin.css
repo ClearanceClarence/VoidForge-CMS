@@ -605,19 +605,60 @@ body.sidebar-open .sidebar-overlay { display: block; }
    Alerts
    ========================================================================== */
 .alert {
-    padding: 0.875rem 1rem;
-    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+    border-radius: var(--border-radius-lg);
     margin-bottom: 1rem;
     font-size: 0.875rem;
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: 0.875rem;
+    line-height: 1.6;
 }
 
-.alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #065f46; }
-.alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #991b1b; }
-.alert-warning { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #92400e; }
-.alert-info { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #3730a3; }
+.alert svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 0.0625rem;
+}
+
+.alert strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.alert p {
+    margin: 0;
+}
+
+.alert-success { 
+    background: rgba(16, 185, 129, 0.1); 
+    border: 1px solid rgba(16, 185, 129, 0.25); 
+    color: #065f46; 
+}
+.alert-success svg { color: #10b981; }
+
+.alert-error { 
+    background: rgba(239, 68, 68, 0.1); 
+    border: 1px solid rgba(239, 68, 68, 0.25); 
+    color: #991b1b; 
+}
+.alert-error svg { color: #ef4444; }
+
+.alert-warning { 
+    background: rgba(245, 158, 11, 0.1); 
+    border: 1px solid rgba(245, 158, 11, 0.25); 
+    color: #92400e; 
+}
+.alert-warning svg { color: #f59e0b; }
+
+.alert-info { 
+    background: rgba(99, 102, 241, 0.08); 
+    border: 1px solid rgba(99, 102, 241, 0.2); 
+    color: #4338ca; 
+}
+.alert-info svg { color: #6366f1; }
 
 /* ==========================================================================
    Page Header & Action Bar

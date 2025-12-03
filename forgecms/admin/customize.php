@@ -438,6 +438,10 @@ $siteTitle = getOption('site_title', 'My Site');
             border-left: 4px solid #ef4444;
         }
         
+        .toast.info {
+            border-left: 4px solid #6366f1;
+        }
+        
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -654,6 +658,26 @@ $siteTitle = getOption('site_title', 'My Site');
         previewFrame.addEventListener('load', function() {
             if (editor.getValue()) {
                 updatePreview(editor.getValue());
+            }
+            
+            // Prevent clicking on admin links in preview
+            try {
+                const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+                iframeDoc.addEventListener('click', function(e) {
+                    const link = e.target.closest('a');
+                    if (link) {
+                        const href = link.getAttribute('href') || '';
+                        // Block admin links and external navigation
+                        if (href.includes('/admin') || href.startsWith('http')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showToast('Navigation disabled in preview mode', 'info');
+                            return false;
+                        }
+                    }
+                }, true);
+            } catch (e) {
+                console.log('Could not attach click handler (cross-origin):', e);
             }
         });
         
