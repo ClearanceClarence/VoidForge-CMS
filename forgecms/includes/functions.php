@@ -299,3 +299,217 @@ function sanitizeFilename(string $filename): string
     $filename = preg_replace('/-+/', '-', $filename);
     return trim($filename, '-');
 }
+
+// =========================================================================
+// Admin Menu System
+// =========================================================================
+
+/**
+ * Global admin menu storage
+ */
+global $adminMenu;
+$adminMenu = [];
+
+/**
+ * Register a top-level admin menu item
+ * 
+ * @param string $id Unique identifier
+ * @param array $args Menu arguments: label, icon, url, capability, position
+ */
+function registerAdminMenu(string $id, array $args): void
+{
+    global $adminMenu;
+    
+    $defaults = [
+        'id' => $id,
+        'label' => $id,
+        'icon' => 'file',
+        'url' => ADMIN_URL . '/',
+        'capability' => 'editor',
+        'position' => 50,
+        'submenu' => [],
+        'badge' => null,
+    ];
+    
+    $adminMenu[$id] = array_merge($defaults, $args);
+}
+
+/**
+ * Register a submenu item under a parent menu
+ * 
+ * @param string $parentId Parent menu ID
+ * @param string $id Unique identifier for submenu
+ * @param array $args Submenu arguments: label, url, capability
+ */
+function registerAdminSubmenu(string $parentId, string $id, array $args): void
+{
+    global $adminMenu;
+    
+    $defaults = [
+        'id' => $id,
+        'label' => $id,
+        'url' => ADMIN_URL . '/',
+        'capability' => 'editor',
+    ];
+    
+    if (!isset($adminMenu[$parentId])) {
+        return;
+    }
+    
+    $adminMenu[$parentId]['submenu'][$id] = array_merge($defaults, $args);
+}
+
+/**
+ * Get all registered admin menus sorted by position
+ */
+function getAdminMenus(): array
+{
+    global $adminMenu;
+    
+    $menus = $adminMenu;
+    uasort($menus, function($a, $b) {
+        return ($a['position'] ?? 50) <=> ($b['position'] ?? 50);
+    });
+    
+    return $menus;
+}
+
+/**
+ * Check if current user has capability for menu item
+ */
+function userCanAccessMenu(array $menu): bool
+{
+    $capability = $menu['capability'] ?? 'editor';
+    
+    switch ($capability) {
+        case 'admin':
+            return User::isAdmin();
+        case 'editor':
+            return User::hasRole('editor') || User::isAdmin();
+        case 'author':
+            return User::hasRole('author') || User::hasRole('editor') || User::isAdmin();
+        default:
+            return true;
+    }
+}
+
+/**
+ * Initialize default admin menus
+ */
+function initDefaultAdminMenus(): void
+{
+    // Dashboard
+    registerAdminMenu('dashboard', [
+        'label' => 'Dashboard',
+        'icon' => 'dashboard',
+        'url' => ADMIN_URL . '/',
+        'capability' => 'author',
+        'position' => 1,
+    ]);
+    
+    // Media with submenu
+    registerAdminMenu('media', [
+        'label' => 'Media',
+        'icon' => 'image',
+        'url' => ADMIN_URL . '/media.php',
+        'capability' => 'author',
+        'position' => 20,
+    ]);
+    
+    registerAdminSubmenu('media', 'media-library', [
+        'label' => 'Library',
+        'url' => ADMIN_URL . '/media.php',
+    ]);
+    
+    registerAdminSubmenu('media', 'thumbnails', [
+        'label' => 'Thumbnails',
+        'url' => ADMIN_URL . '/thumbnails.php',
+        'capability' => 'admin',
+    ]);
+    
+    // Design
+    registerAdminMenu('design', [
+        'label' => 'Design',
+        'icon' => 'palette',
+        'url' => ADMIN_URL . '/customize.php',
+        'capability' => 'admin',
+        'position' => 30,
+        'badge' => 'Live',
+    ]);
+    
+    // Users
+    registerAdminMenu('users', [
+        'label' => 'Users',
+        'icon' => 'users',
+        'url' => ADMIN_URL . '/users.php',
+        'capability' => 'admin',
+        'position' => 40,
+    ]);
+    
+    // Settings with submenu
+    registerAdminMenu('settings', [
+        'label' => 'Settings',
+        'icon' => 'settings',
+        'url' => ADMIN_URL . '/settings.php',
+        'capability' => 'admin',
+        'position' => 50,
+    ]);
+    
+    registerAdminSubmenu('settings', 'general', [
+        'label' => 'General',
+        'url' => ADMIN_URL . '/settings.php',
+        'capability' => 'admin',
+    ]);
+    
+    registerAdminSubmenu('settings', 'post-types', [
+        'label' => 'Post Types',
+        'url' => ADMIN_URL . '/post-types.php',
+        'capability' => 'admin',
+    ]);
+    
+    // Tools
+    registerAdminMenu('tools', [
+        'label' => 'Tools',
+        'icon' => 'tool',
+        'url' => ADMIN_URL . '/update.php',
+        'capability' => 'admin',
+        'position' => 55,
+    ]);
+    
+    registerAdminSubmenu('tools', 'update', [
+        'label' => 'Update',
+        'url' => ADMIN_URL . '/update.php',
+        'capability' => 'admin',
+    ]);
+    
+    registerAdminSubmenu('tools', 'plugins', [
+        'label' => 'Plugins',
+        'url' => ADMIN_URL . '/plugins.php',
+        'capability' => 'admin',
+    ]);
+}
+
+/**
+ * Get SVG icon for admin menu
+ */
+function getAdminMenuIcon(string $icon, int $size = 20): string
+{
+    $icons = [
+        'dashboard' => '<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>',
+        'file-text' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>',
+        'file' => '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>',
+        'image' => '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>',
+        'users' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+        'settings' => '<circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>',
+        'palette' => '<path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle>',
+        'layers' => '<polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline>',
+        'tool' => '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>',
+        'upload' => '<polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>',
+        'grid' => '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>',
+        'box' => '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+    ];
+    
+    $path = $icons[$icon] ?? $icons['file'];
+    
+    return '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $path . '</svg>';
+}

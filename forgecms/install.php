@@ -9,10 +9,71 @@ ini_set('display_errors', 1);
 
 define('CMS_ROOT', __DIR__);
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.4');
+define('CMS_VERSION', '1.0.6');
+
+/**
+ * Check if CMS is already installed by verifying database connection and tables
+ */
+function isInstalled(): bool {
+    $configFile = __DIR__ . '/includes/config.php';
+    
+    // Check if config file exists and has been configured
+    if (!file_exists($configFile)) {
+        return false;
+    }
+    
+    // Read config file to check if it has real values
+    $configContent = file_get_contents($configFile);
+    
+    // Check if DB_HOST is still the default placeholder or empty
+    if (strpos($configContent, "define('DB_HOST', '');") !== false ||
+        strpos($configContent, "define('DB_NAME', '');") !== false) {
+        return false;
+    }
+    
+    // Try to include config and verify database
+    try {
+        require_once $configFile;
+        
+        // Check if required constants are defined and have values
+        if (!defined('DB_HOST') || !defined('DB_NAME') || !defined('DB_USER') ||
+            empty(DB_HOST) || empty(DB_NAME)) {
+            return false;
+        }
+        
+        // Try to connect to database
+        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 5
+        ]);
+        
+        // Check if users table exists (core table that must exist)
+        $prefix = defined('DB_PREFIX') ? DB_PREFIX : '';
+        $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
+        $stmt->execute([$prefix . 'users']);
+        
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+        
+        // Check if at least one admin user exists
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}users WHERE role = 'admin'");
+        $stmt->execute();
+        
+        if ($stmt->fetchColumn() == 0) {
+            return false;
+        }
+        
+        return true;
+        
+    } catch (Exception $e) {
+        return false;
+    }
+}
 
 // Check if already installed
-if (file_exists(__DIR__ . '/.installed')) {
+if (isInstalled()) {
     header('Location: admin/');
     exit;
 }
@@ -289,9 +350,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             if (!is_dir(__DIR__ . '/uploads')) {
                 mkdir(__DIR__ . '/uploads', 0755, true);
             }
-
-            // Create installed flag
-            file_put_contents(__DIR__ . '/.installed', date('Y-m-d H:i:s'));
 
             $success = true;
             $step = 3;

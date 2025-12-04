@@ -1,6 +1,7 @@
 <?php
 /**
- * Site Settings - Forge CMS
+ * Site Settings - Forge CMS v1.0.6
+ * Modern, fluid design
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -16,81 +17,10 @@ Post::init();
 User::startSession();
 User::requireRole('admin');
 
+$currentPage = 'settings';
 $pageTitle = 'Settings';
 
-// Handle AJAX requests for thumbnail management
-if (isset($_POST['ajax_action'])) {
-    header('Content-Type: application/json');
-    
-    if (!verifyCsrf($_POST['csrf_token'] ?? '')) {
-        echo json_encode(['success' => false, 'error' => 'Invalid security token']);
-        exit;
-    }
-    
-    $action = $_POST['ajax_action'];
-    
-    switch ($action) {
-        case 'add_thumbnail_size':
-            $name = preg_replace('/[^a-z0-9_-]/', '', strtolower($_POST['name'] ?? ''));
-            $width = (int)($_POST['width'] ?? 0);
-            $height = (int)($_POST['height'] ?? 0);
-            $crop = ($_POST['crop'] ?? '0') === '1';
-            
-            if (empty($name) || $width < 1 || $height < 1) {
-                echo json_encode(['success' => false, 'error' => 'Invalid size parameters']);
-                exit;
-            }
-            
-            if (Media::isDefaultSize($name)) {
-                echo json_encode(['success' => false, 'error' => 'Cannot modify default size name']);
-                exit;
-            }
-            
-            Media::setThumbnailSize($name, $width, $height, $crop, true);
-            echo json_encode(['success' => true, 'message' => 'Thumbnail size added']);
-            exit;
-            
-        case 'toggle_thumbnail_size':
-            $name = $_POST['name'] ?? '';
-            $enabled = ($_POST['enabled'] ?? '0') === '1';
-            
-            if (empty($name)) {
-                echo json_encode(['success' => false, 'error' => 'Size name required']);
-                exit;
-            }
-            
-            Media::toggleThumbnailSize($name, $enabled);
-            echo json_encode(['success' => true, 'message' => 'Thumbnail size updated']);
-            exit;
-            
-        case 'remove_thumbnail_size':
-            $name = $_POST['name'] ?? '';
-            
-            if (Media::isDefaultSize($name)) {
-                echo json_encode(['success' => false, 'error' => 'Cannot remove default sizes']);
-                exit;
-            }
-            
-            if (Media::removeThumbnailSize($name)) {
-                echo json_encode(['success' => true, 'message' => 'Thumbnail size removed']);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Failed to remove size']);
-            }
-            exit;
-            
-        case 'regenerate_all_thumbnails':
-            $result = Media::regenerateAllThumbnails();
-            echo json_encode([
-                'success' => true, 
-                'message' => "Regenerated {$result['success']} images ({$result['failed']} failed)"
-            ]);
-            exit;
-    }
-    
-    echo json_encode(['success' => false, 'error' => 'Unknown action']);
-    exit;
-}
-
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     setOption('site_title', trim($_POST['site_title'] ?? ''));
     setOption('site_description', trim($_POST['site_description'] ?? ''));
@@ -108,653 +38,752 @@ $postsPerPage = getOption('posts_per_page', 10);
 $dateFormat = getOption('date_format', 'M j, Y');
 $timeFormat = getOption('time_format', 'H:i');
 
-// Get thumbnail sizes
-$thumbnailSizes = Media::getThumbnailSizes(true);
-
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
 <style>
-.settings-container {
-    max-width: 720px;
+/* Modern Settings Page Styles */
+.settings-page {
+    max-width: 900px;
+    margin: 0 auto;
 }
 
+.settings-header {
+    margin-bottom: 2rem;
+}
+
+.settings-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+}
+
+.settings-header p {
+    color: #64748b;
+    margin: 0;
+}
+
+/* Tab Navigation */
+.settings-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0;
+}
+
+.settings-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    background: none;
+    border: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+}
+
+.settings-tab:hover {
+    color: #1e293b;
+}
+
+.settings-tab.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+}
+
+.settings-tab svg {
+    opacity: 0.7;
+}
+
+.settings-tab.active svg {
+    opacity: 1;
+}
+
+/* Settings Sections */
+.settings-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.settings-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Settings Cards */
 .settings-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
     margin-bottom: 1.5rem;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .settings-card-header {
-    padding: 1rem 1.25rem;
-    background: var(--bg-card-header);
-    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .settings-card-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-    border-radius: var(--border-radius);
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--forge-primary);
+    flex-shrink: 0;
+}
+
+.settings-card-icon.purple {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    color: #6366f1;
+}
+
+.settings-card-icon.blue {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+    color: #3b82f6;
+}
+
+.settings-card-icon.green {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+    color: #10b981;
+}
+
+.settings-card-icon.orange {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+    color: #f59e0b;
 }
 
 .settings-card-title {
-    font-size: 0.9375rem;
+    flex: 1;
+}
+
+.settings-card-title h3 {
+    font-size: 1rem;
     font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+}
+
+.settings-card-title p {
+    font-size: 0.8125rem;
+    color: #64748b;
     margin: 0;
 }
 
 .settings-card-body {
-    padding: 1.25rem;
+    padding: 1.5rem;
+}
+
+/* Form Elements */
+.form-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
 }
 
 .form-group {
-    margin-bottom: 1.25rem;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .form-label {
-    display: block;
     font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 0.375rem;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-label-hint {
+    font-weight: 400;
+    color: #9ca3af;
+    margin-left: 0.5rem;
 }
 
 .form-input,
-.form-select {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
+.form-select,
+.form-textarea {
+    padding: 0.75rem 1rem;
     font-size: 0.9375rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover {
+    border-color: #cbd5e1;
 }
 
 .form-input:focus,
-.form-select:focus {
+.form-select:focus,
+.form-textarea:focus {
     outline: none;
-    border-color: var(--forge-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
 }
 
 .form-hint {
     font-size: 0.8125rem;
-    color: var(--text-muted);
-    margin-top: 0.375rem;
+    color: #9ca3af;
 }
 
-.form-row {
+/* Preview Card */
+.preview-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.preview-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.preview-value {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* Quick Links */
+.quick-links {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+    margin-top: 1rem;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.quick-link:hover {
+    border-color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    transform: translateY(-2px);
+}
+
+.quick-link-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.quick-link-text {
+    flex: 1;
+}
+
+.quick-link-text span {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.quick-link-text small {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Save Button */
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
 }
 
 .btn-save {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
-    color: white;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 12px;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
 }
 
 .btn-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
 }
 
-/* Thumbnail sizes table */
-.thumbnail-table {
-    width: 100%;
-    border-collapse: collapse;
+.btn-save:active {
+    transform: translateY(0);
 }
 
-.thumbnail-table th,
-.thumbnail-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
+/* Info Cards */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }
 
-.thumbnail-table th {
+.info-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.info-card-label {
     font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted);
+    margin-bottom: 0.375rem;
+}
+
+.info-card-value {
+    font-size: 1.125rem;
     font-weight: 600;
+    color: #1e293b;
 }
 
-.thumbnail-table td {
+.info-card-value code {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.875rem;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
 }
 
-.thumbnail-table tr:last-child td {
-    border-bottom: none;
-}
-
-.size-name {
-    font-family: monospace;
-    background: var(--bg-secondary);
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
-    font-size: 0.8125rem;
-}
-
-.size-badge {
-    display: inline-block;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.size-badge-default {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--forge-primary);
-}
-
-.size-badge-custom {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.toggle-switch {
-    position: relative;
-    width: 44px;
-    height: 24px;
-}
-
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--border-color);
-    transition: 0.3s;
-    border-radius: 24px;
-}
-
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
-}
-
-.toggle-switch input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
-
-.btn-remove-size {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.btn-remove-size:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.btn-remove-size:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.btn-remove-size:disabled:hover {
-    background: none;
-    color: var(--text-muted);
-}
-
-/* Add size form */
-.add-size-form {
-    display: grid;
-    grid-template-columns: 1fr 80px 80px 80px auto;
-    gap: 0.75rem;
-    align-items: end;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    margin-top: 1rem;
-}
-
-.add-size-form .form-group {
-    margin-bottom: 0;
-}
-
-.add-size-form .form-label {
-    font-size: 0.75rem;
-    margin-bottom: 0.25rem;
-}
-
-.add-size-form .form-input {
-    padding: 0.5rem 0.625rem;
-    font-size: 0.875rem;
-}
-
-.btn-add-size {
-    padding: 0.5rem 1rem;
-    background: var(--forge-primary);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.btn-add-size:hover {
-    background: var(--forge-secondary);
-}
-
-.btn-regenerate {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: 0.8125rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-regenerate:hover {
-    background: var(--bg-card-header);
-    border-color: var(--forge-primary);
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.checkbox-group input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--forge-primary);
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-    .add-size-form {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .add-size-form .form-group:first-child {
-        grid-column: span 2;
-    }
-}
-
-@media (max-width: 640px) {
-    .form-row {
+    .form-grid-2 {
         grid-template-columns: 1fr;
     }
     
-    .thumbnail-table th:nth-child(4),
-    .thumbnail-table td:nth-child(4) {
-        display: none;
+    .quick-links {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 </style>
 
-<div class="page-header" style="margin-bottom: 1.5rem;">
-    <h2>Settings</h2>
-    <p style="color: var(--text-secondary); margin-top: 0.25rem;">Configure your site's core settings.</p>
-</div>
-
-<div class="settings-container">
-    <form method="post">
-        <?= csrfField() ?>
-        
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <div class="settings-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                    </svg>
-                </div>
-                <h3 class="settings-card-title">General</h3>
-            </div>
-            <div class="settings-card-body">
-                <div class="form-group">
-                    <label for="site_title" class="form-label">Site Title</label>
-                    <input type="text" id="site_title" name="site_title" class="form-input" 
-                           value="<?= esc($siteTitle) ?>" placeholder="My Awesome Site">
-                </div>
-
-                <div class="form-group">
-                    <label for="site_description" class="form-label">Tagline</label>
-                    <input type="text" id="site_description" name="site_description" class="form-input" 
-                           value="<?= esc($siteDescription) ?>" placeholder="Just another Forge CMS site">
-                    <div class="form-hint">In a few words, explain what this site is about.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <div class="settings-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                </div>
-                <h3 class="settings-card-title">Reading</h3>
-            </div>
-            <div class="settings-card-body">
-                <div class="form-group">
-                    <label for="posts_per_page" class="form-label">Posts per page</label>
-                    <input type="number" id="posts_per_page" name="posts_per_page" class="form-input" 
-                           value="<?= esc($postsPerPage) ?>" min="1" max="100" style="max-width: 120px;">
-                </div>
-            </div>
-        </div>
-
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <div class="settings-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </div>
-                <h3 class="settings-card-title">Date &amp; Time</h3>
-            </div>
-            <div class="settings-card-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="date_format" class="form-label">Date Format</label>
-                        <select name="date_format" id="date_format" class="form-select">
-                            <option value="M j, Y" <?= $dateFormat === 'M j, Y' ? 'selected' : '' ?>>
-                                <?= date('M j, Y') ?>
-                            </option>
-                            <option value="F j, Y" <?= $dateFormat === 'F j, Y' ? 'selected' : '' ?>>
-                                <?= date('F j, Y') ?>
-                            </option>
-                            <option value="Y-m-d" <?= $dateFormat === 'Y-m-d' ? 'selected' : '' ?>>
-                                <?= date('Y-m-d') ?>
-                            </option>
-                            <option value="d/m/Y" <?= $dateFormat === 'd/m/Y' ? 'selected' : '' ?>>
-                                <?= date('d/m/Y') ?>
-                            </option>
-                            <option value="m/d/Y" <?= $dateFormat === 'm/d/Y' ? 'selected' : '' ?>>
-                                <?= date('m/d/Y') ?>
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="time_format" class="form-label">Time Format</label>
-                        <select name="time_format" id="time_format" class="form-select">
-                            <option value="H:i" <?= $timeFormat === 'H:i' ? 'selected' : '' ?>>
-                                <?= date('H:i') ?> (24-hour)
-                            </option>
-                            <option value="g:i A" <?= $timeFormat === 'g:i A' ? 'selected' : '' ?>>
-                                <?= date('g:i A') ?> (12-hour)
-                            </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <button type="submit" class="btn-save">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            Save Settings
-        </button>
-    </form>
-    
-    <!-- Thumbnail Sizes (separate from main form) -->
-    <div class="settings-card" style="margin-top: 2rem;">
-        <div class="settings-card-header">
-            <div class="settings-card-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-            </div>
-            <h3 class="settings-card-title">Image Thumbnail Sizes</h3>
-            <button type="button" class="btn-regenerate" onclick="regenerateAllThumbnails(this)" style="margin-left: auto;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-                Regenerate All
-            </button>
-        </div>
-        <div class="settings-card-body" style="padding: 0;">
-            <table class="thumbnail-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Dimensions</th>
-                        <th>Crop</th>
-                        <th>Type</th>
-                        <th>Enabled</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="thumbnailSizesBody">
-                    <?php foreach ($thumbnailSizes as $name => $config): 
-                        $width = $config[0];
-                        $height = $config[1];
-                        $crop = isset($config[2]) ? $config[2] : false;
-                        $enabled = isset($config[3]) ? $config[3] : true;
-                        $isDefault = Media::isDefaultSize($name);
-                    ?>
-                    <tr data-size="<?= esc($name) ?>">
-                        <td><code class="size-name"><?= esc($name) ?></code></td>
-                        <td><?= $width ?> × <?= $height ?>px</td>
-                        <td><?= $crop ? 'Yes' : 'No' ?></td>
-                        <td>
-                            <?php if ($isDefault): ?>
-                                <span class="size-badge size-badge-default">Default</span>
-                            <?php else: ?>
-                                <span class="size-badge size-badge-custom">Custom</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <label class="toggle-switch">
-                                <input type="checkbox" <?= $enabled ? 'checked' : '' ?> 
-                                       onchange="toggleThumbnailSize('<?= esc($name) ?>', this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <button type="button" class="btn-remove-size" 
-                                    onclick="removeThumbnailSize('<?= esc($name) ?>')"
-                                    <?= $isDefault ? 'disabled title="Cannot remove default sizes"' : '' ?>>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                            </button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            
-            <div class="add-size-form">
-                <div class="form-group">
-                    <label class="form-label">Name</label>
-                    <input type="text" id="newSizeName" class="form-input" placeholder="e.g. hero">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Width</label>
-                    <input type="number" id="newSizeWidth" class="form-input" placeholder="1920" min="1">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Height</label>
-                    <input type="number" id="newSizeHeight" class="form-input" placeholder="1080" min="1">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Crop</label>
-                    <div class="checkbox-group" style="height: 38px; align-items: center;">
-                        <input type="checkbox" id="newSizeCrop">
-                        <span style="font-size: 0.8125rem;">Center crop</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-add-size" onclick="addThumbnailSize()">
-                    Add Size
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="form-hint" style="margin-top: 1rem;">
-        <strong>Note:</strong> After adding or modifying thumbnail sizes, use "Regenerate All" to update existing images.
-        You can also regenerate thumbnails for individual images in the Media Library.
-    </div>
-</div>
-
 <script>
-const csrfToken = '<?= getCsrfToken() ?>';
-
-async function ajaxAction(action, data = {}) {
-    const formData = new FormData();
-    formData.append('ajax_action', action);
-    formData.append('csrf_token', csrfToken);
-    
-    for (const [key, value] of Object.entries(data)) {
-        formData.append(key, value);
+function switchTab(tabId, evt) {
+    // Get the clicked button
+    var clickedTab = null;
+    if (evt) {
+        clickedTab = evt.currentTarget || evt.target;
+        // Make sure we have the button, not a child element
+        while (clickedTab && !clickedTab.classList.contains('settings-tab')) {
+            clickedTab = clickedTab.parentElement;
+        }
     }
     
-    try {
-        const res = await fetch('', { method: 'POST', body: formData });
-        return await res.json();
-    } catch (e) {
-        return { success: false, error: e.message };
-    }
-}
-
-async function toggleThumbnailSize(name, enabled) {
-    const result = await ajaxAction('toggle_thumbnail_size', { name, enabled: enabled ? '1' : '0' });
-    if (!result.success) {
-        alert('Error: ' + result.error);
-    }
-}
-
-async function removeThumbnailSize(name) {
-    if (!confirm('Remove this thumbnail size? This will not delete existing thumbnail files.')) {
-        return;
+    // Update tabs - remove active from all
+    var tabs = document.querySelectorAll('.settings-tab');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
     }
     
-    const result = await ajaxAction('remove_thumbnail_size', { name });
-    if (result.success) {
-        document.querySelector(`tr[data-size="${name}"]`)?.remove();
-    } else {
-        alert('Error: ' + result.error);
-    }
-}
-
-async function addThumbnailSize() {
-    const name = document.getElementById('newSizeName').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    const width = parseInt(document.getElementById('newSizeWidth').value);
-    const height = parseInt(document.getElementById('newSizeHeight').value);
-    const crop = document.getElementById('newSizeCrop').checked ? '1' : '0';
-    
-    if (!name || !width || !height) {
-        alert('Please fill in all fields');
-        return;
+    // Add active to clicked tab
+    if (clickedTab) {
+        clickedTab.classList.add('active');
     }
     
-    const result = await ajaxAction('add_thumbnail_size', { name, width, height, crop });
-    if (result.success) {
-        location.reload();
-    } else {
-        alert('Error: ' + result.error);
-    }
-}
-
-async function regenerateAllThumbnails(btn) {
-    if (!confirm('Regenerate all thumbnails? This may take a while for large media libraries.')) {
-        return;
+    // Update sections - hide all
+    var sections = document.querySelectorAll('.settings-section');
+    for (var j = 0; j < sections.length; j++) {
+        sections[j].classList.remove('active');
     }
     
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Working...';
-    btn.disabled = true;
-    
-    const result = await ajaxAction('regenerate_all_thumbnails');
-    
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-    
-    if (result.success) {
-        alert(result.message);
-    } else {
-        alert('Error: ' + result.error);
+    // Show target section
+    var targetSection = document.getElementById('section-' + tabId);
+    if (targetSection) {
+        targetSection.classList.add('active');
     }
+    
+    return false;
 }
 </script>
 
-<style>
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+<div class="settings-page">
+    <div class="settings-header">
+        <h1>Settings</h1>
+        <p>Configure your site settings and preferences</p>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="settings-tabs">
+        <button type="button" class="settings-tab active" onclick="switchTab('general', event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            General
+        </button>
+        <button type="button" class="settings-tab" onclick="switchTab('reading', event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            Reading
+        </button>
+        <button type="button" class="settings-tab" onclick="switchTab('system', event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            System Info
+        </button>
+    </div>
+    
+    <form method="post">
+        <?= csrfField() ?>
+        
+        <!-- General Settings -->
+        <div id="section-general" class="settings-section active">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Site Identity</h3>
+                        <p>Basic information about your website</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Site Title</label>
+                            <input type="text" name="site_title" class="form-input" 
+                                   value="<?= esc($siteTitle) ?>" placeholder="My Awesome Site">
+                            <span class="form-hint">Displayed in browser tabs and search results</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Site Description <span class="form-label-hint">(Tagline)</span></label>
+                            <textarea name="site_description" class="form-textarea" 
+                                      placeholder="A short description of your site..."><?= esc($siteDescription) ?></textarea>
+                            <span class="form-hint">A brief explanation of what your site is about</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Quick Actions</h3>
+                        <p>Frequently used settings pages</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="quick-links">
+                        <a href="<?= ADMIN_URL ?>/post-types.php" class="quick-link">
+                            <div class="quick-link-icon" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15)); color: #6366f1;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </div>
+                            <div class="quick-link-text">
+                                <span>Post Types</span>
+                                <small>Create custom content types</small>
+                            </div>
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/customize.php" class="quick-link">
+                            <div class="quick-link-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15)); color: #10b981;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                    <path d="M2 2l7.586 7.586"></path>
+                                    <circle cx="11" cy="11" r="2"></circle>
+                                </svg>
+                            </div>
+                            <div class="quick-link-text">
+                                <span>Customize</span>
+                                <small>Theme & CSS editor</small>
+                            </div>
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/thumbnails.php" class="quick-link">
+                            <div class="quick-link-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15)); color: #f59e0b;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </div>
+                            <div class="quick-link-text">
+                                <span>Thumbnails</span>
+                                <small>Manage image sizes</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reading Settings -->
+        <div id="section-reading" class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon green">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Content Display</h3>
+                        <p>How your content is displayed to visitors</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Posts Per Page</label>
+                            <input type="number" name="posts_per_page" class="form-input" 
+                                   value="<?= $postsPerPage ?>" min="1" max="100">
+                            <span class="form-hint">Number of posts shown on archive pages</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon orange">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Date & Time Format</h3>
+                        <p>How dates and times are displayed</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Date Format</label>
+                            <select name="date_format" class="form-select" id="dateFormatSelect">
+                                <option value="M j, Y" <?= $dateFormat === 'M j, Y' ? 'selected' : '' ?>>
+                                    <?= date('M j, Y') ?>
+                                </option>
+                                <option value="F j, Y" <?= $dateFormat === 'F j, Y' ? 'selected' : '' ?>>
+                                    <?= date('F j, Y') ?>
+                                </option>
+                                <option value="m/d/Y" <?= $dateFormat === 'm/d/Y' ? 'selected' : '' ?>>
+                                    <?= date('m/d/Y') ?>
+                                </option>
+                                <option value="d/m/Y" <?= $dateFormat === 'd/m/Y' ? 'selected' : '' ?>>
+                                    <?= date('d/m/Y') ?>
+                                </option>
+                                <option value="Y-m-d" <?= $dateFormat === 'Y-m-d' ? 'selected' : '' ?>>
+                                    <?= date('Y-m-d') ?>
+                                </option>
+                            </select>
+                            <div class="preview-card">
+                                <div class="preview-label">Preview</div>
+                                <div class="preview-value" id="datePreview"><?= date($dateFormat) ?></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Time Format</label>
+                            <select name="time_format" class="form-select" id="timeFormatSelect">
+                                <option value="H:i" <?= $timeFormat === 'H:i' ? 'selected' : '' ?>>
+                                    <?= date('H:i') ?> (24-hour)
+                                </option>
+                                <option value="g:i A" <?= $timeFormat === 'g:i A' ? 'selected' : '' ?>>
+                                    <?= date('g:i A') ?> (12-hour)
+                                </option>
+                            </select>
+                            <div class="preview-card">
+                                <div class="preview-label">Preview</div>
+                                <div class="preview-value" id="timePreview"><?= date($timeFormat) ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Info -->
+        <div id="section-system" class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>System Information</h3>
+                        <p>Technical details about your installation</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-card-label">Forge CMS Version</div>
+                            <div class="info-card-value"><?= CMS_VERSION ?></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">PHP Version</div>
+                            <div class="info-card-value"><?= PHP_VERSION ?></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Database</div>
+                            <div class="info-card-value">MySQL <?= Database::queryValue("SELECT VERSION()") ?></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Server</div>
+                            <div class="info-card-value"><?= $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown' ?></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Site URL</div>
+                            <div class="info-card-value"><code><?= SITE_URL ?></code></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Uploads Path</div>
+                            <div class="info-card-value"><code><?= UPLOADS_PATH ?></code></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">GD Library</div>
+                            <div class="info-card-value"><?= extension_loaded('gd') ? '✓ Enabled' : '✗ Disabled' ?></div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Max Upload Size</div>
+                            <div class="info-card-value"><?= ini_get('upload_max_filesize') ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-actions">
+            <button type="submit" class="btn-save">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Date/Time preview updates
+var dateSelect = document.getElementById('dateFormatSelect');
+if (dateSelect) {
+    dateSelect.addEventListener('change', function() {
+        var formats = {
+            'M j, Y': '<?= date('M j, Y') ?>',
+            'F j, Y': '<?= date('F j, Y') ?>',
+            'm/d/Y': '<?= date('m/d/Y') ?>',
+            'd/m/Y': '<?= date('d/m/Y') ?>',
+            'Y-m-d': '<?= date('Y-m-d') ?>'
+        };
+        var preview = document.getElementById('datePreview');
+        if (preview) preview.textContent = formats[this.value] || this.value;
+    });
 }
-.spin {
-    animation: spin 1s linear infinite;
+
+var timeSelect = document.getElementById('timeFormatSelect');
+if (timeSelect) {
+    timeSelect.addEventListener('change', function() {
+        var formats = {
+            'H:i': '<?= date('H:i') ?>',
+            'g:i A': '<?= date('g:i A') ?>'
+        };
+        var preview = document.getElementById('timePreview');
+        if (preview) preview.textContent = formats[this.value] || this.value;
+    });
 }
-</style>
+</script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

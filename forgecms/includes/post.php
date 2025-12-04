@@ -22,10 +22,11 @@ class Post
     private static $postTypes = [];
 
     /**
-     * Initialize default post types
+     * Initialize default post types and load custom ones from database
      */
     public static function init(): void
     {
+        // Register default post types
         self::registerType('post', [
             'label' => 'Posts',
             'singular' => 'Post',
@@ -43,6 +44,51 @@ class Post
             'has_archive' => false,
             'hierarchical' => true,
         ]);
+        
+        // Load custom post types from database
+        self::loadCustomPostTypes();
+    }
+    
+    /**
+     * Load custom post types from database options
+     */
+    private static function loadCustomPostTypes(): void
+    {
+        try {
+            $customTypes = getOption('custom_post_types', []);
+            
+            if (!is_array($customTypes)) {
+                return;
+            }
+            
+            foreach ($customTypes as $slug => $config) {
+                if (empty($slug) || isset(self::$postTypes[$slug])) {
+                    continue; // Skip if already registered (built-in types)
+                }
+                
+                self::registerType($slug, [
+                    'label' => $config['label_plural'] ?? ucfirst($slug) . 's',
+                    'singular' => $config['label_singular'] ?? ucfirst($slug),
+                    'icon' => $config['icon'] ?? 'file',
+                    'supports' => $config['supports'] ?? ['title', 'editor'],
+                    'has_archive' => $config['has_archive'] ?? true,
+                    'hierarchical' => $config['hierarchical'] ?? false,
+                    'public' => $config['public'] ?? true,
+                    'fields' => $config['fields'] ?? [], // Custom fields
+                ]);
+            }
+        } catch (Exception $e) {
+            // Silently fail if database not ready
+        }
+    }
+    
+    /**
+     * Get custom fields for a post type
+     */
+    public static function getCustomFields(string $type): array
+    {
+        $postType = self::getType($type);
+        return $postType['fields'] ?? [];
     }
 
     /**

@@ -619,35 +619,61 @@ class Media
     {
         $sizes = self::getThumbnailSizes();
         if (!isset($sizes[$size])) {
+            error_log("Forge Thumbnail: Size '$size' not found in configured sizes");
             return false;
         }
         
         if (empty($media['filepath'])) {
+            error_log("Forge Thumbnail: Media has no filepath");
+            return false;
+        }
+        
+        // Check GD library
+        if (!extension_loaded('gd')) {
+            error_log("Forge Thumbnail: GD library not loaded");
             return false;
         }
         
         $sourcePath = self::getPath($media);
-        if (empty($sourcePath) || !file_exists($sourcePath)) {
+        if (empty($sourcePath)) {
+            error_log("Forge Thumbnail: Could not get source path");
+            return false;
+        }
+        
+        if (!file_exists($sourcePath)) {
+            error_log("Forge Thumbnail: Source file does not exist: $sourcePath");
             return false;
         }
         
         $sizeConfig = $sizes[$size];
-        $maxWidth = $sizeConfig[0];
-        $maxHeight = $sizeConfig[1];
-        $crop = isset($sizeConfig[2]) ? $sizeConfig[2] : false;
+        $maxWidth = (int)$sizeConfig[0];
+        $maxHeight = (int)$sizeConfig[1];
+        $crop = isset($sizeConfig[2]) ? (bool)$sizeConfig[2] : false;
         
         $pathInfo = pathinfo($media['filepath']);
         
         if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+            error_log("Forge Thumbnail: Invalid path info for: " . $media['filepath']);
             return false;
         }
-        $thumbDir = UPLOADS_PATH . '/' . $pathInfo['dirname'] . '/thumbs';
+        
+        $thumbDir = UPLOADS_PATH . '/' . ($pathInfo['dirname'] ?? '.');
+        $thumbDir .= '/thumbs';
         $baseName = $pathInfo['filename'];
         $ext = strtolower($pathInfo['extension']);
         
         // Create thumbs directory
         if (!is_dir($thumbDir)) {
-            @mkdir($thumbDir, 0755, true);
+            if (!@mkdir($thumbDir, 0755, true)) {
+                error_log("Forge Thumbnail: Could not create directory: $thumbDir");
+                return false;
+            }
+        }
+        
+        // Check if directory is writable
+        if (!is_writable($thumbDir)) {
+            error_log("Forge Thumbnail: Directory not writable: $thumbDir");
+            return false;
         }
         
         $thumbPath = $thumbDir . '/' . $baseName . '-' . $size . '.' . $ext;
@@ -655,6 +681,7 @@ class Media
         // Get source image info
         $imageInfo = @getimagesize($sourcePath);
         if (!$imageInfo) {
+            error_log("Forge Thumbnail: Could not get image size for: $sourcePath");
             return false;
         }
         
@@ -662,28 +689,40 @@ class Media
         
         // Don't upscale - if source is smaller than target, just copy
         if ($srcWidth <= $maxWidth && $srcHeight <= $maxHeight && !$crop) {
-            return @copy($sourcePath, $thumbPath);
+            $result = @copy($sourcePath, $thumbPath);
+            if (!$result) {
+                error_log("Forge Thumbnail: Failed to copy small image to: $thumbPath");
+            }
+            return $result;
         }
         
         // Create source image resource
+        $sourceImage = null;
         switch ($type) {
             case IMAGETYPE_JPEG:
-                $sourceImage = @imagecreatefromjpeg($sourcePath);
+                if (function_exists('imagecreatefromjpeg')) {
+                    $sourceImage = @imagecreatefromjpeg($sourcePath);
+                }
                 break;
             case IMAGETYPE_PNG:
-                $sourceImage = @imagecreatefrompng($sourcePath);
+                if (function_exists('imagecreatefrompng')) {
+                    $sourceImage = @imagecreatefrompng($sourcePath);
+                }
                 break;
             case IMAGETYPE_GIF:
-                $sourceImage = @imagecreatefromgif($sourcePath);
+                if (function_exists('imagecreatefromgif')) {
+                    $sourceImage = @imagecreatefromgif($sourcePath);
+                }
                 break;
             case IMAGETYPE_WEBP:
-                $sourceImage = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($sourcePath) : false;
+                if (function_exists('imagecreatefromwebp')) {
+                    $sourceImage = @imagecreatefromwebp($sourcePath);
+                }
                 break;
-            default:
-                $sourceImage = false;
         }
         
         if (!$sourceImage) {
+            error_log("Forge Thumbnail: Could not create image resource for type $type from: $sourcePath");
             return false;
         }
         
@@ -712,8 +751,8 @@ class Media
         } else {
             // Fit within dimensions (maintain aspect ratio)
             $ratio = min($maxWidth / $srcWidth, $maxHeight / $srcHeight);
-            $destWidth = (int)($srcWidth * $ratio);
-            $destHeight = (int)($srcHeight * $ratio);
+            $destWidth = max(1, (int)($srcWidth * $ratio));
+            $destHeight = max(1, (int)($srcHeight * $ratio));
             $cropX = 0;
             $cropY = 0;
             $cropWidth = $srcWidth;
@@ -721,7 +760,12 @@ class Media
         }
         
         // Create destination image
-        $destImage = imagecreatetruecolor($destWidth, $destHeight);
+        $destImage = @imagecreatetruecolor($destWidth, $destHeight);
+        if (!$destImage) {
+            error_log("Forge Thumbnail: Could not create destination image {$destWidth}x{$destHeight}");
+            imagedestroy($sourceImage);
+            return false;
+        }
         
         // Preserve transparency for PNG and GIF
         if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_GIF) {
@@ -732,35 +776,128 @@ class Media
         }
         
         // Resize/crop
-        imagecopyresampled(
+        $resampleResult = @imagecopyresampled(
             $destImage, $sourceImage,
             0, 0, $cropX, $cropY,
             $destWidth, $destHeight, $cropWidth, $cropHeight
         );
         
+        if (!$resampleResult) {
+            error_log("Forge Thumbnail: imagecopyresampled failed");
+            imagedestroy($sourceImage);
+            imagedestroy($destImage);
+            return false;
+        }
+        
         // Save thumbnail
+        $result = false;
         switch ($type) {
             case IMAGETYPE_JPEG:
-                $result = imagejpeg($destImage, $thumbPath, 85);
+                $result = @imagejpeg($destImage, $thumbPath, 85);
                 break;
             case IMAGETYPE_PNG:
-                $result = imagepng($destImage, $thumbPath, 8);
+                $result = @imagepng($destImage, $thumbPath, 8);
                 break;
             case IMAGETYPE_GIF:
-                $result = imagegif($destImage, $thumbPath);
+                $result = @imagegif($destImage, $thumbPath);
                 break;
             case IMAGETYPE_WEBP:
-                $result = function_exists('imagewebp') ? imagewebp($destImage, $thumbPath, 85) : false;
+                if (function_exists('imagewebp')) {
+                    $result = @imagewebp($destImage, $thumbPath, 85);
+                }
                 break;
-            default:
-                $result = false;
         }
         
         // Cleanup
         imagedestroy($sourceImage);
         imagedestroy($destImage);
         
+        if (!$result) {
+            error_log("Forge Thumbnail: Failed to save thumbnail to: $thumbPath");
+        }
+        
         return $result;
+    }
+    
+    /**
+     * Get diagnostic information about thumbnail system
+     */
+    public static function getThumbnailDiagnostics(): array
+    {
+        $diagnostics = [
+            'gd_loaded' => extension_loaded('gd'),
+            'gd_info' => function_exists('gd_info') ? gd_info() : [],
+            'uploads_path' => UPLOADS_PATH,
+            'uploads_writable' => is_writable(UPLOADS_PATH),
+            'thumbnail_sizes' => self::getThumbnailSizes(),
+            'supported_formats' => [],
+        ];
+        
+        if ($diagnostics['gd_loaded'] && function_exists('gd_info')) {
+            $gdInfo = gd_info();
+            $diagnostics['supported_formats'] = [
+                'jpeg' => !empty($gdInfo['JPEG Support']),
+                'png' => !empty($gdInfo['PNG Support']),
+                'gif' => !empty($gdInfo['GIF Read Support']) && !empty($gdInfo['GIF Create Support']),
+                'webp' => !empty($gdInfo['WebP Support']),
+            ];
+        }
+        
+        return $diagnostics;
+    }
+    
+    /**
+     * Get all thumbnails for all media with status
+     */
+    public static function getAllThumbnailsStatus(): array
+    {
+        $media = self::query(['type' => 'image']);
+        $sizes = self::getThumbnailSizes();
+        $results = [];
+        
+        foreach ($media as $item) {
+            // Skip SVGs
+            if (!empty($item['mime_type']) && strpos($item['mime_type'], 'svg') !== false) {
+                continue;
+            }
+            
+            $pathInfo = pathinfo($item['filepath'] ?? '');
+            if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+                continue;
+            }
+            
+            $thumbDir = ($pathInfo['dirname'] ?? '.') . '/thumbs';
+            $baseName = $pathInfo['filename'];
+            $ext = $pathInfo['extension'];
+            
+            $thumbStatus = [];
+            foreach ($sizes as $sizeName => $sizeConfig) {
+                $thumbPath = UPLOADS_PATH . '/' . $thumbDir . '/' . $baseName . '-' . $sizeName . '.' . $ext;
+                $thumbUrl = UPLOADS_URL . '/' . $thumbDir . '/' . $baseName . '-' . $sizeName . '.' . $ext;
+                
+                $exists = file_exists($thumbPath);
+                $thumbStatus[$sizeName] = [
+                    'exists' => $exists,
+                    'path' => $thumbPath,
+                    'url' => $exists ? $thumbUrl : null,
+                    'size' => $exists ? filesize($thumbPath) : 0,
+                    'dimensions' => $sizeConfig[0] . 'x' . $sizeConfig[1],
+                    'crop' => !empty($sizeConfig[2]),
+                ];
+            }
+            
+            $results[] = [
+                'id' => $item['id'],
+                'filename' => $item['filename'],
+                'filepath' => $item['filepath'],
+                'original_url' => $item['url'] ?? self::getUrl($item),
+                'mime_type' => $item['mime_type'],
+                'dimensions' => ($item['width'] ?? '?') . 'x' . ($item['height'] ?? '?'),
+                'thumbnails' => $thumbStatus,
+            ];
+        }
+        
+        return $results;
     }
 
     /**

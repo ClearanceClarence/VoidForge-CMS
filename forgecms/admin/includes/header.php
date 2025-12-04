@@ -1,15 +1,54 @@
 <?php
 /**
- * Admin Header - Forge CMS v1.0.4
+ * Admin Header - Forge CMS v1.0.6
+ * With dynamic theme support
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 $currentUser = User::current();
+
+// Load admin theme settings
+$adminTheme = getOption('admin_theme', [
+    'color_scheme' => 'default',
+    'font' => 'inter',
+    'icon_style' => 'outlined',
+    'sidebar_compact' => false,
+    'animations' => true,
+]);
+
+// Color schemes - all use dark sidebar gradients for good text contrast
+$colorSchemes = [
+    'default' => ['name' => 'Indigo', 'primary' => '#6366f1', 'secondary' => '#8b5cf6', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)', 'preview' => ['#6366f1', '#8b5cf6', '#1e1b4b']],
+    'ocean' => ['name' => 'Ocean', 'primary' => '#0ea5e9', 'secondary' => '#06b6d4', 'sidebar_bg' => 'linear-gradient(180deg, #0c1929 0%, #0c4a6e 50%, #164e63 100%)', 'preview' => ['#0ea5e9', '#06b6d4', '#0c4a6e']],
+    'emerald' => ['name' => 'Emerald', 'primary' => '#10b981', 'secondary' => '#14b8a6', 'sidebar_bg' => 'linear-gradient(180deg, #022c22 0%, #064e3b 50%, #065f46 100%)', 'preview' => ['#10b981', '#14b8a6', '#064e3b']],
+    'rose' => ['name' => 'Rose', 'primary' => '#f43f5e', 'secondary' => '#ec4899', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a10 0%, #4c0519 50%, #701a2e 100%)', 'preview' => ['#f43f5e', '#ec4899', '#4c0519']],
+    'amber' => ['name' => 'Amber', 'primary' => '#f59e0b', 'secondary' => '#fbbf24', 'sidebar_bg' => 'linear-gradient(180deg, #1a1207 0%, #451a03 50%, #5c2a0a 100%)', 'preview' => ['#f59e0b', '#fbbf24', '#451a03']],
+    'slate' => ['name' => 'Slate', 'primary' => '#64748b', 'secondary' => '#94a3b8', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 'preview' => ['#64748b', '#94a3b8', '#1e293b']],
+];
+
+$fonts = [
+    'inter' => ['name' => 'Inter', 'family' => "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 'google' => 'Inter:wght@400;500;600;700;800'],
+    'poppins' => ['name' => 'Poppins', 'family' => "'Poppins', sans-serif", 'google' => 'Poppins:wght@400;500;600;700'],
+    'nunito' => ['name' => 'Nunito', 'family' => "'Nunito', sans-serif", 'google' => 'Nunito:wght@400;500;600;700'],
+    'roboto' => ['name' => 'Roboto', 'family' => "'Roboto', sans-serif", 'google' => 'Roboto:wght@400;500;700'],
+    'source-sans' => ['name' => 'Source Sans', 'family' => "'Source Sans 3', sans-serif", 'google' => 'Source+Sans+3:wght@400;500;600;700'],
+    'dm-sans' => ['name' => 'DM Sans', 'family' => "'DM Sans', sans-serif", 'google' => 'DM+Sans:wght@400;500;600;700'],
+];
+
+$iconStyles = [
+    'outlined' => ['name' => 'Outlined', 'stroke_width' => '2'],
+    'light' => ['name' => 'Light', 'stroke_width' => '1.5'],
+    'bold' => ['name' => 'Bold', 'stroke_width' => '2.5'],
+];
+
+$scheme = $colorSchemes[$adminTheme['color_scheme']] ?? $colorSchemes['default'];
+$font = $fonts[$adminTheme['font']] ?? $fonts['inter'];
+$iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?= esc($adminTheme['color_scheme']) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,8 +56,26 @@ $currentUser = User::current();
     <link rel="icon" type="image/svg+xml" href="<?= ADMIN_URL ?>/assets/images/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=<?= $font['google'] ?>&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= ADMIN_URL ?>/assets/css/admin.css">
+    <style>
+        :root {
+            --forge-primary: <?= $scheme['primary'] ?>;
+            --forge-secondary: <?= $scheme['secondary'] ?>;
+            --sidebar-gradient: <?= $scheme['sidebar_bg'] ?>;
+            --font-family: <?= $font['family'] ?>;
+            --icon-stroke-width: <?= $iconWeight ?>;
+        }
+        body { font-family: var(--font-family); }
+        <?php if (!($adminTheme['animations'] ?? true)): ?>
+        *, *::before, *::after { transition: none !important; animation: none !important; }
+        <?php endif; ?>
+        <?php if ($adminTheme['sidebar_compact'] ?? false): ?>
+        .admin-sidebar { --sidebar-width: 220px; }
+        .nav-item { padding: 0.5rem 0.75rem; }
+        .sidebar-logo .logo-icon svg { width: 24px; height: 24px; }
+        <?php endif; ?>
+    </style>
 </head>
 <body>
     <div class="admin-wrapper">

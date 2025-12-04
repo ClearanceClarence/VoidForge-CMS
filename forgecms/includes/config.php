@@ -1,6 +1,9 @@
 <?php
 /**
  * Forge CMS Configuration
+ * 
+ * This file will be automatically configured during installation.
+ * Do not modify unless you know what you're doing.
  */
 
 // Prevent direct access
@@ -8,18 +11,18 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.4');
+define('CMS_VERSION', '1.0.6');
 
-// Database settings
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'forge_cms');
-define('DB_USER', 'root');
+// Database settings - configured during installation
+define('DB_HOST', '');
+define('DB_NAME', '');
+define('DB_USER', '');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
-define('DB_PREFIX', ''); // Table prefix (e.g., 'forge_') - set during installation
+define('DB_PREFIX', '');
 
-// Site settings
-define('SITE_URL', 'http://localhost/forge');
+// Site settings - configured during installation
+define('SITE_URL', '');
 define('ADMIN_URL', SITE_URL . '/admin');
 
 // Paths
@@ -42,8 +45,8 @@ define('SESSION_LIFETIME', 86400); // 24 hours
 define('HASH_COST', 12);
 
 // Timezone
-date_default_timezone_set('Europe/Oslo');
+date_default_timezone_set('UTC');
 
 // Error reporting (disable in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);

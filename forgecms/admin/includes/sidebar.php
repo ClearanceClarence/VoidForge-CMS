@@ -1,11 +1,15 @@
 <?php
 /**
- * Admin Sidebar - Forge CMS v1.0.4
- * Premium design with enhanced visual styling
+ * Admin Sidebar - Forge CMS v1.0.6
+ * With submenu support and dynamic menu registration
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+// Initialize default menus
+initDefaultAdminMenus();
+
+// Get post types for content menu
 $postTypes = Post::getTypes();
 ?>
 <aside class="admin-sidebar" id="adminSidebar">
@@ -37,21 +41,18 @@ $postTypes = Post::getTypes();
         </div>
 
         <nav class="sidebar-nav">
+            <!-- Dashboard -->
             <div class="nav-section">
                 <a href="<?= ADMIN_URL ?>/" class="nav-item <?= $currentPage === 'index' ? 'active' : '' ?>">
                     <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-                            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-                            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-                            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-                        </svg>
+                        <?= getAdminMenuIcon('dashboard') ?>
                     </div>
                     <span class="nav-label">Dashboard</span>
                     <?php if ($currentPage === 'index'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
             </div>
 
+            <!-- Content Section -->
             <div class="nav-section">
                 <div class="nav-section-header">
                     <span class="nav-section-title">Content</span>
@@ -62,19 +63,7 @@ $postTypes = Post::getTypes();
                     <?php if ($config['public']): ?>
                         <a href="<?= ADMIN_URL ?>/posts.php?type=<?= $type ?>" class="nav-item <?= $currentPage === 'posts' && ($_GET['type'] ?? 'post') === $type ? 'active' : '' ?>">
                             <div class="nav-icon">
-                                <?php if ($config['icon'] === 'file-text'): ?>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                </svg>
-                                <?php else: ?>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                    <polyline points="13 2 13 9 20 9"></polyline>
-                                </svg>
-                                <?php endif; ?>
+                                <?= getAdminMenuIcon($config['icon'] ?? 'file') ?>
                             </div>
                             <span class="nav-label"><?= esc($config['label']) ?></span>
                             <?php if ($currentPage === 'posts' && ($_GET['type'] ?? 'post') === $type): ?><div class="nav-indicator"></div><?php endif; ?>
@@ -82,20 +71,35 @@ $postTypes = Post::getTypes();
                     <?php endif; ?>
                 <?php endforeach; ?>
 
-                <a href="<?= ADMIN_URL ?>/media.php" class="nav-item <?= $currentPage === 'media' ? 'active' : '' ?>">
-                    <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
+                <!-- Media with submenu -->
+                <?php 
+                $mediaExpanded = in_array($currentPage, ['media', 'thumbnails']);
+                ?>
+                <div class="nav-item-group <?= $mediaExpanded ? 'expanded' : '' ?>">
+                    <button type="button" class="nav-item nav-item-parent <?= $mediaExpanded ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
+                        <div class="nav-icon">
+                            <?= getAdminMenuIcon('image') ?>
+                        </div>
+                        <span class="nav-label">Media</span>
+                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="<?= ADMIN_URL ?>/media.php" class="nav-subitem <?= $currentPage === 'media' ? 'active' : '' ?>">
+                            Library
+                        </a>
+                        <?php if (User::isAdmin()): ?>
+                        <a href="<?= ADMIN_URL ?>/thumbnails.php" class="nav-subitem <?= $currentPage === 'thumbnails' ? 'active' : '' ?>">
+                            Thumbnails
+                        </a>
+                        <?php endif; ?>
                     </div>
-                    <span class="nav-label">Media</span>
-                    <?php if ($currentPage === 'media'): ?><div class="nav-indicator"></div><?php endif; ?>
-                </a>
+                </div>
             </div>
 
             <?php if (User::isAdmin()): ?>
+            <!-- Design Section -->
             <div class="nav-section">
                 <div class="nav-section-header">
                     <span class="nav-section-title">Design</span>
@@ -104,12 +108,7 @@ $postTypes = Post::getTypes();
                 
                 <a href="<?= ADMIN_URL ?>/customize.php" class="nav-item nav-item-featured <?= $currentPage === 'customize' ? 'active' : '' ?>">
                     <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                            <path d="M2 2l7.586 7.586"></path>
-                            <circle cx="11" cy="11" r="2"></circle>
-                        </svg>
+                        <?= getAdminMenuIcon('palette') ?>
                     </div>
                     <span class="nav-label">Customize</span>
                     <span class="nav-badge">Live</span>
@@ -117,6 +116,7 @@ $postTypes = Post::getTypes();
                 </a>
             </div>
 
+            <!-- Admin Section -->
             <div class="nav-section">
                 <div class="nav-section-header">
                     <span class="nav-section-title">Admin</span>
@@ -125,51 +125,62 @@ $postTypes = Post::getTypes();
                 
                 <a href="<?= ADMIN_URL ?>/users.php" class="nav-item <?= $currentPage === 'users' ? 'active' : '' ?>">
                     <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
+                        <?= getAdminMenuIcon('users') ?>
                     </div>
                     <span class="nav-label">Users</span>
                     <?php if ($currentPage === 'users'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
 
-                <a href="<?= ADMIN_URL ?>/settings.php" class="nav-item <?= $currentPage === 'settings' ? 'active' : '' ?>">
-                    <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                <!-- Settings with submenu -->
+                <?php 
+                $settingsExpanded = in_array($currentPage, ['settings', 'post-types', 'admin-theme']);
+                ?>
+                <div class="nav-item-group <?= $settingsExpanded ? 'expanded' : '' ?>">
+                    <button type="button" class="nav-item nav-item-parent <?= $settingsExpanded ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
+                        <div class="nav-icon">
+                            <?= getAdminMenuIcon('settings') ?>
+                        </div>
+                        <span class="nav-label">Settings</span>
+                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="<?= ADMIN_URL ?>/settings.php" class="nav-subitem <?= $currentPage === 'settings' ? 'active' : '' ?>">
+                            General
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/post-types.php" class="nav-subitem <?= $currentPage === 'post-types' ? 'active' : '' ?>">
+                            Post Types
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/admin-theme.php" class="nav-subitem <?= $currentPage === 'admin-theme' ? 'active' : '' ?>">
+                            Admin Theme
+                        </a>
                     </div>
-                    <span class="nav-label">Settings</span>
-                    <?php if ($currentPage === 'settings'): ?><div class="nav-indicator"></div><?php endif; ?>
-                </a>
+                </div>
 
-                <a href="<?= ADMIN_URL ?>/update.php" class="nav-item <?= $currentPage === 'update' ? 'active' : '' ?>">
-                    <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="16 16 12 12 8 16"></polyline>
-                            <line x1="12" y1="12" x2="12" y2="21"></line>
-                            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                <!-- Tools with submenu -->
+                <?php 
+                $toolsExpanded = in_array($currentPage, ['update', 'plugins']);
+                ?>
+                <div class="nav-item-group <?= $toolsExpanded ? 'expanded' : '' ?>">
+                    <button type="button" class="nav-item nav-item-parent <?= $toolsExpanded ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
+                        <div class="nav-icon">
+                            <?= getAdminMenuIcon('tool') ?>
+                        </div>
+                        <span class="nav-label">Tools</span>
+                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="<?= ADMIN_URL ?>/update.php" class="nav-subitem <?= $currentPage === 'update' ? 'active' : '' ?>">
+                            Update
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-subitem <?= $currentPage === 'plugins' ? 'active' : '' ?>">
+                            Plugins
+                        </a>
                     </div>
-                    <span class="nav-label">Update</span>
-                    <?php if ($currentPage === 'update'): ?><div class="nav-indicator"></div><?php endif; ?>
-                </a>
-
-                <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-item <?= $currentPage === 'plugins' ? 'active' : '' ?>">
-                    <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                            <path d="M2 17l10 5 10-5"></path>
-                            <path d="M2 12l10 5 10-5"></path>
-                        </svg>
-                    </div>
-                    <span class="nav-label">Plugins</span>
-                    <?php if ($currentPage === 'plugins'): ?><div class="nav-indicator"></div><?php endif; ?>
-                </a>
+                </div>
             </div>
             <?php endif; ?>
         </nav>
@@ -191,3 +202,10 @@ $postTypes = Post::getTypes();
         </div>
     </div>
 </aside>
+
+<script>
+function toggleSubmenu(btn) {
+    const group = btn.closest('.nav-item-group');
+    group.classList.toggle('expanded');
+}
+</script>
