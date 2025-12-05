@@ -1,6 +1,6 @@
 <?php
 /**
- * Thumbnail Manager - Forge CMS v1.0.6
+ * Thumbnail Manager - Forge CMS v1.0.7
  * Modern redesigned interface
  */
 
@@ -32,6 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = Media::regenerateAllThumbnails();
         $message = "Regenerated: {$result['success']} successful, {$result['failed']} failed";
         $messageType = $result['failed'] > 0 ? 'warning' : 'success';
+    } elseif (isset($_POST['delete_all'])) {
+        $result = Media::deleteAllThumbnails();
+        $message = "Deleted {$result['deleted']} thumbnails" . ($result['errors'] > 0 ? " ({$result['errors']} errors)" : "");
+        $messageType = $result['errors'] > 0 ? 'warning' : 'success';
     } elseif (isset($_POST['regenerate_id'])) {
         $id = (int)$_POST['regenerate_id'];
         $result = Media::regenerateThumbnails($id);
@@ -55,11 +59,28 @@ $sizeNames = array_keys($sizes);
 $totalImages = count($thumbnailsStatus);
 $totalThumbnails = 0;
 $missingThumbnails = 0;
+$totalThumbSize = 0;
 
 foreach ($thumbnailsStatus as $item) {
     foreach ($item['thumbnails'] as $thumb) {
-        $thumb['exists'] ? $totalThumbnails++ : $missingThumbnails++;
+        if ($thumb['exists']) {
+            $totalThumbnails++;
+            $totalThumbSize += $thumb['size'] ?? 0;
+        } else {
+            $missingThumbnails++;
+        }
     }
+}
+
+// Additional system info
+$phpMemoryLimit = ini_get('memory_limit');
+$maxExecutionTime = ini_get('max_execution_time');
+$uploadMaxFilesize = ini_get('upload_max_filesize');
+$postMaxSize = ini_get('post_max_size');
+$gdVersion = '';
+if (function_exists('gd_info')) {
+    $gdInfo = gd_info();
+    $gdVersion = $gdInfo['GD Version'] ?? 'Unknown';
 }
 
 include __DIR__ . '/includes/header.php';
@@ -96,6 +117,7 @@ include __DIR__ . '/includes/header.php';
     color: #fff;
     border: none;
     border-radius: 12px;
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
@@ -106,6 +128,28 @@ include __DIR__ . '/includes/header.php';
 .btn-regen:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #fff;
+    color: #dc2626;
+    border: 2px solid #fecaca;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    transform: translateY(-2px);
 }
 
 /* Stats Grid */
@@ -375,6 +419,7 @@ include __DIR__ . '/includes/header.php';
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
+    font-family: inherit;
     font-size: 0.75rem;
     font-weight: 500;
     color: #475569;
@@ -417,16 +462,28 @@ include __DIR__ . '/includes/header.php';
             <h1>Thumbnails</h1>
             <p>Manage image thumbnails and regenerate sizes</p>
         </div>
-        <form method="post">
-            <button type="submit" name="regenerate_all" class="btn-regen"
-                    onclick="return confirm('Regenerate all thumbnails? This may take a while.')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-                Regenerate All
-            </button>
-        </form>
+        <div class="thumb-actions" style="display: flex; gap: 0.75rem;">
+            <form method="post" style="display: inline;">
+                <button type="submit" name="delete_all" class="btn-delete"
+                        onclick="return confirm('Delete ALL thumbnails? You will need to regenerate them.')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete All
+                </button>
+            </form>
+            <form method="post" style="display: inline;">
+                <button type="submit" name="regenerate_all" class="btn-regen"
+                        onclick="return confirm('Regenerate all thumbnails? This may take a while.')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Regenerate All
+                </button>
+            </form>
+        </div>
     </div>
 
     <?php if ($message): ?>
@@ -506,7 +563,7 @@ include __DIR__ . '/includes/header.php';
             <h3 class="diag-title">System Status</h3>
         </div>
         <div class="diag-body">
-            <div class="diag-grid">
+            <div class="diag-grid" style="margin-bottom: 1.5rem;">
                 <div class="diag-item">
                     <span class="diag-item-label">GD Library</span>
                     <span class="status-badge <?= $diagnostics['gd_loaded'] ? 'success' : 'danger' ?>">
@@ -514,11 +571,39 @@ include __DIR__ . '/includes/header.php';
                     </span>
                 </div>
                 <div class="diag-item">
+                    <span class="diag-item-label">GD Version</span>
+                    <span class="diag-item-value"><?= esc($gdVersion ?: 'N/A') ?></span>
+                </div>
+                <div class="diag-item">
                     <span class="diag-item-label">Uploads Writable</span>
                     <span class="status-badge <?= $diagnostics['uploads_writable'] ? 'success' : 'danger' ?>">
                         <?= $diagnostics['uploads_writable'] ? '✓ Yes' : '✗ No' ?>
                     </span>
                 </div>
+                <div class="diag-item">
+                    <span class="diag-item-label">PHP Version</span>
+                    <span class="diag-item-value"><?= PHP_VERSION ?></span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-item-label">Memory Limit</span>
+                    <span class="diag-item-value"><?= esc($phpMemoryLimit) ?></span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-item-label">Max Execution</span>
+                    <span class="diag-item-value"><?= esc($maxExecutionTime) ?>s</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-item-label">Upload Max Size</span>
+                    <span class="diag-item-value"><?= esc($uploadMaxFilesize) ?></span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-item-label">Uploads Path</span>
+                    <span class="diag-item-value" style="font-size: 0.75rem; word-break: break-all;"><?= esc(UPLOADS_PATH) ?></span>
+                </div>
+            </div>
+            
+            <h4 style="font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem;">Format Support</h4>
+            <div class="diag-grid" style="margin-bottom: 1.5rem;">
                 <div class="diag-item">
                     <span class="diag-item-label">JPEG</span>
                     <span class="status-badge <?= !empty($diagnostics['supported_formats']['jpeg']) ? 'success' : 'danger' ?>">
@@ -532,13 +617,20 @@ include __DIR__ . '/includes/header.php';
                     </span>
                 </div>
                 <div class="diag-item">
+                    <span class="diag-item-label">GIF</span>
+                    <span class="status-badge <?= !empty($diagnostics['supported_formats']['gif']) ? 'success' : 'warning' ?>">
+                        <?= !empty($diagnostics['supported_formats']['gif']) ? '✓ Supported' : '○ No' ?>
+                    </span>
+                </div>
+                <div class="diag-item">
                     <span class="diag-item-label">WebP</span>
                     <span class="status-badge <?= !empty($diagnostics['supported_formats']['webp']) ? 'success' : 'warning' ?>">
                         <?= !empty($diagnostics['supported_formats']['webp']) ? '✓ Supported' : '○ No' ?>
                     </span>
                 </div>
             </div>
-
+            
+            <h4 style="font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem;">Thumbnail Sizes</h4>
             <div class="sizes-list">
                 <?php foreach ($sizes as $name => $config): ?>
                 <span class="size-tag">
@@ -547,6 +639,13 @@ include __DIR__ . '/includes/header.php';
                 </span>
                 <?php endforeach; ?>
             </div>
+            
+            <?php if ($totalThumbSize > 0): ?>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                <span class="diag-item-label">Total Thumbnail Storage</span>
+                <span class="diag-item-value" style="margin-left: 0.5rem;"><?= formatFileSize($totalThumbSize) ?></span>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 

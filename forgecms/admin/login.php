@@ -1,6 +1,7 @@
 <?php
 /**
- * Admin Login - Forge CMS
+ * Admin Login - Forge CMS v1.0.7
+ * Light mode design
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -29,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get site name for display
 $siteName = CMS_NAME;
 try {
     $siteName = getOption('site_name', CMS_NAME);
@@ -52,142 +52,101 @@ try {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
             --accent: #a855f7;
-            --bg-dark: #0f0f23;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.5);
         }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
+            background: #f8fafc;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
         }
         
-        /* Animated background */
-        .bg-gradient {
+        .bg-decoration {
             position: fixed;
             inset: 0;
             z-index: 0;
             overflow: hidden;
         }
         
-        .bg-gradient::before {
+        .bg-decoration::before {
             content: '';
             position: absolute;
-            width: 150%;
-            height: 150%;
-            top: -25%;
-            left: -25%;
+            width: 100%;
+            height: 100%;
             background: 
-                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 40% 60%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
-            animation: bgShift 20s ease-in-out infinite;
+                radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
         }
         
-        @keyframes bgShift {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(2%, 2%) rotate(1deg); }
-            66% { transform: translate(-1%, 1%) rotate(-1deg); }
-        }
-        
-        /* Floating orbs */
-        .orb {
+        .shape {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
             opacity: 0.5;
-            animation: float 15s ease-in-out infinite;
         }
         
-        .orb-1 {
+        .shape-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+            top: -200px;
+            right: -200px;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .shape-2 {
             width: 400px;
             height: 400px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            top: -10%;
-            right: -5%;
-            animation-delay: 0s;
-        }
-        
-        .orb-2 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #3b82f6, var(--primary));
-            bottom: -10%;
-            left: -5%;
-            animation-delay: -5s;
-        }
-        
-        .orb-3 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, var(--accent), #ec4899);
-            top: 50%;
-            left: 50%;
-            animation-delay: -10s;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%);
+            bottom: -150px;
+            left: -150px;
+            animation: float 25s ease-in-out infinite reverse;
         }
         
         @keyframes float {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(20px, -20px) scale(1.05); }
-            50% { transform: translate(-10px, 10px) scale(0.95); }
-            75% { transform: translate(15px, 15px) scale(1.02); }
+            50% { transform: translate(30px, -30px) scale(1.05); }
         }
         
-        /* Grid overlay */
-        .grid-overlay {
+        .grid-pattern {
             position: fixed;
             inset: 0;
             background-image: 
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
             z-index: 1;
         }
         
-        /* Main container */
-        .login-wrapper {
+        .login-container {
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             padding: 2rem;
         }
         
-        /* Glass card */
         .login-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
+            background: #fff;
+            border: 1px solid #e2e8f0;
             border-radius: 24px;
-            padding: 3rem 2.5rem;
+            padding: 3rem;
             box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                0 1px 3px rgba(0, 0, 0, 0.04),
+                0 6px 16px rgba(0, 0, 0, 0.04),
+                0 24px 48px rgba(0, 0, 0, 0.06);
+            animation: cardSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        @keyframes cardEnter {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.96);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        @keyframes cardSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Logo */
-        .logo-container {
+        .logo-wrapper {
             display: flex;
             justify-content: center;
             margin-bottom: 2rem;
@@ -201,16 +160,7 @@ try {
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 
-                0 10px 40px rgba(99, 102, 241, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
-            position: relative;
-            animation: logoPulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes logoPulse {
-            0%, 100% { box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1); }
-            50% { box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15); }
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
         }
         
         .logo svg {
@@ -218,90 +168,114 @@ try {
             height: 36px;
         }
         
-        /* Header text */
         .login-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
         
         .login-header h1 {
             font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--text);
+            font-weight: 700;
+            color: #0f172a;
             letter-spacing: -0.02em;
             margin-bottom: 0.5rem;
         }
         
         .login-header p {
-            color: var(--text-muted);
+            color: #94a3b8;
             font-size: 0.9375rem;
-            font-weight: 400;
         }
         
-        /* Form */
-        .form-group {
+        .error-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
+            animation: shake 0.4s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .error-alert svg {
+            width: 20px;
+            height: 20px;
+            color: #dc2626;
+            flex-shrink: 0;
+        }
+        
+        .error-alert span {
+            font-size: 0.875rem;
+            color: #dc2626;
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
         }
         
         .form-label {
             display: block;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
             margin-bottom: 0.5rem;
-            letter-spacing: 0.01em;
         }
         
-        .input-wrapper {
+        .input-group {
             position: relative;
-        }
-        
-        .input-wrapper .icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            color: var(--text-muted);
-            pointer-events: none;
-            transition: color 0.2s;
         }
         
         .form-input {
             width: 100%;
-            padding: 0.9375rem 1rem 0.9375rem 2.75rem;
+            padding: 0.875rem 1rem 0.875rem 3rem;
             font-size: 0.9375rem;
             font-family: inherit;
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
+            color: #0f172a;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             outline: none;
             transition: all 0.2s;
         }
         
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-        }
-        
         .form-input:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.06);
+            border-color: #cbd5e1;
         }
         
         .form-input:focus {
             border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.08);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
         
-        .form-input:focus + .icon,
-        .input-wrapper:focus-within .icon {
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #94a3b8;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        
+        .form-input:focus + .input-icon {
             color: var(--primary);
         }
         
-        /* Password toggle */
         .password-toggle {
             position: absolute;
             right: 1rem;
@@ -309,132 +283,79 @@ try {
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: var(--text-muted);
             cursor: pointer;
+            color: #94a3b8;
             padding: 0.25rem;
             display: flex;
-            align-items: center;
-            justify-content: center;
             transition: color 0.2s;
         }
         
         .password-toggle:hover {
-            color: var(--text);
+            color: #475569;
         }
         
         .password-toggle svg {
-            width: 18px;
-            height: 18px;
-        }
-        
-        /* Error message */
-        .error-message {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.875rem 1rem;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-            20%, 40%, 60%, 80% { transform: translateX(4px); }
-        }
-        
-        .error-message svg {
             width: 20px;
             height: 20px;
-            color: #f87171;
-            flex-shrink: 0;
         }
         
-        .error-message span {
-            font-size: 0.875rem;
-            color: #fca5a5;
-            font-weight: 500;
-        }
-        
-        /* Submit button */
         .btn-submit {
             width: 100%;
-            padding: 1rem;
+            padding: 1rem 1.5rem;
+            margin-top: 0.5rem;
             font-size: 0.9375rem;
             font-weight: 600;
             font-family: inherit;
-            color: white;
+            color: #fff;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-submit::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
         
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
-        }
-        
-        .btn-submit:hover::before {
-            opacity: 1;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
         }
         
         .btn-submit:active {
             transform: translateY(0);
         }
         
-        .btn-submit span {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+        .btn-submit svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.2s;
         }
         
-        .btn-submit .arrow {
-            transition: transform 0.3s;
-        }
-        
-        .btn-submit:hover .arrow {
+        .btn-submit:hover svg {
             transform: translateX(4px);
         }
         
-        /* Footer */
         .login-footer {
             margin-top: 2rem;
             text-align: center;
         }
         
         .login-footer a {
-            color: var(--text-muted);
+            color: #94a3b8;
             text-decoration: none;
             font-size: 0.875rem;
             font-weight: 500;
-            transition: color 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: color 0.2s;
         }
         
         .login-footer a:hover {
-            color: var(--text);
+            color: var(--primary);
         }
         
         .login-footer a svg {
@@ -447,7 +368,6 @@ try {
             transform: translateX(-3px);
         }
         
-        /* Page footer */
         .page-footer {
             position: fixed;
             bottom: 0;
@@ -460,51 +380,28 @@ try {
         
         .page-footer span {
             font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.3);
-            font-weight: 400;
+            color: #94a3b8;
         }
         
-        /* Responsive */
         @media (max-width: 480px) {
-            .login-wrapper {
-                padding: 1rem;
-            }
-            
-            .login-card {
-                padding: 2rem 1.5rem;
-                border-radius: 20px;
-            }
-            
-            .logo {
-                width: 60px;
-                height: 60px;
-                border-radius: 16px;
-            }
-            
-            .logo svg {
-                width: 30px;
-                height: 30px;
-            }
-            
-            .login-header h1 {
-                font-size: 1.5rem;
-            }
+            .login-container { padding: 1rem; }
+            .login-card { padding: 2rem 1.5rem; border-radius: 20px; }
+            .logo { width: 60px; height: 60px; border-radius: 16px; }
+            .logo svg { width: 30px; height: 30px; }
+            .login-header h1 { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <!-- Background effects -->
-    <div class="bg-gradient">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
+    <div class="bg-decoration">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
     </div>
-    <div class="grid-overlay"></div>
+    <div class="grid-pattern"></div>
     
-    <!-- Login form -->
-    <div class="login-wrapper">
+    <div class="login-container">
         <div class="login-card">
-            <div class="logo-container">
+            <div class="logo-wrapper">
                 <div class="logo">
                     <svg viewBox="0 0 48 48" fill="none">
                         <path d="M14 12h20v5h-13v6h10v5h-10v10h-7V12z" fill="white"/>
@@ -518,7 +415,7 @@ try {
             </div>
             
             <?php if ($error): ?>
-            <div class="error-message">
+            <div class="error-alert">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -531,11 +428,11 @@ try {
             <form method="post">
                 <div class="form-group">
                     <label for="username" class="form-label">Username or Email</label>
-                    <div class="input-wrapper">
+                    <div class="input-group">
                         <input type="text" id="username" name="username" class="form-input" 
                                placeholder="Enter your username" required autofocus
                                value="<?= esc($_POST['username'] ?? '') ?>">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
@@ -544,10 +441,10 @@ try {
                 
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <div class="input-wrapper">
+                    <div class="input-group">
                         <input type="password" id="password" name="password" class="form-input" 
-                               placeholder="Enter your password" required>
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                               placeholder="Enter your password" required style="padding-right: 3rem;">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
@@ -561,13 +458,11 @@ try {
                 </div>
                 
                 <button type="submit" class="btn-submit">
-                    <span>
-                        Sign In
-                        <svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </span>
+                    Sign In
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                 </button>
             </form>
             
@@ -584,14 +479,13 @@ try {
     </div>
     
     <div class="page-footer">
-        <span><?= esc($siteName) ?> · Powered by Forge CMS</span>
+        <span>Powered by Forge CMS</span>
     </div>
     
     <script>
         function togglePassword() {
-            const input = document.getElementById('password');
-            const icon = document.getElementById('eye-icon');
-            
+            var input = document.getElementById('password');
+            var icon = document.getElementById('eye-icon');
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';

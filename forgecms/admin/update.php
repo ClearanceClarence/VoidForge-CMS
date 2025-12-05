@@ -715,411 +715,846 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
-<!-- Update Result -->
-<?php if ($updateResult): ?>
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-header" style="background: <?= $updateResult === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' ?>;">
-        <h3 class="card-title" style="color: <?= $updateResult === 'success' ? '#10b981' : '#ef4444' ?>;">
-            <?= $updateResult === 'success' ? '✓ Update Successful' : '✕ Update Failed' ?>
-        </h3>
-    </div>
-    <div class="card-body">
-        <pre style="background: #0f172a; color: #e2e8f0; padding: 1.25rem; border-radius: 8px; font-family: 'Monaco', 'Consolas', monospace; font-size: 0.8125rem; line-height: 1.8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto;"><?= implode("\n", array_map('htmlspecialchars', $updateLog)) ?></pre>
-        
-        <?php if ($updateResult === 'success'): ?>
-        <div style="margin-top: 1rem;">
-            <a href="<?= ADMIN_URL ?>/update.php" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-                Refresh Page
-            </a>
-            <a href="<?= ADMIN_URL ?>/" class="btn btn-secondary">Go to Dashboard</a>
-        </div>
-        <?php endif; ?>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Current Status -->
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-header">
-        <h3 class="card-title">System Status</h3>
-    </div>
-    <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Current Version</div>
-                <div style="font-size: 1.25rem; font-weight: 700; color: var(--forge-primary);"><?= CMS_VERSION ?></div>
-            </div>
-            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Last Update</div>
-                <div style="font-size: 1.125rem; font-weight: 600;"><?= $lastUpdate !== 'Never' ? formatDate($lastUpdate, 'M j, Y g:i A') : 'Never' ?></div>
-            </div>
-            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">PHP Version</div>
-                <div style="font-size: 1.125rem; font-weight: 600;"><?= PHP_VERSION ?></div>
-            </div>
-            <div style="padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
-                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.25rem;">ZipArchive</div>
-                <div style="font-size: 1.125rem; font-weight: 600; color: <?= $zipAvailable ? '#10b981' : '#ef4444' ?>;">
-                    <?= $zipAvailable ? '✓ Available' : '✕ Missing' ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Update Upload -->
-<?php if ($updateResult !== 'success'): ?>
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-header">
-        <h3 class="card-title">Upload Update</h3>
-    </div>
-    <div class="card-body">
-        <?php if (!$zipAvailable): ?>
-            <div class="alert alert-warning" style="margin-bottom: 1rem;">
-                <strong>⚠️ PHP ZipArchive Extension Required</strong><br>
-                The ZipArchive extension is not enabled. To enable it on XAMPP:
-                <ol style="margin: 0.75rem 0 0 1.25rem; line-height: 1.8;">
-                    <li>Open <code style="background: rgba(0,0,0,0.1); padding: 0.125rem 0.375rem; border-radius: 4px;">C:\xampp\php\php.ini</code></li>
-                    <li>Find the line <code style="background: rgba(0,0,0,0.1); padding: 0.125rem 0.375rem; border-radius: 4px;">;extension=zip</code></li>
-                    <li>Remove the semicolon to make it <code style="background: rgba(0,0,0,0.1); padding: 0.125rem 0.375rem; border-radius: 4px;">extension=zip</code></li>
-                    <li>Restart Apache in XAMPP Control Panel</li>
-                </ol>
-            </div>
-        <?php else: ?>
-
-        <!-- Server Diagnostics -->
-        <div class="card" style="margin-bottom: 1rem; background: var(--bg-card-header);">
-            <div class="card-body" style="padding: 1rem;">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-                    <div>
-                        <strong style="font-size: 0.8125rem;">Server Diagnostics</strong>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            PHP: <?= $diagnostics['php_sapi'] ?> | 
-                            Timeout: <?= $diagnostics['max_execution_time'] ?>s | 
-                            Memory: <?= $diagnostics['memory_limit'] ?> |
-                            Upload: <?= $diagnostics['upload_max_filesize'] ?>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="runTimeoutTest()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        Test Timeout
-                    </button>
-                </div>
-                <div id="timeoutResult" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: var(--bg-card); border-radius: var(--border-radius); font-size: 0.8125rem;"></div>
-            </div>
-        </div>
-
-        <!-- Update Progress -->
-        <div id="updateProgress" style="display: none; margin-bottom: 1rem;">
-            <div style="background: var(--bg-card-header); border-radius: var(--border-radius-lg); padding: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                    <div id="progressSpinner" style="width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--forge-primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <div>
-                        <div id="progressTitle" style="font-weight: 600; font-size: 1rem;">Uploading...</div>
-                        <div id="progressSubtitle" style="font-size: 0.8125rem; color: var(--text-secondary);">Please wait</div>
-                    </div>
-                </div>
-                <div id="progressLog" style="background: var(--bg-card); border-radius: var(--border-radius); padding: 1rem; font-family: monospace; font-size: 0.8125rem; max-height: 200px; overflow-y: auto;"></div>
-            </div>
-        </div>
-
-        <!-- Upload Form -->
-        <div id="uploadForm">
-            <div class="upload-zone" id="updateDropZone" onclick="document.getElementById('updateFile').click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p>Drag and drop your <strong>Forge CMS ZIP file</strong> here</p>
-                <p>or <span>click to browse</span></p>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
-                    Your uploads, configuration, and database will be preserved
-                </p>
-            </div>
-            
-            <input type="file" name="update_file" id="updateFile" accept=".zip" style="display: none;" onchange="handleFileSelect(this)">
-            
-            <div id="selectedFile" style="display: none; padding: 1rem; background: var(--bg-card-header); border: 1px solid var(--border-color); border-radius: var(--border-radius); margin-top: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--forge-primary); flex-shrink: 0;">
-                        <path d="M21 8v13H3V8"></path>
-                        <path d="M1 3h22v5H1z"></path>
-                        <path d="M10 12h4"></path>
-                    </svg>
-                    <div style="flex: 1; min-width: 0;">
-                        <div id="fileName" style="font-weight: 600; overflow: hidden; text-overflow: ellipsis;"></div>
-                        <div id="fileSize" style="font-size: 0.8125rem; color: var(--text-secondary);"></div>
-                    </div>
-                    <button type="button" onclick="clearFile()" class="btn btn-sm" style="flex-shrink: 0;">
-                        Change
-                    </button>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                <button type="button" class="btn btn-primary" id="installBtn" disabled onclick="startUpdate()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="16 16 12 12 8 16"></polyline>
-                        <line x1="12" y1="12" x2="12" y2="21"></line>
-                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
-                    </svg>
-                    <span id="btnText">Install Update</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Success Message -->
-        <div id="updateSuccess" style="display: none; text-align: center; padding: 2rem;">
-            <div style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Update Complete!</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Forge CMS has been updated successfully.</p>
-            <button onclick="location.reload()" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-                Refresh Page
-            </button>
-        </div>
-
-        <!-- Error Message -->
-        <div id="updateError" style="display: none;">
-            <div class="alert alert-error" style="margin-bottom: 1rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                <div>
-                    <strong>Update Failed</strong>
-                    <p id="errorMessage" style="margin: 0.25rem 0 0 0;"></p>
-                </div>
-            </div>
-            <button onclick="resetUpdate()" class="btn btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="1 4 1 10 7 10"></polyline>
-                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                </svg>
-                Try Again
-            </button>
-        </div>
-        <?php endif; ?>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Instructions -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Update Instructions</h3>
-    </div>
-    <div class="card-body" style="color: var(--text-secondary); line-height: 1.7;">
-        <ol style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
-            <li>Download the latest Forge CMS ZIP file</li>
-            <li>Drag and drop the ZIP file to the upload area above, or click to browse</li>
-            <li>Click "Install Update" to begin the process</li>
-            <li>Wait for the update to complete — <strong>do not close this page</strong></li>
-            <li>After completion, click "Refresh Page" to load the new version</li>
-        </ol>
-        <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
-            <strong>⚡ What gets preserved:</strong>
-            <ul style="padding-left: 1.25rem; margin-top: 0.5rem;">
-                <li>Your database and all content</li>
-                <li>Your configuration (includes/config.php)</li>
-                <li>All uploaded media (uploads/)</li>
-                <li>Previous backups (backups/)</li>
-                <li>Your .htaccess rules</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-<!-- Manual Update Instructions -->
-<div class="card" style="margin-top: 1.5rem;" id="manualUpdateCard">
-    <div class="card-header" style="cursor: pointer;" onclick="document.getElementById('manualInstructions').style.display = document.getElementById('manualInstructions').style.display === 'none' ? 'block' : 'none'">
-        <h3 class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-            </svg>
-            Manual Update (if automatic fails)
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: auto;" id="manualChevron">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-        </h3>
-    </div>
-    <div id="manualInstructions" class="card-body" style="display: none; color: var(--text-secondary); line-height: 1.7;">
-        <div class="alert alert-info" style="margin-bottom: 1.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <div>
-                <strong>Why does this happen?</strong>
-                <p style="margin: 0.25rem 0 0 0;">Your hosting provider enforces a timeout (usually 3-30 seconds) at the server level. This cannot be overridden by PHP or .htaccess. Manual update via FTP or File Manager is the solution.</p>
-            </div>
-        </div>
-        
-        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">📋 Quick Steps:</h4>
-        
-        <div style="background: var(--bg-card-header); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
-                <div style="width: 28px; height: 28px; background: var(--forge-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">1</div>
-                <div>
-                    <strong style="color: var(--text-primary);">Extract ZIP on your computer</strong>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem;">Unzip the forge-cms-v*.zip file locally</p>
-                </div>
-            </div>
-            
-            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
-                <div style="width: 28px; height: 28px; background: var(--forge-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">2</div>
-                <div>
-                    <strong style="color: var(--text-primary);">Upload via File Manager or FTP</strong>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem;">Upload all files to your CMS folder. <strong>Skip these files:</strong></p>
-                    <ul style="margin: 0.5rem 0 0 1rem; font-size: 0.8125rem; color: var(--text-muted);">
-                        <li><code>includes/config.php</code> (keep yours)</li>
-                        <li><code>uploads/</code> folder (keep yours)</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                <div style="width: 28px; height: 28px; background: var(--forge-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">3</div>
-                <div>
-                    <strong style="color: var(--text-primary);">Run database migrations</strong>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem;">Click the button below or visit the URL:</p>
-                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="?run_migrations=1" class="btn btn-primary btn-sm" target="_blank">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                <polyline points="15 3 21 3 21 9"></polyline>
-                                <line x1="10" y1="14" x2="21" y2="3"></line>
-                            </svg>
-                            Run Migrations
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 600; color: var(--text-primary);">📁 Need help with FTP?</summary>
-            <div style="margin-top: 0.75rem; padding-left: 1rem; border-left: 2px solid var(--border-color);">
-                <p style="margin-bottom: 0.5rem;"><strong>Free FTP clients:</strong></p>
-                <ul style="padding-left: 1rem; font-size: 0.875rem;">
-                    <li><a href="https://filezilla-project.org/" target="_blank" style="color: var(--forge-primary);">FileZilla</a> — Works on Windows, Mac, Linux</li>
-                    <li><a href="https://cyberduck.io/" target="_blank" style="color: var(--forge-primary);">Cyberduck</a> — Great for Mac and Windows</li>
-                </ul>
-                <p style="margin-top: 0.75rem; font-size: 0.875rem;"><strong>Or use your hosting's File Manager</strong> — Most hosting control panels (cPanel, Plesk, etc.) have a built-in File Manager that lets you upload and extract ZIP files directly.</p>
-            </div>
-        </details>
-    </div>
-</div>
-
 <style>
-.upload-zone {
-    border: 2px dashed var(--border-color);
-    border-radius: var(--border-radius-lg);
+/* Update Page Styles */
+.update-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.update-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.update-header-left h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.375rem 0;
+}
+
+.update-header-left p {
+    color: #64748b;
+    margin: 0;
+}
+
+.update-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    font-weight: 600;
+    color: var(--forge-primary, #6366f1);
+}
+
+.update-version-badge svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Status Grid */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.status-card {
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.status-card-label {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin-bottom: 0.375rem;
+}
+
+.status-card-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.status-card-value.success { color: #10b981; }
+.status-card-value.error { color: #ef4444; }
+.status-card-value.primary { color: var(--forge-primary, #6366f1); }
+
+/* Upload Section */
+.upload-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.upload-card-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.upload-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.upload-card-title svg {
+    color: var(--forge-primary, #6366f1);
+}
+
+.upload-card-body {
+    padding: 1.5rem;
+}
+
+/* Drop Zone */
+.drop-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
     padding: 3rem 2rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: var(--bg-card-header);
+    background: #fafbfc;
 }
 
-.upload-zone:hover,
-.upload-zone.dragover {
-    border-color: var(--forge-primary);
-    background: rgba(99, 102, 241, 0.05);
+.drop-zone:hover {
+    border-color: var(--forge-primary, #6366f1);
+    background: rgba(99, 102, 241, 0.04);
 }
 
-.upload-zone svg {
+.drop-zone.dragover {
+    border-color: var(--forge-primary, #6366f1);
+    background: rgba(99, 102, 241, 0.08);
+    transform: scale(1.01);
+}
+
+.drop-zone-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    color: var(--forge-primary, #6366f1);
+}
+
+.drop-zone-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.drop-zone h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: #1e293b;
+}
+
+.drop-zone p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+.drop-zone .browse-link {
+    color: var(--forge-primary, #6366f1);
+    font-weight: 500;
+}
+
+.drop-zone-hint {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+}
+
+/* Selected File */
+.selected-file {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    margin-top: 1rem;
+}
+
+.selected-file-icon {
     width: 48px;
     height: 48px;
-    color: var(--text-muted);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.selected-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.selected-file-name {
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected-file-size {
+    font-size: 0.8125rem;
+    color: #64748b;
+}
+
+.selected-file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Progress */
+.progress-section {
+    padding: 2rem;
+    text-align: center;
+}
+
+.progress-spinner {
+    width: 56px;
+    height: 56px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--forge-primary, #6366f1);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.progress-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.progress-subtitle {
+    color: #64748b;
+    font-size: 0.9375rem;
+}
+
+.progress-log {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #0f172a;
+    border-radius: 10px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    color: #e2e8f0;
+    text-align: left;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Success/Error States */
+.result-section {
+    text-align: center;
+    padding: 2rem;
+}
+
+.result-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+
+.result-icon.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+    color: #10b981;
+}
+
+.result-icon.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+    color: #ef4444;
+}
+
+.result-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.result-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.result-message {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+/* Server Info */
+.server-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 10px;
     margin-bottom: 1rem;
 }
 
-.upload-zone p {
-    margin: 0.25rem 0;
-    color: var(--text-secondary);
+.server-info-text {
+    font-size: 0.8125rem;
+    color: #64748b;
 }
 
-.upload-zone span {
-    color: var(--forge-primary);
+.server-info-text strong {
+    color: #475569;
+}
+
+/* Instructions */
+.instructions-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.instructions-header {
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
     font-weight: 600;
-    text-decoration: underline;
+    color: #1e293b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.instructions-header:hover {
+    background: #f1f5f9;
+}
+
+.instructions-body {
+    padding: 1.5rem;
+}
+
+.instructions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+}
+
+.instructions-list li {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.instructions-list li:last-child {
+    border-bottom: none;
+}
+
+.instructions-list li::before {
+    counter-increment: step;
+    content: counter(step);
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--forge-primary, #6366f1);
+    flex-shrink: 0;
+}
+
+.preserved-list {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 10px;
+}
+
+.preserved-list h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    color: #059669;
+}
+
+.preserved-list ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #475569;
+    font-size: 0.875rem;
+    line-height: 1.8;
+}
+
+/* Alert */
+.alert-warning {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    color: #92400e;
+}
+
+.alert-warning svg {
+    flex-shrink: 0;
+    color: #d97706;
+}
+
+/* Buttons */
+.btn-install {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+}
+
+.btn-install:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.btn-install:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: #fff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    border-color: var(--forge-primary, #6366f1);
+    color: var(--forge-primary, #6366f1);
+}
+
+@media (max-width: 640px) {
+    .update-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .status-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .server-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 </style>
 
+<div class="update-page">
+    <div class="update-header">
+        <div class="update-header-left">
+            <h1>System Update</h1>
+            <p>Keep your Forge CMS installation up to date</p>
+        </div>
+        <div class="update-version-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4m-3.93 7.07l-2.83-2.83M6.34 6.34L3.51 3.51"/>
+            </svg>
+            v<?= CMS_VERSION ?>
+        </div>
+    </div>
+    
+    <!-- Status Grid -->
+    <div class="status-grid">
+        <div class="status-card">
+            <div class="status-card-label">Current Version</div>
+            <div class="status-card-value primary"><?= CMS_VERSION ?></div>
+        </div>
+        <div class="status-card">
+            <div class="status-card-label">Last Updated</div>
+            <div class="status-card-value"><?= $lastUpdate !== 'Never' ? formatDate($lastUpdate, 'M j, Y') : 'Never' ?></div>
+        </div>
+        <div class="status-card">
+            <div class="status-card-label">PHP Version</div>
+            <div class="status-card-value"><?= PHP_VERSION ?></div>
+        </div>
+        <div class="status-card">
+            <div class="status-card-label">ZipArchive</div>
+            <div class="status-card-value <?= $zipAvailable ? 'success' : 'error' ?>">
+                <?= $zipAvailable ? '✓ Ready' : '✕ Missing' ?>
+            </div>
+        </div>
+    </div>
+    
+    <?php if ($updateResult): ?>
+    <!-- Update Result -->
+    <div class="upload-card">
+        <div class="upload-card-header">
+            <h3 class="upload-card-title">
+                <?php if ($updateResult === 'success'): ?>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Update Successful
+                <?php else: ?>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                Update Failed
+                <?php endif; ?>
+            </h3>
+        </div>
+        <div class="upload-card-body">
+            <div class="progress-log"><?= implode("\n", array_map('htmlspecialchars', $updateLog)) ?></div>
+            <?php if ($updateResult === 'success'): ?>
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="<?= ADMIN_URL ?>/update.php" class="btn-install">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Refresh Page
+                </a>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <?php if ($updateResult !== 'success'): ?>
+    <!-- Upload Section -->
+    <div class="upload-card">
+        <div class="upload-card-header">
+            <h3 class="upload-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload Update Package
+            </h3>
+        </div>
+        <div class="upload-card-body">
+            <?php if (!$zipAvailable): ?>
+            <div class="alert-warning">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div>
+                    <strong>PHP ZipArchive Extension Required</strong>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">
+                        Enable the zip extension in your php.ini file and restart your web server.
+                    </p>
+                </div>
+            </div>
+            <?php else: ?>
+            
+            <!-- Server Info -->
+            <div class="server-info">
+                <div class="server-info-text">
+                    <strong>Server:</strong> PHP <?= $diagnostics['php_sapi'] ?> &bull; 
+                    <strong>Timeout:</strong> <?= $diagnostics['max_execution_time'] ?>s &bull; 
+                    <strong>Memory:</strong> <?= $diagnostics['memory_limit'] ?> &bull; 
+                    <strong>Upload:</strong> <?= $diagnostics['upload_max_filesize'] ?>
+                </div>
+                <button type="button" class="btn-secondary" onclick="runTimeoutTest()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Test Server
+                </button>
+            </div>
+            <div id="timeoutResult" style="display: none; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem;"></div>
+            
+            <!-- Progress Section (hidden by default) -->
+            <div id="updateProgress" style="display: none;">
+                <div class="progress-section">
+                    <div class="progress-spinner" id="progressSpinner"></div>
+                    <div class="progress-title" id="progressTitle">Uploading...</div>
+                    <div class="progress-subtitle" id="progressSubtitle">Please wait</div>
+                    <div class="progress-log" id="progressLog"></div>
+                </div>
+            </div>
+            
+            <!-- Upload Form -->
+            <div id="uploadForm">
+                <div class="drop-zone" id="updateDropZone" onclick="document.getElementById('updateFile').click()">
+                    <div class="drop-zone-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <h3>Drop your update ZIP file here</h3>
+                    <p>or <span class="browse-link">click to browse</span></p>
+                    <div class="drop-zone-hint">
+                        Your uploads, configuration, and database will be preserved
+                    </div>
+                </div>
+                
+                <input type="file" name="update_file" id="updateFile" accept=".zip" style="display: none;" onchange="handleFileSelect(this)">
+                
+                <div id="selectedFile" class="selected-file" style="display: none;">
+                    <div class="selected-file-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 8v13H3V8"></path>
+                            <path d="M1 3h22v5H1z"></path>
+                            <path d="M10 12h4"></path>
+                        </svg>
+                    </div>
+                    <div class="selected-file-info">
+                        <div class="selected-file-name" id="fileName"></div>
+                        <div class="selected-file-size" id="fileSize"></div>
+                    </div>
+                    <div class="selected-file-actions">
+                        <button type="button" class="btn-secondary" onclick="clearFile()">Change</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn-install" id="installBtn" disabled onclick="startUpdate()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 16 12 12 8 16"></polyline>
+                            <line x1="12" y1="12" x2="12" y2="21"></line>
+                            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                        </svg>
+                        <span id="btnText">Install Update</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Success -->
+            <div id="updateSuccess" class="result-section" style="display: none;">
+                <div class="result-icon success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div class="result-title">Update Complete!</div>
+                <div class="result-message">Forge CMS has been updated successfully.</div>
+                <button onclick="location.reload()" class="btn-install">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Refresh Page
+                </button>
+            </div>
+            
+            <!-- Error -->
+            <div id="updateError" class="result-section" style="display: none;">
+                <div class="result-icon error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <div class="result-title">Update Failed</div>
+                <div class="result-message" id="errorMessage"></div>
+                <button onclick="resetUpdate()" class="btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Try Again
+                </button>
+            </div>
+            
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Instructions -->
+    <div class="instructions-card">
+        <div class="instructions-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+            <span>Update Instructions</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </div>
+        <div class="instructions-body">
+            <ol class="instructions-list">
+                <li>Download the latest Forge CMS ZIP file</li>
+                <li>Drag and drop the ZIP to the upload area above</li>
+                <li>Click "Install Update" to begin</li>
+                <li>Wait for the process to complete</li>
+                <li>Click "Refresh Page" to load the new version</li>
+            </ol>
+            <div class="preserved-list">
+                <h4>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Files Preserved During Update
+                </h4>
+                <ul>
+                    <li>Database and all content</li>
+                    <li>Configuration (includes/config.php)</li>
+                    <li>Uploaded media (uploads/)</li>
+                    <li>Backups (backups/)</li>
+                    <li>.htaccess rules</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Manual Update -->
+    <div class="instructions-card" style="margin-top: 1rem;">
+        <div class="instructions-header" onclick="toggleManual(this)">
+            <span>Manual Update (FTP)</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </div>
+        <div class="instructions-body" id="manualInstructions" style="display: none;">
+            <p style="margin: 0 0 1rem 0; color: #64748b;">If automatic updates fail, follow these steps:</p>
+            <ol class="instructions-list">
+                <li>Download and extract the Forge CMS ZIP</li>
+                <li>Back up your config.php and uploads folder</li>
+                <li>Upload all files via FTP (except config.php and uploads/)</li>
+                <li>
+                    Run migrations: 
+                    <a href="?run_migrations=1" style="color: #6366f1; font-weight: 500;">Click here to run database migrations</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+
 <script>
 const csrfToken = '<?= csrfToken() ?>';
-const dropZone = document.getElementById('updateDropZone');
-const fileInput = document.getElementById('updateFile');
-const selectedFile = document.getElementById('selectedFile');
-const fileName = document.getElementById('fileName');
-const fileSize = document.getElementById('fileSize');
-const installBtn = document.getElementById('installBtn');
-const btnText = document.getElementById('btnText');
-
 let selectedFileObj = null;
 
+function toggleManual(el) {
+    const body = el.nextElementSibling;
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+// Drag and drop
+const dropZone = document.getElementById('updateDropZone');
 if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
     });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
+    
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'));
     });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect(fileInput);
+    
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'));
+    });
+    
+    dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            document.getElementById('updateFile').files = files;
+            handleFileSelect(document.getElementById('updateFile'));
         }
     });
 }
 
 function handleFileSelect(input) {
-    if (input.files.length) {
-        const file = input.files[0];
-        if (!file.name.toLowerCase().endsWith('.zip')) {
-            alert('Please select a ZIP file');
-            input.value = '';
-            return;
-        }
-        
-        selectedFileObj = file;
-        fileName.textContent = file.name;
-        fileSize.textContent = formatBytes(file.size);
-        selectedFile.style.display = 'block';
-        dropZone.style.display = 'none';
-        installBtn.disabled = false;
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+        alert('Please select a ZIP file');
+        return;
     }
+    
+    selectedFileObj = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatBytes(file.size);
+    document.getElementById('selectedFile').style.display = 'flex';
+    document.getElementById('updateDropZone').style.display = 'none';
+    document.getElementById('installBtn').disabled = false;
 }
 
 function clearFile() {
-    fileInput.value = '';
     selectedFileObj = null;
-    selectedFile.style.display = 'none';
-    dropZone.style.display = 'block';
-    installBtn.disabled = true;
+    document.getElementById('updateFile').value = '';
+    document.getElementById('selectedFile').style.display = 'none';
+    document.getElementById('updateDropZone').style.display = 'block';
+    document.getElementById('installBtn').disabled = true;
 }
 
 function formatBytes(bytes) {
@@ -1130,17 +1565,16 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Timeout test
 async function runTimeoutTest() {
     const resultDiv = document.getElementById('timeoutResult');
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<span style="color: var(--text-muted);">Testing server timeout (5 seconds)...</span>';
+    resultDiv.innerHTML = '<span style="color: #64748b;">Testing server timeout (5 seconds)...</span>';
     
     const startTime = Date.now();
     
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s client timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         
         const response = await fetch('?test_timeout=1&duration=5', {
             signal: controller.signal
@@ -1152,27 +1586,26 @@ async function runTimeoutTest() {
         if (response.ok) {
             const data = await response.json();
             if (data.completed) {
-                resultDiv.innerHTML = `<span style="color: #10b981;">✓ Server completed ${data.elapsed}s test successfully. No timeout issues detected.</span>`;
+                resultDiv.innerHTML = `<span style="color: #10b981;">✓ Server completed ${data.elapsed}s test. Ready for updates.</span>`;
             } else {
-                resultDiv.innerHTML = `<span style="color: #f59e0b;">⚠ Server only ran for ${data.elapsed}s of ${data.requested}s requested.</span>`;
+                resultDiv.innerHTML = `<span style="color: #f59e0b;">⚠ Server only ran for ${data.elapsed}s of ${data.requested}s.</span>`;
             }
         } else {
-            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Server returned error after ${elapsed}s. Status: ${response.status}</span>`;
+            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Server error after ${elapsed}s.</span>`;
         }
     } catch (error) {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
         if (error.name === 'AbortError') {
-            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Request timed out after ${elapsed}s (client-side limit)</span>`;
+            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Request timed out after ${elapsed}s.</span>`;
         } else {
-            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Connection failed after ${elapsed}s: ${error.message}<br>This indicates a server-level timeout (Apache/nginx/proxy) that cannot be changed via PHP.</span>`;
+            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Connection failed after ${elapsed}s.</span>`;
         }
     }
 }
 
-// Progress logging
 function addLog(message, isError = false) {
     const log = document.getElementById('progressLog');
-    const color = isError ? '#ef4444' : 'inherit';
+    const color = isError ? '#ef4444' : '#e2e8f0';
     log.innerHTML += `<div style="color: ${color}; margin-bottom: 0.25rem;">${message}</div>`;
     log.scrollTop = log.scrollHeight;
 }
@@ -1182,11 +1615,9 @@ function setProgress(title, subtitle) {
     document.getElementById('progressSubtitle').textContent = subtitle;
 }
 
-// Main update function using chunked AJAX
 async function startUpdate() {
     if (!selectedFileObj) return;
     
-    // Show progress UI
     document.getElementById('uploadForm').style.display = 'none';
     document.getElementById('updateProgress').style.display = 'block';
     document.getElementById('progressLog').innerHTML = '';
@@ -1194,7 +1625,6 @@ async function startUpdate() {
     const startTime = Date.now();
     
     try {
-        // Step 1: Upload file
         setProgress('Uploading...', 'Sending file to server');
         addLog('Starting upload: ' + selectedFileObj.name + ' (' + formatBytes(selectedFileObj.size) + ')');
         
@@ -1206,7 +1636,7 @@ async function startUpdate() {
         let uploadResponse;
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             
             uploadResponse = await fetch('', {
                 method: 'POST',
@@ -1218,13 +1648,13 @@ async function startUpdate() {
         } catch (error) {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             if (error.name === 'AbortError') {
-                throw new Error(`Upload timed out after ${elapsed}s. The file may be too large or your server has strict timeout limits.`);
+                throw new Error(`Upload timed out after ${elapsed}s.`);
             }
-            throw new Error(`Connection lost after ${elapsed}s. Your server likely has a timeout limit that cannot be changed via PHP. Try the manual update method below.`);
+            throw new Error(`Connection lost after ${elapsed}s. Try manual update.`);
         }
         
         if (!uploadResponse.ok) {
-            throw new Error(`Server error: ${uploadResponse.status} ${uploadResponse.statusText}`);
+            throw new Error(`Server error: ${uploadResponse.status}`);
         }
         
         let uploadData;
@@ -1232,8 +1662,7 @@ async function startUpdate() {
         try {
             uploadData = JSON.parse(responseText);
         } catch (e) {
-            console.error('Response:', responseText.substring(0, 500));
-            throw new Error('Invalid server response. The server may have timed out or crashed. Check error logs.');
+            throw new Error('Invalid server response.');
         }
         
         if (!uploadData.success) {
@@ -1242,7 +1671,6 @@ async function startUpdate() {
         
         uploadData.log.forEach(msg => addLog(msg));
         
-        // Step 2: Extract ZIP
         setProgress('Extracting...', 'Unpacking update files');
         addLog('Extracting ZIP archive...');
         
@@ -1251,19 +1679,15 @@ async function startUpdate() {
         extractData.append('csrf_token', csrfToken);
         extractData.append('zip_path', uploadData.zip_path);
         
-        const extractResponse = await fetch('', {
-            method: 'POST',
-            body: extractData
-        });
-        
+        const extractResponse = await fetch('', { method: 'POST', body: extractData });
         const extractResult = await extractResponse.json();
+        
         if (!extractResult.success) {
             throw new Error(extractResult.error || 'Extraction failed');
         }
         
         extractResult.log.forEach(msg => addLog(msg));
         
-        // Step 3: Install files
         setProgress('Installing...', 'Copying files and running migrations');
         addLog('Installing update...');
         
@@ -1274,19 +1698,15 @@ async function startUpdate() {
         installData.append('backup_dir', extractResult.backup_dir);
         installData.append('temp_dir', extractResult.temp_dir);
         
-        const installResponse = await fetch('', {
-            method: 'POST',
-            body: installData
-        });
-        
+        const installResponse = await fetch('', { method: 'POST', body: installData });
         const installResult = await installResponse.json();
+        
         if (!installResult.success) {
             throw new Error(installResult.error || 'Installation failed');
         }
         
         installResult.log.forEach(msg => addLog(msg));
         
-        // Success!
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         addLog(`\nCompleted in ${totalTime}s`);
         
@@ -1296,35 +1716,15 @@ async function startUpdate() {
     } catch (error) {
         console.error('Update error:', error);
         
-        // Detect NetworkError (server killed connection)
-        const isNetworkError = error.message.includes('NetworkError') || 
-                               error.message.includes('network') ||
-                               error.message.includes('Failed to fetch') ||
-                               error.name === 'TypeError';
-        
-        let errorMsg = error.message;
-        if (isNetworkError) {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            errorMsg = `Server connection lost after ${elapsed}s. Your hosting provider has a strict timeout limit that cannot be bypassed. Please use the Manual Update method below.`;
-        }
-        
-        addLog('✗ ' + errorMsg, true);
+        addLog('✗ ' + error.message, true);
         
         document.getElementById('progressSpinner').style.display = 'none';
-        setProgress('Update Failed', 'Server timeout detected');
+        setProgress('Update Failed', '');
         
-        // Show error UI after a moment
         setTimeout(() => {
             document.getElementById('updateProgress').style.display = 'none';
             document.getElementById('updateError').style.display = 'block';
-            document.getElementById('errorMessage').innerHTML = errorMsg + 
-                (isNetworkError ? '<br><br><strong>→ Scroll down and expand "Manual Update" for step-by-step instructions.</strong>' : '');
-            
-            // Auto-expand manual instructions if network error
-            if (isNetworkError) {
-                const manualSection = document.getElementById('manualInstructions');
-                if (manualSection) manualSection.style.display = 'block';
-            }
+            document.getElementById('errorMessage').innerHTML = error.message;
         }, 1500);
     }
 }
@@ -1336,11 +1736,5 @@ function resetUpdate() {
     clearFile();
 }
 </script>
-
-<style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-</style>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

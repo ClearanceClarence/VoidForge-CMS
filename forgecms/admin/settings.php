@@ -1,6 +1,6 @@
 <?php
 /**
- * Site Settings - Forge CMS v1.0.6
+ * Site Settings - Forge CMS v1.0.7
  * Modern, fluid design
  */
 

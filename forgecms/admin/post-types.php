@@ -1,6 +1,6 @@
 <?php
 /**
- * Post Types Builder - Forge CMS v1.0.6
+ * Post Types Builder - Forge CMS v1.0.7
  * Create and manage custom post types with custom fields
  */
 
@@ -40,6 +40,20 @@ if (isset($_POST['ajax_action']) && verifyCsrf($_POST['csrf_token'] ?? '')) {
             $supports = $_POST['supports'] ?? ['title', 'editor'];
             $fields = json_decode($_POST['fields'] ?? '[]', true) ?: [];
             
+            // Full label configuration
+            $labels = [
+                'add_new' => trim($_POST['label_add_new'] ?? '') ?: 'Add New',
+                'add_new_item' => trim($_POST['label_add_new_item'] ?? '') ?: "Add New {$labelSingular}",
+                'edit_item' => trim($_POST['label_edit_item'] ?? '') ?: "Edit {$labelSingular}",
+                'new_item' => trim($_POST['label_new_item'] ?? '') ?: "New {$labelSingular}",
+                'view_item' => trim($_POST['label_view_item'] ?? '') ?: "View {$labelSingular}",
+                'view_items' => trim($_POST['label_view_items'] ?? '') ?: "View {$labelPlural}",
+                'search_items' => trim($_POST['label_search_items'] ?? '') ?: "Search {$labelPlural}",
+                'not_found' => trim($_POST['label_not_found'] ?? '') ?: "No {$labelPlural} found",
+                'all_items' => trim($_POST['label_all_items'] ?? '') ?: "All {$labelPlural}",
+                'menu_name' => trim($_POST['label_menu_name'] ?? '') ?: $labelPlural,
+            ];
+            
             if (empty($slug) || empty($labelSingular) || empty($labelPlural)) {
                 echo json_encode(['success' => false, 'error' => 'Slug and labels are required']);
                 exit;
@@ -56,6 +70,7 @@ if (isset($_POST['ajax_action']) && verifyCsrf($_POST['csrf_token'] ?? '')) {
                 'slug' => $slug,
                 'label_singular' => $labelSingular,
                 'label_plural' => $labelPlural,
+                'labels' => $labels,
                 'icon' => $icon,
                 'public' => $isPublic,
                 'has_archive' => $hasArchive,
@@ -150,10 +165,11 @@ include ADMIN_PATH . '/includes/header.php';
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     color: #fff;
     border: none;
     border-radius: 12px;
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
@@ -256,7 +272,7 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 .pt-card:hover {
-    border-color: #6366f1;
+    border-color: var(--forge-primary, #6366f1);
     box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
 }
 
@@ -274,7 +290,7 @@ include ADMIN_PATH . '/includes/header.php';
     height: 48px;
     border-radius: 12px;
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-    color: #6366f1;
+    color: var(--forge-primary, #6366f1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -366,6 +382,7 @@ include ADMIN_PATH . '/includes/header.php';
     justify-content: center;
     gap: 0.375rem;
     padding: 0.625rem 1rem;
+    font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 500;
     border-radius: 8px;
@@ -385,7 +402,7 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 .pt-btn-view {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     color: #fff;
     border: none;
 }
@@ -427,7 +444,7 @@ include ADMIN_PATH . '/includes/header.php';
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6366f1;
+    color: var(--forge-primary, #6366f1);
 }
 
 .pt-empty h3 {
@@ -574,7 +591,7 @@ include ADMIN_PATH . '/includes/header.php';
 .form-input:focus,
 .form-select:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--forge-primary, #6366f1);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
@@ -607,7 +624,7 @@ include ADMIN_PATH . '/includes/header.php';
 .checkbox-item input {
     width: 18px;
     height: 18px;
-    accent-color: #6366f1;
+    accent-color: var(--forge-primary, #6366f1);
 }
 
 .checkbox-item span {
@@ -693,7 +710,8 @@ include ADMIN_PATH . '/includes/header.php';
     padding: 1rem;
     background: #f8fafc;
     border: none;
-    color: #6366f1;
+    color: var(--forge-primary, #6366f1);
+    font-family: inherit;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -718,6 +736,7 @@ include ADMIN_PATH . '/includes/header.php';
     color: #475569;
     border: none;
     border-radius: 10px;
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 500;
     cursor: pointer;
@@ -730,10 +749,11 @@ include ADMIN_PATH . '/includes/header.php';
 
 .btn-save {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     color: #fff;
     border: none;
     border-radius: 10px;
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
@@ -774,14 +794,14 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 .icon-option:hover {
-    border-color: #6366f1;
-    color: #6366f1;
+    border-color: var(--forge-primary, #6366f1);
+    color: var(--forge-primary, #6366f1);
 }
 
 .icon-option.selected {
-    border-color: #6366f1;
+    border-color: var(--forge-primary, #6366f1);
     background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    color: var(--forge-primary, #6366f1);
 }
 
 @media (max-width: 768px) {
@@ -802,6 +822,38 @@ include ADMIN_PATH . '/includes/header.php';
     .checkbox-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Labels Section */
+.form-section-title.expandable {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    user-select: none;
+}
+
+.form-section-title.expandable:hover {
+    color: var(--forge-primary, #6366f1);
+}
+
+.expand-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #94a3b8;
+    margin-left: auto;
+}
+
+.labels-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.labels-hint {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin-bottom: 1rem;
 }
 </style>
 
@@ -1001,6 +1053,69 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
                 
                 <div class="form-section">
+                    <div class="form-section-title expandable" onclick="toggleLabelsSection()">
+                        <span>Advanced Labels</span>
+                        <span class="expand-hint" id="labelsExpandHint">Click to customize</span>
+                        <svg id="labelsExpandIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div id="labelsSection" class="labels-section" style="display: none;">
+                        <p class="labels-hint">Customize how this post type is labeled throughout the admin interface. Leave blank to use defaults.</p>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Add New Button</label>
+                                <input type="text" id="labelAddNew" class="form-input" placeholder="Add New">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Add New Item</label>
+                                <input type="text" id="labelAddNewItem" class="form-input" placeholder="Add New [Singular]">
+                            </div>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Edit Item</label>
+                                <input type="text" id="labelEditItem" class="form-input" placeholder="Edit [Singular]">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Item</label>
+                                <input type="text" id="labelNewItem" class="form-input" placeholder="New [Singular]">
+                            </div>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">View Item</label>
+                                <input type="text" id="labelViewItem" class="form-input" placeholder="View [Singular]">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">View Items</label>
+                                <input type="text" id="labelViewItems" class="form-input" placeholder="View [Plural]">
+                            </div>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Search Items</label>
+                                <input type="text" id="labelSearchItems" class="form-input" placeholder="Search [Plural]">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Not Found</label>
+                                <input type="text" id="labelNotFound" class="form-input" placeholder="No [Plural] found">
+                            </div>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">All Items</label>
+                                <input type="text" id="labelAllItems" class="form-input" placeholder="All [Plural]">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Menu Name</label>
+                                <input type="text" id="labelMenuName" class="form-input" placeholder="[Plural]">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
                     <div class="form-section-title">Icon</div>
                     <div class="icon-grid" id="iconGrid">
                         <!-- Icons will be populated by JavaScript -->
@@ -1164,6 +1279,12 @@ function openModal(slug = null) {
     document.getElementById('postTypeModal').classList.add('active');
     document.getElementById('modalTitle').textContent = slug ? 'Edit Post Type' : 'New Post Type';
     document.getElementById('editingSlug').value = slug || '';
+    document.getElementById('ptSlug').disabled = !!slug;
+    
+    // Reset labels section
+    document.getElementById('labelsSection').style.display = 'none';
+    document.getElementById('labelsExpandIcon').style.transform = '';
+    document.getElementById('labelsExpandHint').textContent = 'Click to customize';
     
     if (!slug) {
         // Reset form
@@ -1178,7 +1299,51 @@ function openModal(slug = null) {
         selectIcon('file');
         customFields = [];
         renderFields();
+        clearLabelsFields();
     }
+}
+
+function toggleLabelsSection() {
+    const section = document.getElementById('labelsSection');
+    const icon = document.getElementById('labelsExpandIcon');
+    const hint = document.getElementById('labelsExpandHint');
+    
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+        hint.textContent = 'Click to collapse';
+    } else {
+        section.style.display = 'none';
+        icon.style.transform = '';
+        hint.textContent = 'Click to customize';
+    }
+}
+
+function clearLabelsFields() {
+    document.getElementById('labelAddNew').value = '';
+    document.getElementById('labelAddNewItem').value = '';
+    document.getElementById('labelEditItem').value = '';
+    document.getElementById('labelNewItem').value = '';
+    document.getElementById('labelViewItem').value = '';
+    document.getElementById('labelViewItems').value = '';
+    document.getElementById('labelSearchItems').value = '';
+    document.getElementById('labelNotFound').value = '';
+    document.getElementById('labelAllItems').value = '';
+    document.getElementById('labelMenuName').value = '';
+}
+
+function loadLabelsFields(labels) {
+    if (!labels) return;
+    document.getElementById('labelAddNew').value = labels.add_new || '';
+    document.getElementById('labelAddNewItem').value = labels.add_new_item || '';
+    document.getElementById('labelEditItem').value = labels.edit_item || '';
+    document.getElementById('labelNewItem').value = labels.new_item || '';
+    document.getElementById('labelViewItem').value = labels.view_item || '';
+    document.getElementById('labelViewItems').value = labels.view_items || '';
+    document.getElementById('labelSearchItems').value = labels.search_items || '';
+    document.getElementById('labelNotFound').value = labels.not_found || '';
+    document.getElementById('labelAllItems').value = labels.all_items || '';
+    document.getElementById('labelMenuName').value = labels.menu_name || '';
 }
 
 function closeModal() {
@@ -1213,6 +1378,9 @@ async function editPostType(slug) {
             selectIcon(data.icon || 'file');
             customFields = data.fields || [];
             renderFields();
+            
+            // Load labels
+            loadLabelsFields(data.labels);
         } else {
             alert('Error: ' + result.error);
         }
@@ -1236,6 +1404,18 @@ async function savePostType() {
     formData.append('has_archive', document.getElementById('hasArchive').value);
     formData.append('fields', JSON.stringify(customFields));
     supports.forEach(s => formData.append('supports[]', s));
+    
+    // Labels
+    formData.append('label_add_new', document.getElementById('labelAddNew').value);
+    formData.append('label_add_new_item', document.getElementById('labelAddNewItem').value);
+    formData.append('label_edit_item', document.getElementById('labelEditItem').value);
+    formData.append('label_new_item', document.getElementById('labelNewItem').value);
+    formData.append('label_view_item', document.getElementById('labelViewItem').value);
+    formData.append('label_view_items', document.getElementById('labelViewItems').value);
+    formData.append('label_search_items', document.getElementById('labelSearchItems').value);
+    formData.append('label_not_found', document.getElementById('labelNotFound').value);
+    formData.append('label_all_items', document.getElementById('labelAllItems').value);
+    formData.append('label_menu_name', document.getElementById('labelMenuName').value);
     
     try {
         const res = await fetch('', { method: 'POST', body: formData });

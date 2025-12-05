@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Dashboard - Forge CMS v1.0.6
+ * Admin Dashboard - Forge CMS v1.0.7
  */
 
 define('CMS_ROOT', dirname(__DIR__));

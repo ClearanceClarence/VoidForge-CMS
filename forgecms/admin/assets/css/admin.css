@@ -9,6 +9,7 @@
    ========================================================================== */
 :root {
     --forge-primary: #6366f1;
+    --forge-secondary: #8b5cf6;
     --forge-primary-dark: #4f46e5;
     --forge-primary-light: #818cf8;
     --forge-accent: #8b5cf6;
@@ -170,7 +171,7 @@ body.sidebar-open .sidebar-overlay { display: block; }
 .logo-icon {
     width: 42px;
     height: 42px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -249,7 +250,7 @@ body.sidebar-open .sidebar-overlay { display: block; }
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0.25rem 0.5rem;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     color: #fff;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
@@ -477,6 +478,11 @@ body.sidebar-open .sidebar-overlay { display: block; }
 /* ==========================================================================
    Buttons
    ========================================================================== */
+/* Ensure all buttons inherit font */
+button, input[type="button"], input[type="submit"], input[type="reset"] {
+    font-family: inherit;
+}
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -497,12 +503,12 @@ body.sidebar-open .sidebar-overlay { display: block; }
 .btn:hover { text-decoration: none; }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-primary-dark) 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 2px 8px var(--forge-shadow-color, rgba(99, 102, 241, 0.25));
 }
 
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--forge-shadow-color-hover, rgba(99, 102, 241, 0.35)); }
 
 .btn-secondary { background: var(--bg-card); border-color: var(--border-color); color: var(--text-secondary); }
 .btn-secondary:hover { border-color: var(--forge-primary); color: var(--forge-primary); }

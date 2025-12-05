@@ -11,7 +11,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.6');
+define('CMS_VERSION', '1.0.7');
 
 // Database settings - configured during installation
 define('DB_HOST', '');

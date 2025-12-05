@@ -1,6 +1,6 @@
 <?php
 /**
- * Media Library - Forge CMS v1.0.6
+ * Media Library - Forge CMS v1.0.7
  * Single-click selection with slide-in panel
  */
 
@@ -427,7 +427,7 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
         </div>
 
-        <div class="media-upload-zone" id="uploadZone">
+        <div class="media-upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" style="cursor: pointer;">
             <div class="media-upload-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -436,7 +436,7 @@ include ADMIN_PATH . '/includes/header.php';
                 </svg>
             </div>
             <h3>Drop files here to upload</h3>
-            <p>or click "Upload" button above</p>
+            <p>or click anywhere in this area</p>
         </div>
 
         <?php if (!empty($folders) || $currentFolder): ?>

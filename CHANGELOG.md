@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2024-12-05
+
+### Added
+
+#### Theme-Aware UI Components
+- Admin theme colors now affect buttons, icons, and UI elements globally
+- All primary buttons use CSS variables for colors (btn-primary, btn-regen, btn-new-type, btn-save, btn-install)
+- Dynamic shadow colors based on theme primary color
+- Form inputs focus states use theme colors
+- Checkboxes use theme accent color
+- Icon option selectors and card hovers use theme colors
+
+### Fixed
+- **Post Types buttons** now properly respond to theme color changes
+- **Thumbnails page buttons** styling improved and uses theme colors
+- **Update page** buttons and UI elements now use theme colors
+- Icon stroke width now applies to all SVG icons throughout admin
+- Button styling consistency across all admin pages
+- Added --forge-secondary CSS variable to root stylesheet
+- All hardcoded color values replaced with CSS variables in:
+  - post-types.php (btn-save, btn-new-type, pt-btn-view, icon-option, etc.)
+  - update.php (btn-install, drop-zone, progress-spinner, etc.)
+  - admin.css (logo-icon, nav-badge, btn-primary)
+
+### Technical Notes
+- Helper functions added to header.php: adjustBrightness(), hexToRgba()
+- CSS variables with fallbacks ensure backward compatibility
+- Theme colors cascade to all UI elements through header.php inline styles
+
+### Thumbnail Regeneration
+- Note: If thumbnail regeneration fails, check:
+  - GD library is installed and enabled (required for image processing)
+  - PHP memory_limit is at least 128M
+  - Upload directory is writable
+  - Image file exists and is accessible
+
+---
+
 ## [1.0.6] - 2024-12-04
 
 ### Added
@@ -55,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Landing Page
 - Complete redesign with modern aesthetics
 - Updated hero section with gradient text
-- New feature cards highlighting v1.0.6 features
+- New feature cards highlighting v1.0.7 features
 - Cleaner, more focused layout
 - Better responsive behavior
 
@@ -347,7 +385,7 @@ Forge CMS uses Semantic Versioning:
 
 ## Upgrade Notes
 
-### Upgrading to 1.0.6
+### Upgrading to 1.0.7
 
 1. Backup your installation
 2. Upload new files (preserving config.php and uploads/)

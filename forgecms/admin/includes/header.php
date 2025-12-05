@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Header - Forge CMS v1.0.6
+ * Admin Header - Forge CMS v1.0.7
  * With dynamic theme support
  */
 
@@ -9,6 +9,29 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 $currentUser = User::current();
 
+// Helper function to adjust color brightness
+function adjustBrightness($hex, $steps) {
+    $hex = ltrim($hex, '#');
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    
+    $r = max(0, min(255, $r + $steps));
+    $g = max(0, min(255, $g + $steps));
+    $b = max(0, min(255, $b + $steps));
+    
+    return sprintf('#%02x%02x%02x', $r, $g, $b);
+}
+
+// Helper function to convert hex to rgba
+function hexToRgba($hex, $alpha = 1) {
+    $hex = ltrim($hex, '#');
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    return "rgba($r, $g, $b, $alpha)";
+}
+
 // Load admin theme settings
 $adminTheme = getOption('admin_theme', [
     'color_scheme' => 'default',
@@ -16,6 +39,9 @@ $adminTheme = getOption('admin_theme', [
     'icon_style' => 'outlined',
     'sidebar_compact' => false,
     'animations' => true,
+    'custom_primary' => '#6366f1',
+    'custom_secondary' => '#8b5cf6',
+    'custom_sidebar' => '#0f172a',
 ]);
 
 // Color schemes - all use dark sidebar gradients for good text contrast
@@ -27,6 +53,22 @@ $colorSchemes = [
     'amber' => ['name' => 'Amber', 'primary' => '#f59e0b', 'secondary' => '#fbbf24', 'sidebar_bg' => 'linear-gradient(180deg, #1a1207 0%, #451a03 50%, #5c2a0a 100%)', 'preview' => ['#f59e0b', '#fbbf24', '#451a03']],
     'slate' => ['name' => 'Slate', 'primary' => '#64748b', 'secondary' => '#94a3b8', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 'preview' => ['#64748b', '#94a3b8', '#1e293b']],
 ];
+
+// Handle custom color scheme
+if ($adminTheme['color_scheme'] === 'custom') {
+    $customPrimary = $adminTheme['custom_primary'] ?? '#6366f1';
+    $customSecondary = $adminTheme['custom_secondary'] ?? '#8b5cf6';
+    $customSidebar = $adminTheme['custom_sidebar'] ?? '#0f172a';
+    $scheme = [
+        'name' => 'Custom',
+        'primary' => $customPrimary,
+        'secondary' => $customSecondary,
+        'sidebar_bg' => $customSidebar,
+        'preview' => [$customPrimary, $customSecondary, $customSidebar]
+    ];
+} else {
+    $scheme = $colorSchemes[$adminTheme['color_scheme']] ?? $colorSchemes['default'];
+}
 
 $fonts = [
     'inter' => ['name' => 'Inter', 'family' => "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 'google' => 'Inter:wght@400;500;600;700;800'],
@@ -43,7 +85,6 @@ $iconStyles = [
     'bold' => ['name' => 'Bold', 'stroke_width' => '2.5'],
 ];
 
-$scheme = $colorSchemes[$adminTheme['color_scheme']] ?? $colorSchemes['default'];
 $font = $fonts[$adminTheme['font']] ?? $fonts['inter'];
 $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
 ?>
@@ -62,11 +103,67 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
         :root {
             --forge-primary: <?= $scheme['primary'] ?>;
             --forge-secondary: <?= $scheme['secondary'] ?>;
+            --forge-primary-dark: <?= adjustBrightness($scheme['primary'], -20) ?>;
+            --forge-primary-light: <?= adjustBrightness($scheme['primary'], 30) ?>;
+            --forge-shadow-color: <?= hexToRgba($scheme['primary'], 0.25) ?>;
+            --forge-shadow-color-hover: <?= hexToRgba($scheme['primary'], 0.35) ?>;
             --sidebar-gradient: <?= $scheme['sidebar_bg'] ?>;
             --font-family: <?= $font['family'] ?>;
             --icon-stroke-width: <?= $iconWeight ?>;
         }
         body { font-family: var(--font-family); }
+        
+        /* Apply icon stroke width to all SVG icons */
+        .admin-sidebar svg:not(.logo-icon svg),
+        .nav-icon svg,
+        .admin-header svg,
+        .settings-card-icon svg,
+        .theme-section-icon svg,
+        .btn svg,
+        .action-btn svg,
+        .stat-icon svg,
+        .diag-icon svg,
+        .upload-card-title svg,
+        .card-title svg,
+        .pt-card-icon svg,
+        .pt-btn svg,
+        .btn-regen svg,
+        .btn-delete svg,
+        .btn-new-type svg,
+        .btn-action svg {
+            stroke-width: var(--icon-stroke-width, 2) !important;
+        }
+        
+        /* Theme-aware buttons */
+        .btn-primary,
+        .btn-regen,
+        .btn-new-type,
+        .btn-save,
+        .btn-install {
+            background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%) !important;
+            box-shadow: 0 4px 15px <?= hexToRgba($scheme['primary'], 0.35) ?> !important;
+        }
+        .btn-primary:hover,
+        .btn-regen:hover,
+        .btn-new-type:hover,
+        .btn-save:hover,
+        .btn-install:hover {
+            box-shadow: 0 6px 20px <?= hexToRgba($scheme['primary'], 0.45) ?> !important;
+        }
+        
+        /* Theme-aware stat icons */
+        .stat-icon:first-of-type,
+        .stat-card:first-child .stat-icon {
+            background: linear-gradient(135deg, var(--forge-primary), var(--forge-secondary)) !important;
+        }
+        
+        /* Theme-aware secondary buttons */
+        .btn-secondary:hover,
+        .btn-cancel:hover {
+            border-color: var(--forge-primary) !important;
+            color: var(--forge-primary) !important;
+        }
+        
         <?php if (!($adminTheme['animations'] ?? true)): ?>
         *, *::before, *::after { transition: none !important; animation: none !important; }
         <?php endif; ?>

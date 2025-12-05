@@ -1,7 +1,7 @@
 <?php
 /**
  * Forge CMS Installation Wizard
- * Beautiful step-by-step installation process
+ * Light mode design matching login page
  */
 
 error_reporting(E_ALL);
@@ -9,46 +9,39 @@ ini_set('display_errors', 1);
 
 define('CMS_ROOT', __DIR__);
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.6');
+define('CMS_VERSION', '1.0.7');
 
 /**
- * Check if CMS is already installed by verifying database connection and tables
+ * Check if CMS is already installed
  */
 function isInstalled(): bool {
     $configFile = __DIR__ . '/includes/config.php';
     
-    // Check if config file exists and has been configured
     if (!file_exists($configFile)) {
         return false;
     }
     
-    // Read config file to check if it has real values
     $configContent = file_get_contents($configFile);
     
-    // Check if DB_HOST is still the default placeholder or empty
     if (strpos($configContent, "define('DB_HOST', '');") !== false ||
         strpos($configContent, "define('DB_NAME', '');") !== false) {
         return false;
     }
     
-    // Try to include config and verify database
     try {
         require_once $configFile;
         
-        // Check if required constants are defined and have values
         if (!defined('DB_HOST') || !defined('DB_NAME') || !defined('DB_USER') ||
             empty(DB_HOST) || empty(DB_NAME)) {
             return false;
         }
         
-        // Try to connect to database
         $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
         $pdo = new PDO($dsn, DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_TIMEOUT => 5
         ]);
         
-        // Check if users table exists (core table that must exist)
         $prefix = defined('DB_PREFIX') ? DB_PREFIX : '';
         $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
         $stmt->execute([$prefix . 'users']);
@@ -57,7 +50,6 @@ function isInstalled(): bool {
             return false;
         }
         
-        // Check if at least one admin user exists
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}users WHERE role = 'admin'");
         $stmt->execute();
         
@@ -72,7 +64,6 @@ function isInstalled(): bool {
     }
 }
 
-// Check if already installed
 if (isInstalled()) {
     header('Location: admin/');
     exit;
@@ -81,28 +72,24 @@ if (isInstalled()) {
 // Check requirements
 $requirements = [
     'php' => [
-        'name' => 'PHP 7.4+ (8.1+ recommended)',
+        'name' => 'PHP 7.4+',
         'status' => version_compare(PHP_VERSION, '7.4.0', '>='),
         'current' => PHP_VERSION,
-        'required' => '7.4.0'
     ],
     'pdo_mysql' => [
         'name' => 'PDO MySQL',
         'status' => extension_loaded('pdo_mysql'),
-        'current' => extension_loaded('pdo_mysql') ? 'Installed' : 'Not installed',
-        'required' => 'Required'
+        'current' => extension_loaded('pdo_mysql') ? 'Installed' : 'Missing',
     ],
     'writable' => [
         'name' => 'Directory Writable',
         'status' => is_writable(__DIR__),
-        'current' => is_writable(__DIR__) ? 'Writable' : 'Not writable',
-        'required' => 'Required'
+        'current' => is_writable(__DIR__) ? 'Yes' : 'No',
     ],
     'config' => [
         'name' => 'Config File',
         'status' => file_exists(__DIR__ . '/includes/config.php') && is_writable(__DIR__ . '/includes/config.php'),
         'current' => file_exists(__DIR__ . '/includes/config.php') ? (is_writable(__DIR__ . '/includes/config.php') ? 'Ready' : 'Not writable') : 'Missing',
-        'required' => 'Writable'
     ]
 ];
 
@@ -114,7 +101,6 @@ foreach ($requirements as $req) {
     }
 }
 
-// Current step
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 if (!$allPassed && $step > 1) $step = 1;
 
@@ -129,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $dbPass = $_POST['db_pass'] ?? '';
     $dbPrefix = trim($_POST['db_prefix'] ?? 'forge_');
     
-    // Sanitize prefix - only allow alphanumeric and underscore
     $dbPrefix = preg_replace('/[^a-zA-Z0-9_]/', '', $dbPrefix);
     if (empty($dbPrefix)) $dbPrefix = 'forge_';
     if (substr($dbPrefix, -1) !== '_') $dbPrefix .= '_';
@@ -142,7 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $adminPass = $_POST['admin_pass'] ?? '';
     $adminPassConfirm = $_POST['admin_pass_confirm'] ?? '';
 
-    // Validate
     if (empty($dbHost)) $errors['db_host'] = 'Database host is required';
     if (empty($dbName)) $errors['db_name'] = 'Database name is required';
     if (empty($dbUser)) $errors['db_user'] = 'Database user is required';
@@ -157,17 +141,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
 
     if (empty($errors)) {
         try {
-            // Test database connection
             $dsn = "mysql:host={$dbHost};charset=utf8mb4";
             $pdo = new PDO($dsn, $dbUser, $dbPass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
 
-            // Create database if not exists
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             $pdo->exec("USE `{$dbName}`");
 
-            // Create tables with prefix
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS {$dbPrefix}users (
                     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -248,12 +229,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
-            // Create admin user
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS {$dbPrefix}custom_post_types (
+                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    slug VARCHAR(50) NOT NULL UNIQUE,
+                    config JSON NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    INDEX idx_slug (slug)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
             $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT, ['cost' => 12]);
             $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}users (username, email, password, display_name, role, created_at) VALUES (?, ?, ?, ?, 'admin', NOW())");
             $stmt->execute([$adminUser, $adminEmail, $hashedPass, $adminUser]);
 
-            // Insert default options
             $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}options (option_name, option_value) VALUES (?, ?)");
             $stmt->execute(['site_title', $siteTitle]);
             $stmt->execute(['site_description', '']);
@@ -263,90 +252,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             $stmt->execute(['cms_version', CMS_VERSION]);
             $stmt->execute(['active_plugins', '[]']);
 
-            // Create sample content
-            $welcomeContent = '<h2>Welcome to ' . $siteTitle . '</h2>
-<p>Congratulations on setting up your new Forge CMS website! This is your homepage, and you can customize it however you like.</p>
-
+            $welcomeContent = '<h2>Welcome to ' . htmlspecialchars($siteTitle) . '</h2>
+<p>Congratulations on setting up your new Forge CMS website!</p>
 <h3>Getting Started</h3>
-<p>Here are a few things you can do to get started:</p>
 <ul>
-<li><strong>Customize your site</strong> – Visit the Settings page to update your site title, description, and other options.</li>
-<li><strong>Create content</strong> – Add new posts and pages from the admin panel to build out your site.</li>
-<li><strong>Upload media</strong> – Use the Media Library to upload images and files for your content.</li>
-<li><strong>Explore plugins</strong> – Check out the Plugins page to extend your site\'s functionality.</li>
-</ul>
+<li><strong>Customize your site</strong> – Visit Settings to update your site options.</li>
+<li><strong>Create content</strong> – Add posts and pages from the admin panel.</li>
+<li><strong>Upload media</strong> – Use the Media Library to manage images and files.</li>
+</ul>';
 
-<h3>Need Help?</h3>
-<p>Forge CMS is designed to be simple and intuitive. If you need assistance, check out the documentation or reach out to our community.</p>
-
-<p>Happy building!</p>';
-
-            $helloContent = '<p>Welcome to your new Forge CMS website! This is your first blog post, and it\'s here to help you get familiar with how posts work.</p>
-
-<h2>What is Forge CMS?</h2>
-<p>Forge CMS is a modern, lightweight content management system built with PHP. It\'s designed to be simple, fast, and developer-friendly – giving you all the tools you need without the bloat.</p>
-
+            $helloContent = '<p>Welcome to Forge CMS! This is your first blog post.</p>
 <h2>Key Features</h2>
-<p>Here\'s what makes Forge CMS special:</p>
 <ul>
-<li><strong>Clean Admin Interface</strong> – A modern, intuitive dashboard that\'s a pleasure to use.</li>
-<li><strong>Posts &amp; Pages</strong> – Full content management with a rich text editor.</li>
-<li><strong>Media Library</strong> – Drag-and-drop uploads with easy organization.</li>
-<li><strong>Plugin System</strong> – Extend functionality with hooks, filters, and content tags.</li>
-<li><strong>Theme Support</strong> – Customizable themes with a live CSS editor.</li>
-</ul>
-
-<h2>What\'s Next?</h2>
-<p>Now that you\'ve seen your first post, why not create your own? Head over to the admin panel and click "Add New" under Posts to write something amazing.</p>
-
-<p>You can edit or delete this post anytime – it\'s just here to get you started. Happy writing!</p>';
-
-            $welcomeExcerpt = 'Welcome to your new Forge CMS website. Get started by customizing your site, creating content, and exploring all the features.';
-            $helloExcerpt = 'Welcome to Forge CMS! This is your first post. Learn about the key features and get started with creating your own content.';
+<li><strong>Clean Admin Interface</strong> – Modern and intuitive dashboard.</li>
+<li><strong>Posts &amp; Pages</strong> – Full content management with rich editing.</li>
+<li><strong>Media Library</strong> – Easy file uploads and organization.</li>
+<li><strong>Plugin System</strong> – Extend functionality with hooks and filters.</li>
+</ul>';
 
             $stmt = $pdo->prepare("INSERT INTO {$dbPrefix}posts (post_type, title, slug, content, excerpt, status, author_id, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, ?, 'published', 1, NOW(), NOW(), NOW())");
-            $stmt->execute(['page', 'Welcome', 'welcome', $welcomeContent, $welcomeExcerpt]);
-            $stmt->execute(['post', 'Hello World', 'hello-world', $helloContent, $helloExcerpt]);
+            $stmt->execute(['page', 'Welcome', 'welcome', $welcomeContent, 'Welcome to your new website.']);
+            $stmt->execute(['post', 'Hello World', 'hello-world', $helloContent, 'Your first blog post on Forge CMS.']);
 
-            // Update config file
             $configContent = "<?php\n";
             $configContent .= "/**\n * Forge CMS Configuration\n * Generated: " . date('Y-m-d H:i:s') . "\n */\n\n";
-            $configContent .= "// Prevent direct access\n";
             $configContent .= "defined('CMS_ROOT') or die('Direct access not allowed');\n\n";
-            $configContent .= "// Branding\n";
             $configContent .= "define('CMS_NAME', 'Forge');\n";
             $configContent .= "define('CMS_VERSION', '" . CMS_VERSION . "');\n\n";
-            $configContent .= "// Database settings\n";
             $configContent .= "define('DB_HOST', " . var_export($dbHost, true) . ");\n";
             $configContent .= "define('DB_NAME', " . var_export($dbName, true) . ");\n";
             $configContent .= "define('DB_USER', " . var_export($dbUser, true) . ");\n";
             $configContent .= "define('DB_PASS', " . var_export($dbPass, true) . ");\n";
             $configContent .= "define('DB_CHARSET', 'utf8mb4');\n";
             $configContent .= "define('DB_PREFIX', " . var_export($dbPrefix, true) . ");\n\n";
-            $configContent .= "// Site settings\n";
             $configContent .= "define('SITE_URL', " . var_export($siteUrl, true) . ");\n";
             $configContent .= "define('ADMIN_URL', SITE_URL . '/admin');\n\n";
-            $configContent .= "// Paths\n";
             $configContent .= "define('INCLUDES_PATH', CMS_ROOT . '/includes');\n";
             $configContent .= "define('ADMIN_PATH', CMS_ROOT . '/admin');\n";
             $configContent .= "define('THEMES_PATH', CMS_ROOT . '/themes');\n";
             $configContent .= "define('UPLOADS_PATH', CMS_ROOT . '/uploads');\n";
             $configContent .= "define('UPLOADS_URL', SITE_URL . '/uploads');\n";
             $configContent .= "define('PLUGINS_PATH', CMS_ROOT . '/plugins');\n\n";
-            $configContent .= "// Current theme\n";
             $configContent .= "define('CURRENT_THEME', 'default');\n";
             $configContent .= "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);\n\n";
-            $configContent .= "// Session settings\n";
             $configContent .= "define('SESSION_NAME', 'forge_session');\n";
-            $configContent .= "define('SESSION_LIFETIME', 86400);\n\n";
-            $configContent .= "// Security\n";
+            $configContent .= "define('SESSION_LIFETIME', 86400);\n";
             $configContent .= "define('HASH_COST', 12);\n\n";
-            $configContent .= "// Timezone\n";
             $configContent .= "date_default_timezone_set('UTC');\n";
 
             file_put_contents(__DIR__ . '/includes/config.php', $configContent);
 
-            // Create uploads directory
             if (!is_dir(__DIR__ . '/uploads')) {
                 mkdir(__DIR__ . '/uploads', 0755, true);
             }
@@ -362,11 +317,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     }
 }
 
-// Auto-detect site URL
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $path = dirname($_SERVER['SCRIPT_NAME']);
 $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
+
+function esc($str) {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -378,43 +336,105 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent: #a855f7;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background: #f8fafc;
             min-height: 100vh;
             color: #0f172a;
             line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .bg-decoration {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .bg-decoration::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .shape-1 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+            top: -150px;
+            right: -150px;
+        }
+        
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%);
+            bottom: -100px;
+            left: -100px;
+        }
+        
+        .grid-pattern {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+            pointer-events: none;
         }
         
         .install-container {
-            max-width: 640px;
+            position: relative;
+            z-index: 10;
+            max-width: 580px;
             margin: 0 auto;
             padding: 3rem 1.5rem;
         }
         
         .install-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
         
-        .install-logo {
+        .logo {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            border-radius: 20px;
             margin-bottom: 1.5rem;
-            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
         }
         
-        .install-logo svg {
+        .logo svg {
             width: 36px;
             height: 36px;
-            color: #fff;
         }
         
         .install-header h1 {
@@ -427,11 +447,10 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             color: #64748b;
         }
         
-        /* Steps indicator */
+        /* Steps */
         .steps {
             display: flex;
             justify-content: center;
-            align-items: center;
             gap: 0.5rem;
             margin-bottom: 2rem;
         }
@@ -442,7 +461,7 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             gap: 0.5rem;
         }
         
-        .step-number {
+        .step-num {
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -453,22 +472,22 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             font-weight: 600;
             background: #e2e8f0;
             color: #64748b;
-            flex-shrink: 0;
+            transition: all 0.2s;
         }
         
-        .step.active .step-number {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        .step.active .step-num {
+            background: var(--primary);
             color: #fff;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
         
-        .step.completed .step-number {
-            background: #10b981;
+        .step.completed .step-num {
+            background: var(--success);
             color: #fff;
         }
         
         .step-label {
-            font-size: 0.8125rem;
+            font-size: 0.875rem;
             font-weight: 500;
             color: #64748b;
         }
@@ -481,47 +500,39 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             width: 40px;
             height: 2px;
             background: #e2e8f0;
-            flex-shrink: 0;
-            align-self: center;
         }
         
         /* Card */
-        .install-card {
+        .card {
             background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.04),
+                0 6px 16px rgba(0, 0, 0, 0.04),
+                0 20px 40px rgba(0, 0, 0, 0.04);
         }
         
-        .card-header {
-            padding: 1.25rem 1.5rem;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .card-header h2 {
-            font-size: 1rem;
+        .card-title {
+            font-size: 1.125rem;
             font-weight: 600;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
         
-        .card-header svg {
-            width: 20px;
-            height: 20px;
-            color: #6366f1;
-        }
-        
-        .card-body {
-            padding: 1.5rem;
+        .card-title svg {
+            color: var(--primary);
         }
         
         /* Requirements */
-        .req-list {
+        .requirements {
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
+            margin-bottom: 1.5rem;
         }
         
         .req-item {
@@ -530,63 +541,39 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             justify-content: space-between;
             padding: 0.875rem 1rem;
             background: #f8fafc;
-            border-radius: 8px;
-        }
-        
-        .req-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .req-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .req-icon.pass {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-        
-        .req-icon.fail {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
+            border-radius: 10px;
         }
         
         .req-name {
             font-weight: 500;
         }
         
-        .req-value {
+        .req-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 0.875rem;
-            color: #64748b;
+            font-weight: 500;
         }
+        
+        .req-status.pass { color: var(--success); }
+        .req-status.fail { color: var(--danger); }
         
         /* Form */
         .form-section {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .form-section:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
+            margin-bottom: 2rem;
         }
         
         .form-section-title {
-            font-size: 0.8125rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #6366f1;
+            color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .form-group {
@@ -595,42 +582,53 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
         
         .form-label {
             display: block;
-            font-size: 0.8125rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #334155;
             margin-bottom: 0.375rem;
+            color: #0f172a;
         }
         
         .form-input {
             width: 100%;
             padding: 0.75rem 1rem;
             font-size: 0.9375rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            transition: all 0.15s;
             font-family: inherit;
+            color: #0f172a;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .form-input:hover {
+            border-color: #cbd5e1;
         }
         
         .form-input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #94a3b8;
         }
         
         .form-input.error {
-            border-color: #ef4444;
-        }
-        
-        .form-hint {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 0.25rem;
+            border-color: var(--danger);
         }
         
         .form-error {
-            font-size: 0.75rem;
-            color: #ef4444;
-            margin-top: 0.25rem;
+            font-size: 0.8125rem;
+            color: var(--danger);
+            margin-top: 0.375rem;
+        }
+        
+        .form-hint {
+            font-size: 0.8125rem;
+            color: #94a3b8;
+            margin-top: 0.375rem;
         }
         
         .form-row {
@@ -645,20 +643,20 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.5rem;
             font-size: 0.9375rem;
             font-weight: 600;
-            border-radius: 8px;
-            border: none;
+            font-family: inherit;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: inherit;
             text-decoration: none;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: #fff;
+            border: none;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
         
@@ -669,45 +667,64 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
         
         .btn-secondary {
             background: #fff;
-            color: #64748b;
-            border: 1px solid #e2e8f0;
+            color: #475569;
+            border: 2px solid #e2e8f0;
         }
         
         .btn-secondary:hover {
-            border-color: #6366f1;
-            color: #6366f1;
+            border-color: var(--primary);
+            color: var(--primary);
         }
         
-        .btn-block {
-            width: 100%;
+        .btn svg {
+            width: 18px;
+            height: 18px;
         }
         
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-        
-        .card-footer {
-            padding: 1rem 1.5rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
+        .btn-group {
             display: flex;
-            justify-content: flex-end;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        /* Alert */
+        .alert {
+            display: flex;
+            align-items: flex-start;
             gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+        
+        .alert svg {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
         }
         
         /* Success */
+        .success-content {
+            text-align: center;
+        }
+        
         .success-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
         }
         
         .success-icon svg {
@@ -716,19 +733,14 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             color: #fff;
         }
         
-        .success-content {
-            text-align: center;
-            padding: 2rem;
-        }
-        
         .success-content h2 {
             font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
         
         .success-content p {
             color: #64748b;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         
         .success-links {
@@ -737,270 +749,309 @@ $defaultUrl = $protocol . '://' . $host . ($path !== '/' ? $path : '');
             justify-content: center;
         }
         
-        /* Error box */
-        .error-box {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
+        /* Footer */
+        .install-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #94a3b8;
             font-size: 0.875rem;
         }
         
         @media (max-width: 640px) {
             .form-row { grid-template-columns: 1fr; }
             .step-label { display: none; }
-            .success-links { flex-direction: column; }
+            .btn-group { flex-direction: column; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-decoration">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+    <div class="grid-pattern"></div>
+    
     <div class="install-container">
         <div class="install-header">
-            <div class="install-logo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                    <polyline points="2 17 12 22 22 17"></polyline>
-                    <polyline points="2 12 12 17 22 12"></polyline>
+            <div class="logo">
+                <svg viewBox="0 0 48 48" fill="none">
+                    <path d="M14 12h20v5h-13v6h10v5h-10v10h-7V12z" fill="white"/>
                 </svg>
             </div>
             <h1>Install <?= CMS_NAME ?></h1>
-            <p>Version <?= CMS_VERSION ?></p>
+            <p>Let's get your site up and running</p>
         </div>
         
         <div class="steps">
             <div class="step <?= $step >= 1 ? ($step > 1 ? 'completed' : 'active') : '' ?>">
-                <div class="step-number"><?= $step > 1 ? '✓' : '1' ?></div>
+                <span class="step-num"><?= $step > 1 ? '✓' : '1' ?></span>
                 <span class="step-label">Requirements</span>
             </div>
             <div class="step-line"></div>
             <div class="step <?= $step >= 2 ? ($step > 2 ? 'completed' : 'active') : '' ?>">
-                <div class="step-number"><?= $step > 2 ? '✓' : '2' ?></div>
+                <span class="step-num"><?= $step > 2 ? '✓' : '2' ?></span>
                 <span class="step-label">Configuration</span>
             </div>
             <div class="step-line"></div>
             <div class="step <?= $step >= 3 ? 'active' : '' ?>">
-                <div class="step-number">3</div>
+                <span class="step-num">3</span>
                 <span class="step-label">Complete</span>
             </div>
         </div>
         
-        <?php if ($step === 1): ?>
-        <!-- Step 1: Requirements -->
-        <div class="install-card">
-            <div class="card-header">
-                <h2>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 11l3 3L22 4"></path>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                    </svg>
-                    System Requirements
-                </h2>
-            </div>
-            <div class="card-body">
-                <div class="req-list">
-                    <?php foreach ($requirements as $key => $req): ?>
-                    <div class="req-item">
-                        <div class="req-info">
-                            <div class="req-icon <?= $req['status'] ? 'pass' : 'fail' ?>">
-                                <?php if ($req['status']): ?>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                <?php else: ?>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                                <?php endif; ?>
-                            </div>
-                            <span class="req-name"><?= $req['name'] ?></span>
-                        </div>
-                        <span class="req-value"><?= $req['current'] ?></span>
-                    </div>
-                    <?php endforeach; ?>
+        <div class="card">
+            <?php if ($step === 1): ?>
+            <!-- Step 1: Requirements -->
+            <h3 class="card-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                System Requirements
+            </h3>
+            
+            <div class="requirements">
+                <?php foreach ($requirements as $key => $req): ?>
+                <div class="req-item">
+                    <span class="req-name"><?= esc($req['name']) ?></span>
+                    <span class="req-status <?= $req['status'] ? 'pass' : 'fail' ?>">
+                        <?php if ($req['status']): ?>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <?= esc($req['current']) ?>
+                        <?php else: ?>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        <?= esc($req['current']) ?>
+                        <?php endif; ?>
+                    </span>
                 </div>
-            </div>
-            <div class="card-footer">
-                <?php if ($allPassed): ?>
-                <a href="?step=2" class="btn btn-primary">
-                    Continue
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </a>
-                <?php else: ?>
-                <button class="btn btn-primary" disabled>Fix Requirements First</button>
-                <?php endif; ?>
-            </div>
-        </div>
-        
-        <?php elseif ($step === 2): ?>
-        <!-- Step 2: Configuration -->
-        <div class="install-card">
-            <div class="card-header">
-                <h2>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Configuration
-                </h2>
+                <?php endforeach; ?>
             </div>
             
-            <form method="post">
-                <div class="card-body">
-                    <?php if (!empty($errors['database']) || !empty($errors['general'])): ?>
-                    <div class="error-box">
-                        <?= htmlspecialchars($errors['database'] ?? $errors['general']) ?>
-                    </div>
+            <?php if ($allPassed): ?>
+            <a href="?step=2" class="btn btn-primary" style="width: 100%;">
+                Continue
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
+            <?php else: ?>
+            <div class="alert alert-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div>Please fix the requirements above before continuing.</div>
+            </div>
+            <?php endif; ?>
+            
+            <?php elseif ($step === 2): ?>
+            <!-- Step 2: Configuration -->
+            
+            <?php if (!empty($errors)): ?>
+            <div class="alert alert-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div>
+                    <?php if (isset($errors['database'])): ?>
+                        <?= esc($errors['database']) ?>
+                    <?php elseif (isset($errors['general'])): ?>
+                        <?= esc($errors['general']) ?>
+                    <?php else: ?>
+                        Please fix the errors below.
                     <?php endif; ?>
-                    
-                    <div class="form-section">
-                        <div class="form-section-title">Database</div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Host</label>
-                                <input type="text" name="db_host" class="form-input <?= isset($errors['db_host']) ? 'error' : '' ?>" 
-                                       value="<?= htmlspecialchars($_POST['db_host'] ?? 'localhost') ?>">
-                                <?php if (isset($errors['db_host'])): ?>
-                                <div class="form-error"><?= $errors['db_host'] ?></div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Database Name</label>
-                                <input type="text" name="db_name" class="form-input <?= isset($errors['db_name']) ? 'error' : '' ?>" 
-                                       value="<?= htmlspecialchars($_POST['db_name'] ?? 'forge_cms') ?>">
-                                <?php if (isset($errors['db_name'])): ?>
-                                <div class="form-error"><?= $errors['db_name'] ?></div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="db_user" class="form-input <?= isset($errors['db_user']) ? 'error' : '' ?>" 
-                                       value="<?= htmlspecialchars($_POST['db_user'] ?? 'root') ?>">
-                                <?php if (isset($errors['db_user'])): ?>
-                                <div class="form-error"><?= $errors['db_user'] ?></div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="db_pass" class="form-input" 
-                                       value="<?= htmlspecialchars($_POST['db_pass'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Table Prefix</label>
-                                <input type="text" name="db_prefix" class="form-input" 
-                                       value="<?= htmlspecialchars($_POST['db_prefix'] ?? 'forge_') ?>"
-                                       pattern="[a-zA-Z0-9_]+" style="max-width: 200px;">
-                                <div class="form-hint">Letters, numbers, underscores only. End with underscore. Default: forge_</div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <form method="post">
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                        Database
                     </div>
                     
-                    <div class="form-section">
-                        <div class="form-section-title">Site Settings</div>
+                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Site URL</label>
-                            <input type="url" name="site_url" class="form-input <?= isset($errors['site_url']) ? 'error' : '' ?>" 
-                                   value="<?= htmlspecialchars($_POST['site_url'] ?? $defaultUrl) ?>">
-                            <div class="form-hint">No trailing slash. Example: https://example.com</div>
-                            <?php if (isset($errors['site_url'])): ?>
-                            <div class="form-error"><?= $errors['site_url'] ?></div>
+                            <label class="form-label">Host</label>
+                            <input type="text" name="db_host" class="form-input <?= isset($errors['db_host']) ? 'error' : '' ?>" 
+                                   value="<?= esc($_POST['db_host'] ?? 'localhost') ?>" placeholder="localhost">
+                            <?php if (isset($errors['db_host'])): ?>
+                            <div class="form-error"><?= esc($errors['db_host']) ?></div>
                             <?php endif; ?>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Site Title</label>
-                            <input type="text" name="site_title" class="form-input <?= isset($errors['site_title']) ? 'error' : '' ?>" 
-                                   value="<?= htmlspecialchars($_POST['site_title'] ?? 'My Website') ?>">
-                            <?php if (isset($errors['site_title'])): ?>
-                            <div class="form-error"><?= $errors['site_title'] ?></div>
+                            <label class="form-label">Database Name</label>
+                            <input type="text" name="db_name" class="form-input <?= isset($errors['db_name']) ? 'error' : '' ?>" 
+                                   value="<?= esc($_POST['db_name'] ?? '') ?>" placeholder="forge_cms">
+                            <?php if (isset($errors['db_name'])): ?>
+                            <div class="form-error"><?= esc($errors['db_name']) ?></div>
                             <?php endif; ?>
                         </div>
                     </div>
                     
-                    <div class="form-section">
-                        <div class="form-section-title">Admin Account</div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="admin_user" class="form-input <?= isset($errors['admin_user']) ? 'error' : '' ?>" 
-                                       value="<?= htmlspecialchars($_POST['admin_user'] ?? 'admin') ?>">
-                                <?php if (isset($errors['admin_user'])): ?>
-                                <div class="form-error"><?= $errors['admin_user'] ?></div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="admin_email" class="form-input <?= isset($errors['admin_email']) ? 'error' : '' ?>" 
-                                       value="<?= htmlspecialchars($_POST['admin_email'] ?? '') ?>">
-                                <?php if (isset($errors['admin_email'])): ?>
-                                <div class="form-error"><?= $errors['admin_email'] ?></div>
-                                <?php endif; ?>
-                            </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="db_user" class="form-input <?= isset($errors['db_user']) ? 'error' : '' ?>" 
+                                   value="<?= esc($_POST['db_user'] ?? 'root') ?>" placeholder="root">
+                            <?php if (isset($errors['db_user'])): ?>
+                            <div class="form-error"><?= esc($errors['db_user']) ?></div>
+                            <?php endif; ?>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="admin_pass" class="form-input <?= isset($errors['admin_pass']) ? 'error' : '' ?>">
-                                <div class="form-hint">Minimum 8 characters</div>
-                                <?php if (isset($errors['admin_pass'])): ?>
-                                <div class="form-error"><?= $errors['admin_pass'] ?></div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Confirm Password</label>
-                                <input type="password" name="admin_pass_confirm" class="form-input <?= isset($errors['admin_pass_confirm']) ? 'error' : '' ?>">
-                                <?php if (isset($errors['admin_pass_confirm'])): ?>
-                                <div class="form-error"><?= $errors['admin_pass_confirm'] ?></div>
-                                <?php endif; ?>
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="db_pass" class="form-input" 
+                                   value="<?= esc($_POST['db_pass'] ?? '') ?>" placeholder="Optional">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Table Prefix</label>
+                        <input type="text" name="db_prefix" class="form-input" 
+                               value="<?= esc($_POST['db_prefix'] ?? 'forge_') ?>" placeholder="forge_">
+                        <div class="form-hint">Useful for multiple installations in one database</div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                        Site
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Site URL</label>
+                        <input type="url" name="site_url" class="form-input <?= isset($errors['site_url']) ? 'error' : '' ?>" 
+                               value="<?= esc($_POST['site_url'] ?? $defaultUrl) ?>">
+                        <?php if (isset($errors['site_url'])): ?>
+                        <div class="form-error"><?= esc($errors['site_url']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Site Title</label>
+                        <input type="text" name="site_title" class="form-input <?= isset($errors['site_title']) ? 'error' : '' ?>" 
+                               value="<?= esc($_POST['site_title'] ?? 'My Website') ?>" placeholder="My Website">
+                        <?php if (isset($errors['site_title'])): ?>
+                        <div class="form-error"><?= esc($errors['site_title']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Admin Account
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="admin_user" class="form-input <?= isset($errors['admin_user']) ? 'error' : '' ?>" 
+                                   value="<?= esc($_POST['admin_user'] ?? '') ?>" placeholder="admin">
+                            <?php if (isset($errors['admin_user'])): ?>
+                            <div class="form-error"><?= esc($errors['admin_user']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="admin_email" class="form-input <?= isset($errors['admin_email']) ? 'error' : '' ?>" 
+                                   value="<?= esc($_POST['admin_email'] ?? '') ?>" placeholder="admin@example.com">
+                            <?php if (isset($errors['admin_email'])): ?>
+                            <div class="form-error"><?= esc($errors['admin_email']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="admin_pass" class="form-input <?= isset($errors['admin_pass']) ? 'error' : '' ?>" 
+                                   placeholder="Min. 8 characters">
+                            <?php if (isset($errors['admin_pass'])): ?>
+                            <div class="form-error"><?= esc($errors['admin_pass']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" name="admin_pass_confirm" class="form-input <?= isset($errors['admin_pass_confirm']) ? 'error' : '' ?>" 
+                                   placeholder="Repeat password">
+                            <?php if (isset($errors['admin_pass_confirm'])): ?>
+                            <div class="form-error"><?= esc($errors['admin_pass_confirm']) ?></div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
                 
-                <div class="card-footer">
-                    <a href="?step=1" class="btn btn-secondary">Back</a>
+                <div class="btn-group">
+                    <a href="?step=1" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back
+                    </a>
                     <button type="submit" class="btn btn-primary">
-                        Install Now
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        Install <?= CMS_NAME ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                             <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </button>
                 </div>
             </form>
-        </div>
-        
-        <?php elseif ($step === 3): ?>
-        <!-- Step 3: Success -->
-        <div class="install-card">
+            
+            <?php elseif ($step === 3): ?>
+            <!-- Step 3: Success -->
             <div class="success-content">
                 <div class="success-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
                 <h2>Installation Complete!</h2>
-                <p><?= CMS_NAME ?> has been successfully installed. You can now log in to your admin dashboard and start creating content.</p>
+                <p><?= CMS_NAME ?> has been installed successfully. You can now log in to your admin panel.</p>
                 <div class="success-links">
-                    <a href="admin/" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                    <a href="admin/login.php" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" y1="12" x2="3" y2="12"></line>
                         </svg>
-                        Go to Dashboard
+                        Log In
                     </a>
-                    <a href="./" class="btn btn-secondary">View Site</a>
+                    <a href="index.php" class="btn btn-secondary">
+                        View Site
+                    </a>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
+        
+        <div class="install-footer">
+            Powered by <?= CMS_NAME ?> v<?= CMS_VERSION ?>
+        </div>
     </div>
 </body>
 </html>

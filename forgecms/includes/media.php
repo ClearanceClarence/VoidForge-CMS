@@ -919,6 +919,39 @@ class Media
     }
     
     /**
+     * Delete all thumbnails for all media
+     */
+    public static function deleteAllThumbnails(): array
+    {
+        $deleted = 0;
+        $errors = 0;
+        
+        // Find all thumbs directories in uploads
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(UPLOADS_PATH, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+        
+        foreach ($iterator as $file) {
+            if ($file->isDir() && $file->getFilename() === 'thumbs') {
+                $thumbDir = $file->getPathname();
+                $files = glob($thumbDir . '/*');
+                foreach ($files as $thumbFile) {
+                    if (is_file($thumbFile)) {
+                        if (@unlink($thumbFile)) {
+                            $deleted++;
+                        } else {
+                            $errors++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return ['deleted' => $deleted, 'errors' => $errors];
+    }
+    
+    /**
      * Regenerate thumbnails for a single media item
      */
     public static function regenerateThumbnails(int $id): array

@@ -43,6 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
 
 $users = User::all();
 
+// Get post count and last login for each user
+$postsTable = Database::table('posts');
+foreach ($users as &$user) {
+    $postCount = Database::queryValue(
+        "SELECT COUNT(*) FROM {$postsTable} WHERE author_id = ?",
+        [$user['id']]
+    );
+    $user['post_count'] = (int)$postCount;
+}
+unset($user);
+
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
@@ -246,10 +257,12 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 @media (max-width: 768px) {
-    .users-table th:nth-child(3),
-    .users-table td:nth-child(3),
+    .users-table th:nth-child(4),
+    .users-table td:nth-child(4),
     .users-table th:nth-child(5),
-    .users-table td:nth-child(5) {
+    .users-table td:nth-child(5),
+    .users-table th:nth-child(6),
+    .users-table td:nth-child(6) {
         display: none;
     }
 }
@@ -290,6 +303,8 @@ include ADMIN_PATH . '/includes/header.php';
                     <th>User</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Posts</th>
+                    <th>Last Login</th>
                     <th>Joined</th>
                     <th></th>
                 </tr>
@@ -313,6 +328,22 @@ include ADMIN_PATH . '/includes/header.php';
                             <span class="role-badge <?= esc($user['role']) ?>">
                                 <?= User::getRoleLabel($user['role']) ?>
                             </span>
+                        </td>
+                        <td class="user-posts">
+                            <?php if ($user['post_count'] > 0): ?>
+                            <a href="<?= ADMIN_URL ?>/posts.php?author=<?= $user['id'] ?>" style="color: var(--forge-primary); text-decoration: none;">
+                                <?= $user['post_count'] ?>
+                            </a>
+                            <?php else: ?>
+                            <span style="color: var(--text-muted);">0</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="user-date">
+                            <?php if (!empty($user['last_login'])): ?>
+                            <?= formatDate($user['last_login'], 'M j, Y g:i A') ?>
+                            <?php else: ?>
+                            <span style="color: var(--text-muted);">Never</span>
+                            <?php endif; ?>
                         </td>
                         <td class="user-date"><?= formatDate($user['created_at']) ?></td>
                         <td>

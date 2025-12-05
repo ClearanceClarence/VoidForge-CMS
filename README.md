@@ -83,7 +83,7 @@ Forge CMS is designed for developers who want full control without the bloat. Ze
 
 ### Method 1: Quick Install
 
-1. Download `forge-cms-v1.0.6.zip`
+1. Download `forge-cms-v1.0.7.zip`
 2. Extract to your web directory (e.g., `/var/www/html/` or `htdocs/`)
 3. Create a MySQL database
 4. Navigate to `http://yoursite.com/install.php`

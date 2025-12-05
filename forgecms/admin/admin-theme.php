@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Theme Settings - Forge CMS v1.0.6
+ * Admin Theme Settings - Forge CMS v1.0.7
  * Backend color schemes, fonts, and icon styles
  */
 
@@ -34,6 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
         'animations' => isset($_POST['animations']),
     ];
     
+    // Handle custom colors
+    if ($theme['color_scheme'] === 'custom') {
+        $theme['custom_primary'] = $_POST['custom_primary'] ?? '#6366f1';
+        $theme['custom_secondary'] = $_POST['custom_secondary'] ?? '#8b5cf6';
+        $theme['custom_sidebar'] = $_POST['custom_sidebar'] ?? '#0f172a';
+    }
+    
     setOption('admin_theme', $theme);
     setFlash('success', 'Theme settings saved successfully!');
     redirect(ADMIN_URL . '/admin-theme.php');
@@ -46,6 +53,9 @@ $currentTheme = getOption('admin_theme', [
     'icon_style' => 'outlined',
     'sidebar_compact' => false,
     'animations' => true,
+    'custom_primary' => '#6366f1',
+    'custom_secondary' => '#8b5cf6',
+    'custom_sidebar' => '#0f172a',
 ]);
 
 // Ensure all keys exist
@@ -55,6 +65,9 @@ $currentTheme = array_merge([
     'icon_style' => 'outlined',
     'sidebar_compact' => false,
     'animations' => true,
+    'custom_primary' => '#6366f1',
+    'custom_secondary' => '#8b5cf6',
+    'custom_sidebar' => '#0f172a',
 ], $currentTheme);
 
 include ADMIN_PATH . '/includes/header.php';
@@ -215,6 +228,87 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 
 .color-scheme-option input[type="radio"]:checked ~ .color-scheme-check {
     display: flex;
+}
+
+/* Custom Color Pickers */
+.custom-color-pickers {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.custom-color-pickers h4 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+}
+
+.color-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.color-picker-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.color-picker-item label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.color-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.color-input-group input[type="color"] {
+    width: 48px;
+    height: 40px;
+    padding: 0;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    background: none;
+}
+
+.color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.color-input-group input[type="color"]::-webkit-color-swatch {
+    border-radius: 4px;
+    border: none;
+}
+
+.color-text-input {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: 'Monaco', 'Menlo', monospace;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #1e293b;
+    text-transform: uppercase;
+}
+
+.color-text-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: #fff;
+}
+
+@media (max-width: 768px) {
+    .color-picker-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Font Grid */
@@ -498,6 +592,62 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
                         </div>
                     </label>
                     <?php endforeach; ?>
+                    
+                    <!-- Custom Color Scheme -->
+                    <label class="color-scheme-option custom-scheme-option">
+                        <input type="radio" name="color_scheme" value="custom" 
+                               <?= $currentTheme['color_scheme'] === 'custom' ? 'checked' : '' ?>>
+                        <div class="color-scheme-card">
+                            <div class="color-scheme-preview custom-preview">
+                                <span style="background: <?= esc($currentTheme['custom_primary']) ?>"></span>
+                                <span style="background: <?= esc($currentTheme['custom_secondary']) ?>"></span>
+                                <span style="background: <?= esc($currentTheme['custom_sidebar']) ?>"></span>
+                            </div>
+                            <div class="color-scheme-name">Custom</div>
+                        </div>
+                        <div class="color-scheme-check">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- Custom Color Pickers (shown when custom is selected) -->
+                <div id="customColorPickers" class="custom-color-pickers" style="display: <?= $currentTheme['color_scheme'] === 'custom' ? 'block' : 'none' ?>;">
+                    <h4>Custom Colors</h4>
+                    <div class="color-picker-grid">
+                        <div class="color-picker-item">
+                            <label>Primary Color</label>
+                            <div class="color-input-group">
+                                <input type="color" name="custom_primary" id="customPrimary" 
+                                       value="<?= esc($currentTheme['custom_primary']) ?>">
+                                <input type="text" value="<?= esc($currentTheme['custom_primary']) ?>" 
+                                       id="customPrimaryText" class="color-text-input"
+                                       oninput="document.getElementById('customPrimary').value = this.value">
+                            </div>
+                        </div>
+                        <div class="color-picker-item">
+                            <label>Secondary Color</label>
+                            <div class="color-input-group">
+                                <input type="color" name="custom_secondary" id="customSecondary" 
+                                       value="<?= esc($currentTheme['custom_secondary']) ?>">
+                                <input type="text" value="<?= esc($currentTheme['custom_secondary']) ?>" 
+                                       id="customSecondaryText" class="color-text-input"
+                                       oninput="document.getElementById('customSecondary').value = this.value">
+                            </div>
+                        </div>
+                        <div class="color-picker-item">
+                            <label>Sidebar Background</label>
+                            <div class="color-input-group">
+                                <input type="color" name="custom_sidebar" id="customSidebar" 
+                                       value="<?= esc($currentTheme['custom_sidebar']) ?>">
+                                <input type="text" value="<?= esc($currentTheme['custom_sidebar']) ?>" 
+                                       id="customSidebarText" class="color-text-input"
+                                       oninput="document.getElementById('customSidebar').value = this.value">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -632,5 +782,44 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
         </div>
     </form>
 </div>
+
+<script>
+// Show/hide custom color pickers when color scheme changes
+document.querySelectorAll('input[name="color_scheme"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        var pickers = document.getElementById('customColorPickers');
+        if (this.value === 'custom') {
+            pickers.style.display = 'block';
+        } else {
+            pickers.style.display = 'none';
+        }
+    });
+});
+
+// Sync color picker with text input
+document.getElementById('customPrimary').addEventListener('input', function() {
+    document.getElementById('customPrimaryText').value = this.value.toUpperCase();
+    updateCustomPreview();
+});
+document.getElementById('customSecondary').addEventListener('input', function() {
+    document.getElementById('customSecondaryText').value = this.value.toUpperCase();
+    updateCustomPreview();
+});
+document.getElementById('customSidebar').addEventListener('input', function() {
+    document.getElementById('customSidebarText').value = this.value.toUpperCase();
+    updateCustomPreview();
+});
+
+// Update custom preview colors
+function updateCustomPreview() {
+    var preview = document.querySelector('.custom-scheme-option .color-scheme-preview');
+    if (preview) {
+        var spans = preview.querySelectorAll('span');
+        if (spans[0]) spans[0].style.background = document.getElementById('customPrimary').value;
+        if (spans[1]) spans[1].style.background = document.getElementById('customSecondary').value;
+        if (spans[2]) spans[2].style.background = document.getElementById('customSidebar').value;
+    }
+}
+</script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>
