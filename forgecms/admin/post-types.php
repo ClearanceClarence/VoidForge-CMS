@@ -1,6 +1,6 @@
 <?php
 /**
- * Post Types Builder - Forge CMS v1.0.7
+ * Post Types Builder - Forge CMS v1.0.9
  * Create and manage custom post types with custom fields
  */
 
@@ -20,126 +20,137 @@ User::requireRole('admin');
 $currentPage = 'post-types';
 $pageTitle = 'Post Types';
 
+// Debug mode
+$debug = isset($_GET['debug']);
+
 // Get custom post types from options
-$customPostTypes = getOption('custom_post_types', []);
+$customPostTypes = getOption('custom_post_types');
+if (!is_array($customPostTypes)) {
+    $customPostTypes = [];
+}
 
 // Handle AJAX requests
-if (isset($_POST['ajax_action']) && verifyCsrf($_POST['csrf_token'] ?? '')) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
     header('Content-Type: application/json');
+    
+    // CSRF check
+    if (!verifyCsrf($_POST['csrf_token'] ?? '')) {
+        echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+        exit;
+    }
     
     $action = $_POST['ajax_action'];
     
-    switch ($action) {
-        case 'save_post_type':
-            $slug = preg_replace('/[^a-z0-9_]/', '', strtolower($_POST['slug'] ?? ''));
-            $labelSingular = trim($_POST['label_singular'] ?? '');
-            $labelPlural = trim($_POST['label_plural'] ?? '');
-            $icon = trim($_POST['icon'] ?? 'file');
-            $isPublic = ($_POST['is_public'] ?? '1') === '1';
-            $hasArchive = ($_POST['has_archive'] ?? '1') === '1';
-            $supports = $_POST['supports'] ?? ['title', 'editor'];
-            $fields = json_decode($_POST['fields'] ?? '[]', true) ?: [];
-            
-            // Full label configuration
-            $labels = [
-                'add_new' => trim($_POST['label_add_new'] ?? '') ?: 'Add New',
-                'add_new_item' => trim($_POST['label_add_new_item'] ?? '') ?: "Add New {$labelSingular}",
-                'edit_item' => trim($_POST['label_edit_item'] ?? '') ?: "Edit {$labelSingular}",
-                'new_item' => trim($_POST['label_new_item'] ?? '') ?: "New {$labelSingular}",
-                'view_item' => trim($_POST['label_view_item'] ?? '') ?: "View {$labelSingular}",
-                'view_items' => trim($_POST['label_view_items'] ?? '') ?: "View {$labelPlural}",
-                'search_items' => trim($_POST['label_search_items'] ?? '') ?: "Search {$labelPlural}",
-                'not_found' => trim($_POST['label_not_found'] ?? '') ?: "No {$labelPlural} found",
-                'all_items' => trim($_POST['label_all_items'] ?? '') ?: "All {$labelPlural}",
-                'menu_name' => trim($_POST['label_menu_name'] ?? '') ?: $labelPlural,
-            ];
-            
-            if (empty($slug) || empty($labelSingular) || empty($labelPlural)) {
-                echo json_encode(['success' => false, 'error' => 'Slug and labels are required']);
+    try {
+        switch ($action) {
+            case 'save_post_type':
+                $slug = preg_replace('/[^a-z0-9_]/', '', strtolower($_POST['slug'] ?? ''));
+                $labelSingular = trim($_POST['label_singular'] ?? '');
+                $labelPlural = trim($_POST['label_plural'] ?? '');
+                $icon = trim($_POST['icon'] ?? 'file');
+                $isPublic = ($_POST['is_public'] ?? '1') === '1';
+                $hasArchive = ($_POST['has_archive'] ?? '1') === '1';
+                $supports = $_POST['supports'] ?? ['title', 'editor'];
+                $fields = json_decode($_POST['fields'] ?? '[]', true) ?: [];
+                
+                if (empty($slug)) {
+                    echo json_encode(['success' => false, 'error' => 'Slug is required']);
+                    exit;
+                }
+                
+                if (empty($labelSingular)) {
+                    echo json_encode(['success' => false, 'error' => 'Singular label is required']);
+                    exit;
+                }
+                
+                if (empty($labelPlural)) {
+                    echo json_encode(['success' => false, 'error' => 'Plural label is required']);
+                    exit;
+                }
+                
+                // Reserved slugs
+                $reserved = ['post', 'page', 'attachment', 'revision', 'nav_menu_item'];
+                if (in_array($slug, $reserved)) {
+                    echo json_encode(['success' => false, 'error' => 'This slug is reserved']);
+                    exit;
+                }
+                
+                // Build config
+                $config = [
+                    'slug' => $slug,
+                    'label_singular' => $labelSingular,
+                    'label_plural' => $labelPlural,
+                    'icon' => $icon,
+                    'public' => $isPublic,
+                    'has_archive' => $hasArchive,
+                    'supports' => $supports,
+                    'fields' => $fields,
+                    'created_at' => $customPostTypes[$slug]['created_at'] ?? date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ];
+                
+                $customPostTypes[$slug] = $config;
+                setOption('custom_post_types', $customPostTypes);
+                
+                echo json_encode(['success' => true, 'message' => 'Post type saved successfully', 'slug' => $slug]);
                 exit;
-            }
-            
-            // Reserved slugs
-            $reserved = ['post', 'page', 'attachment', 'revision', 'nav_menu_item'];
-            if (in_array($slug, $reserved)) {
-                echo json_encode(['success' => false, 'error' => 'This slug is reserved']);
+                
+            case 'delete_post_type':
+                $slug = $_POST['slug'] ?? '';
+                
+                if (empty($slug) || !isset($customPostTypes[$slug])) {
+                    echo json_encode(['success' => false, 'error' => 'Post type not found']);
+                    exit;
+                }
+                
+                // Check if there are posts using this type
+                $table = Database::table('posts');
+                $count = Database::queryValue("SELECT COUNT(*) FROM {$table} WHERE post_type = ?", [$slug]);
+                
+                if ($count > 0) {
+                    echo json_encode(['success' => false, 'error' => "Cannot delete: {$count} posts are using this type"]);
+                    exit;
+                }
+                
+                unset($customPostTypes[$slug]);
+                setOption('custom_post_types', $customPostTypes);
+                
+                echo json_encode(['success' => true, 'message' => 'Post type deleted']);
                 exit;
-            }
-            
-            $customPostTypes[$slug] = [
-                'slug' => $slug,
-                'label_singular' => $labelSingular,
-                'label_plural' => $labelPlural,
-                'labels' => $labels,
-                'icon' => $icon,
-                'public' => $isPublic,
-                'has_archive' => $hasArchive,
-                'supports' => $supports,
-                'fields' => $fields,
-                'created_at' => $customPostTypes[$slug]['created_at'] ?? date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-            ];
-            
-            setOption('custom_post_types', $customPostTypes);
-            
-            echo json_encode(['success' => true, 'message' => 'Post type saved successfully']);
-            exit;
-            
-        case 'delete_post_type':
-            $slug = $_POST['slug'] ?? '';
-            
-            if (empty($slug) || !isset($customPostTypes[$slug])) {
-                echo json_encode(['success' => false, 'error' => 'Post type not found']);
+                
+            case 'get_post_type':
+                $slug = $_POST['slug'] ?? '';
+                
+                if (empty($slug) || !isset($customPostTypes[$slug])) {
+                    echo json_encode(['success' => false, 'error' => 'Post type not found']);
+                    exit;
+                }
+                
+                echo json_encode(['success' => true, 'data' => $customPostTypes[$slug]]);
                 exit;
-            }
-            
-            // Check if there are posts using this type
-            $table = Database::table('posts');
-            $count = Database::queryValue("SELECT COUNT(*) FROM {$table} WHERE post_type = ?", [$slug]);
-            
-            if ($count > 0) {
-                echo json_encode(['success' => false, 'error' => "Cannot delete: {$count} posts are using this type"]);
+                
+            default:
+                echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
                 exit;
-            }
-            
-            unset($customPostTypes[$slug]);
-            setOption('custom_post_types', $customPostTypes);
-            
-            echo json_encode(['success' => true, 'message' => 'Post type deleted']);
-            exit;
-            
-        case 'get_post_type':
-            $slug = $_POST['slug'] ?? '';
-            
-            if (empty($slug) || !isset($customPostTypes[$slug])) {
-                echo json_encode(['success' => false, 'error' => 'Post type not found']);
-                exit;
-            }
-            
-            echo json_encode(['success' => true, 'data' => $customPostTypes[$slug]]);
-            exit;
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+        exit;
     }
-    
-    echo json_encode(['success' => false, 'error' => 'Unknown action']);
-    exit;
 }
 
 // Get post counts for each type
 $postCounts = [];
 foreach ($customPostTypes as $slug => $config) {
     $table = Database::table('posts');
-    $postCounts[$slug] = Database::queryValue("SELECT COUNT(*) FROM {$table} WHERE post_type = ?", [$slug]);
+    $postCounts[$slug] = (int) Database::queryValue("SELECT COUNT(*) FROM {$table} WHERE post_type = ?", [$slug]);
 }
 
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
 <style>
-/* Post Types Builder Styles */
-.pt-page {
-    max-width: 1100px;
-    margin: 0 auto;
-}
+.pt-page { max-width: 1100px; margin: 0 auto; }
 
 .pt-header {
     display: flex;
@@ -148,114 +159,105 @@ include ADMIN_PATH . '/includes/header.php';
     margin-bottom: 2rem;
 }
 
-.pt-header-left h1 {
+.pt-header h1 {
     font-size: 1.75rem;
     font-weight: 700;
     color: #1e293b;
-    margin: 0 0 0.375rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
-.pt-header-left p {
+.pt-header p {
     color: #64748b;
     margin: 0;
 }
 
-.btn-new-type {
+.btn-primary {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
     color: #fff;
     border: none;
-    border-radius: 12px;
-    font-family: inherit;
+    border-radius: 10px;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    transition: all 0.2s;
 }
 
-.btn-new-type:hover {
+.btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 
-/* Built-in Types Info */
-.builtin-types {
+/* Debug Panel */
+.debug-panel {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.debug-panel h4 {
+    color: #f59e0b;
+    margin: 0 0 0.5rem 0;
+}
+
+.debug-log {
+    color: #94a3b8;
+}
+
+.debug-log .error { color: #ef4444; }
+.debug-log .success { color: #10b981; }
+.debug-log .info { color: #3b82f6; }
+
+/* Built-in Types */
+.builtin-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin-bottom: 2rem;
 }
 
-.builtin-type-card {
+.builtin-card {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1.25rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
 }
 
-.builtin-type-icon {
+.builtin-card .icon {
     width: 48px;
     height: 48px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
 }
 
-.builtin-type-info h4 {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.25rem 0;
-}
+.builtin-card h4 { margin: 0 0 0.25rem 0; font-size: 0.9375rem; color: #1e293b; }
+.builtin-card p { margin: 0; font-size: 0.8125rem; color: #64748b; }
+.builtin-card .badge { margin-left: auto; font-size: 0.6875rem; padding: 0.25rem 0.625rem; background: #e2e8f0; border-radius: 9999px; color: #64748b; }
 
-.builtin-type-info p {
-    font-size: 0.8125rem;
-    color: #64748b;
-    margin: 0;
-}
-
-.builtin-badge {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    padding: 0.25rem 0.625rem;
-    background: #e2e8f0;
-    color: #64748b;
-    border-radius: 9999px;
-    margin-left: auto;
-}
-
-/* Custom Post Types Grid */
-.pt-section-title {
+/* Custom Post Types */
+.section-title {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.25rem;
 }
 
-.pt-section-title h2 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-}
-
-.pt-section-title .count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.625rem;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-    color: #6366f1;
-    border-radius: 9999px;
-}
+.section-title h2 { font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0; }
+.section-title .count { font-size: 0.75rem; padding: 0.25rem 0.625rem; background: rgba(99,102,241,0.1); color: #6366f1; border-radius: 9999px; }
 
 .pt-grid {
     display: grid;
@@ -268,12 +270,12 @@ include ADMIN_PATH . '/includes/header.php';
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     overflow: hidden;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
 .pt-card:hover {
     border-color: var(--forge-primary, #6366f1);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 8px 25px rgba(99,102,241,0.15);
 }
 
 .pt-card-header {
@@ -281,7 +283,7 @@ include ADMIN_PATH . '/includes/header.php';
     align-items: center;
     gap: 1rem;
     padding: 1.25rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    background: #f8fafc;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -289,86 +291,27 @@ include ADMIN_PATH . '/includes/header.php';
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-    color: var(--forge-primary, #6366f1);
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
 }
 
-.pt-card-title {
-    flex: 1;
-    min-width: 0;
-}
+.pt-card-header h3 { margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 600; color: #1e293b; }
+.pt-card-header code { font-size: 0.75rem; background: #e2e8f0; padding: 0.125rem 0.5rem; border-radius: 4px; color: #64748b; }
 
-.pt-card-title h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.25rem 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.pt-card-body { padding: 1.25rem; }
 
-.pt-card-title code {
-    font-size: 0.75rem;
-    font-family: 'JetBrains Mono', monospace;
-    background: #f1f5f9;
-    padding: 0.125rem 0.5rem;
-    border-radius: 4px;
-    color: #64748b;
-}
+.pt-stats { display: flex; gap: 2rem; margin-bottom: 1rem; }
+.pt-stat-value { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+.pt-stat-label { font-size: 0.75rem; color: #94a3b8; }
 
-.pt-card-body {
-    padding: 1.25rem;
-}
+.pt-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.pt-badge { font-size: 0.6875rem; padding: 0.25rem 0.625rem; border-radius: 6px; background: #f1f5f9; color: #64748b; }
+.pt-badge.active { background: rgba(16,185,129,0.1); color: #10b981; }
 
-.pt-card-stats {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.pt-stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.pt-stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.pt-stat-label {
-    font-size: 0.75rem;
-    color: #94a3b8;
-}
-
-.pt-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.pt-meta-badge {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    padding: 0.25rem 0.625rem;
-    border-radius: 6px;
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.pt-meta-badge.active {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.pt-card-actions {
+.pt-actions {
     display: flex;
     gap: 0.5rem;
     padding-top: 1rem;
@@ -381,90 +324,43 @@ include ADMIN_PATH . '/includes/header.php';
     align-items: center;
     justify-content: center;
     gap: 0.375rem;
-    padding: 0.625rem 1rem;
-    font-family: inherit;
+    padding: 0.625rem;
+    border-radius: 8px;
     font-size: 0.8125rem;
     font-weight: 500;
-    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
     text-decoration: none;
 }
 
-.pt-btn-edit {
-    background: #f1f5f9;
-    color: #475569;
-    border: none;
-}
+.pt-btn-edit { background: #f1f5f9; color: #475569; border: none; }
+.pt-btn-edit:hover { background: #e2e8f0; }
 
-.pt-btn-edit:hover {
-    background: #e2e8f0;
-}
+.pt-btn-view { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; }
+.pt-btn-view:hover { box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
 
-.pt-btn-view {
-    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
-    color: #fff;
-    border: none;
-}
-
-.pt-btn-view:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.pt-btn-delete {
-    flex: 0;
-    width: 36px;
-    background: none;
-    color: #94a3b8;
-    border: 1px solid #e2e8f0;
-}
-
-.pt-btn-delete:hover {
-    color: #ef4444;
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.05);
-}
+.pt-btn-delete { flex: 0; width: 36px; background: none; color: #94a3b8; border: 1px solid #e2e8f0; }
+.pt-btn-delete:hover { color: #ef4444; border-color: #ef4444; }
 
 /* Empty State */
-.pt-empty {
+.empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    background: #f8fafc;
     border: 2px dashed #e2e8f0;
     border-radius: 16px;
 }
 
-.pt-empty-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 1.5rem;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--forge-primary, #6366f1);
-}
+.empty-state svg { width: 64px; height: 64px; color: #94a3b8; margin-bottom: 1rem; }
+.empty-state h3 { font-size: 1.125rem; color: #1e293b; margin: 0 0 0.5rem 0; }
+.empty-state p { color: #64748b; margin: 0 0 1.5rem 0; }
 
-.pt-empty h3 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.5rem 0;
-}
-
-.pt-empty p {
-    color: #64748b;
-    margin: 0 0 1.5rem 0;
-}
-
-/* Modal Styles */
+/* Modal */
 .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(15,23,42,0.6);
     backdrop-filter: blur(4px);
     z-index: 1000;
     align-items: center;
@@ -472,37 +368,29 @@ include ADMIN_PATH . '/includes/header.php';
     padding: 2rem;
 }
 
-.modal-overlay.active {
-    display: flex;
-}
+.modal-overlay.active { display: flex; }
 
 .modal {
     width: 100%;
-    max-width: 700px;
+    max-width: 600px;
     max-height: 90vh;
     background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
     border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
 }
 
-.modal-header h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-}
+.modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
 
 .modal-close {
     width: 36px;
@@ -510,18 +398,14 @@ include ADMIN_PATH . '/includes/header.php';
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none;
+    background: #f1f5f9;
     border: none;
-    color: #94a3b8;
-    cursor: pointer;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    color: #64748b;
+    cursor: pointer;
 }
 
-.modal-close:hover {
-    background: #f1f5f9;
-    color: #64748b;
-}
+.modal-close:hover { background: #e2e8f0; }
 
 .modal-body {
     flex: 1;
@@ -538,104 +422,95 @@ include ADMIN_PATH . '/includes/header.php';
     background: #f8fafc;
 }
 
-/* Form Elements */
-.form-section {
-    margin-bottom: 2rem;
-}
-
-.form-section:last-child {
-    margin-bottom: 0;
-}
-
-.form-section-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.form-grid {
-    display: grid;
-    gap: 1rem;
-}
-
-.form-grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-}
+/* Form */
+.form-group { margin-bottom: 1.25rem; }
+.form-group:last-child { margin-bottom: 0; }
 
 .form-label {
+    display: block;
     font-size: 0.8125rem;
     font-weight: 600;
     color: #475569;
+    margin-bottom: 0.5rem;
 }
 
-.form-input,
-.form-select {
+.form-input, .form-select {
+    width: 100%;
     padding: 0.75rem 1rem;
     font-size: 0.9375rem;
     border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fff;
     color: #1e293b;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    box-sizing: border-box;
 }
 
-.form-input:focus,
-.form-select:focus {
+.form-input:focus, .form-select:focus {
     outline: none;
-    border-color: var(--forge-primary, #6366f1);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
 }
 
-.form-hint {
-    font-size: 0.75rem;
-    color: #94a3b8;
+.form-hint { font-size: 0.75rem; color: #94a3b8; margin-top: 0.375rem; }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .checkbox-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem;
+    padding: 0.625rem;
     background: #f8fafc;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.checkbox-item:hover {
-    background: #f1f5f9;
-}
-
-.checkbox-item input {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--forge-primary, #6366f1);
-}
-
-.checkbox-item span {
     font-size: 0.875rem;
     color: #475569;
 }
 
-/* Custom Fields Section */
+.checkbox-item input { accent-color: #6366f1; }
+
+/* Icon Grid */
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.icon-option {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.15s;
+}
+
+.icon-option:hover { border-color: #6366f1; color: #6366f1; }
+.icon-option.selected { border-color: #6366f1; background: rgba(99,102,241,0.1); color: #6366f1; }
+
+/* Custom Fields */
 .fields-list {
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -643,41 +518,17 @@ include ADMIN_PATH . '/includes/header.php';
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1rem;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 0.875rem 1rem;
     background: #fff;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.field-item:last-child {
-    border-bottom: none;
-}
+.field-item:last-child { border-bottom: none; }
+.field-info { flex: 1; }
+.field-label { font-weight: 600; color: #1e293b; }
+.field-meta { font-size: 0.75rem; color: #94a3b8; }
 
-.field-item-drag {
-    color: #cbd5e1;
-    cursor: grab;
-}
-
-.field-item-info {
-    flex: 1;
-}
-
-.field-item-name {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 0.125rem;
-}
-
-.field-item-meta {
-    font-size: 0.75rem;
-    color: #94a3b8;
-}
-
-.field-item-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.field-item-btn {
+.field-remove {
     width: 32px;
     height: 32px;
     display: flex;
@@ -688,39 +539,9 @@ include ADMIN_PATH . '/includes/header.php';
     border-radius: 6px;
     color: #94a3b8;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.field-item-btn:hover {
-    color: #64748b;
-    border-color: #cbd5e1;
-}
-
-.field-item-btn.delete:hover {
-    color: #ef4444;
-    border-color: #ef4444;
-}
-
-.add-field-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 1rem;
-    background: #f8fafc;
-    border: none;
-    color: var(--forge-primary, #6366f1);
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.add-field-btn:hover {
-    background: #f1f5f9;
-}
+.field-remove:hover { color: #ef4444; border-color: #ef4444; }
 
 .fields-empty {
     padding: 2rem;
@@ -729,141 +550,66 @@ include ADMIN_PATH . '/includes/header.php';
     font-size: 0.875rem;
 }
 
-/* Button Styles */
+.btn-add-field {
+    width: 100%;
+    padding: 0.875rem;
+    background: #f8fafc;
+    border: none;
+    color: #6366f1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-add-field:hover { background: #f1f5f9; }
+
 .btn-cancel {
     padding: 0.75rem 1.5rem;
     background: #f1f5f9;
     color: #475569;
     border: none;
-    border-radius: 10px;
-    font-family: inherit;
+    border-radius: 8px;
     font-size: 0.9375rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.btn-cancel:hover {
-    background: #e2e8f0;
-}
+.btn-cancel:hover { background: #e2e8f0; }
 
 .btn-save {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 100%);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     border: none;
-    border-radius: 10px;
-    font-family: inherit;
+    border-radius: 8px;
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-.btn-save:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-}
-
-/* Icon Selector */
-.icon-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 0.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 0.5rem;
-    background: #f8fafc;
-    border-radius: 10px;
-    margin-top: 0.5rem;
-}
-
-.icon-option {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #64748b;
-    transition: all 0.2s ease;
-}
-
-.icon-option:hover {
-    border-color: var(--forge-primary, #6366f1);
-    color: var(--forge-primary, #6366f1);
-}
-
-.icon-option.selected {
-    border-color: var(--forge-primary, #6366f1);
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--forge-primary, #6366f1);
-}
+.btn-save:hover { box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+.btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 768px) {
-    .pt-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .builtin-types {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-grid-2 {
-        grid-template-columns: 1fr;
-    }
-    
-    .checkbox-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Labels Section */
-.form-section-title.expandable {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    user-select: none;
-}
-
-.form-section-title.expandable:hover {
-    color: var(--forge-primary, #6366f1);
-}
-
-.expand-hint {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: #94a3b8;
-    margin-left: auto;
-}
-
-.labels-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e2e8f0;
-}
-
-.labels-hint {
-    font-size: 0.8125rem;
-    color: #64748b;
-    margin-bottom: 1rem;
+    .pt-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .builtin-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .checkbox-grid { grid-template-columns: repeat(2, 1fr); }
+    .icon-grid { grid-template-columns: repeat(6, 1fr); }
 }
 </style>
 
 <div class="pt-page">
     <div class="pt-header">
-        <div class="pt-header-left">
+        <div>
             <h1>Post Types</h1>
-            <p>Create and manage custom content types for your site</p>
+            <p>Create and manage custom content types</p>
         </div>
-        <button type="button" class="btn-new-type" onclick="openModal()">
+        <button type="button" class="btn-primary" id="btnNewType">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -872,10 +618,21 @@ include ADMIN_PATH . '/includes/header.php';
         </button>
     </div>
     
+    <?php if ($debug): ?>
+    <div class="debug-panel">
+        <h4>🔧 Debug Mode</h4>
+        <div class="debug-log" id="debugLog">
+            <div class="info">[Init] Page loaded</div>
+            <div class="info">[Data] CSRF Token: <?= substr(csrfToken(), 0, 16) ?>...</div>
+            <div class="info">[Data] Custom Post Types: <?= count($customPostTypes) ?></div>
+        </div>
+    </div>
+    <?php endif; ?>
+    
     <!-- Built-in Types -->
-    <div class="builtin-types">
-        <div class="builtin-type-card">
-            <div class="builtin-type-icon" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15)); color: #6366f1;">
+    <div class="builtin-grid">
+        <div class="builtin-card">
+            <div class="icon" style="background: rgba(99,102,241,0.1); color: #6366f1;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -883,47 +640,44 @@ include ADMIN_PATH . '/includes/header.php';
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
             </div>
-            <div class="builtin-type-info">
+            <div>
                 <h4>Posts</h4>
                 <p>Blog posts and articles</p>
             </div>
-            <span class="builtin-badge">Built-in</span>
+            <span class="badge">Built-in</span>
         </div>
-        
-        <div class="builtin-type-card">
-            <div class="builtin-type-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15)); color: #10b981;">
+        <div class="builtin-card">
+            <div class="icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                     <polyline points="13 2 13 9 20 9"></polyline>
                 </svg>
             </div>
-            <div class="builtin-type-info">
+            <div>
                 <h4>Pages</h4>
                 <p>Static content pages</p>
             </div>
-            <span class="builtin-badge">Built-in</span>
+            <span class="badge">Built-in</span>
         </div>
     </div>
     
-    <!-- Custom Post Types -->
-    <div class="pt-section-title">
+    <!-- Custom Post Types Section -->
+    <div class="section-title">
         <h2>Custom Post Types</h2>
         <span class="count"><?= count($customPostTypes) ?></span>
     </div>
     
     <?php if (empty($customPostTypes)): ?>
-    <div class="pt-empty">
-        <div class="pt-empty-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-            </svg>
-        </div>
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
         <h3>No custom post types yet</h3>
         <p>Create your first custom post type to organize different types of content</p>
-        <button type="button" class="btn-new-type" onclick="openModal()">
+        <button type="button" class="btn-primary" id="btnNewTypeEmpty">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -934,42 +688,39 @@ include ADMIN_PATH . '/includes/header.php';
     <?php else: ?>
     <div class="pt-grid">
         <?php foreach ($customPostTypes as $slug => $config): ?>
-        <div class="pt-card" data-slug="<?= esc($slug) ?>">
+        <div class="pt-card">
             <div class="pt-card-header">
                 <div class="pt-card-icon">
                     <?= getAdminMenuIcon($config['icon'] ?? 'file', 24) ?>
                 </div>
-                <div class="pt-card-title">
-                    <h3><?= esc($config['label_plural']) ?></h3>
+                <div>
+                    <h3><?= esc($config['label_plural'] ?? $slug) ?></h3>
                     <code><?= esc($slug) ?></code>
                 </div>
             </div>
             <div class="pt-card-body">
-                <div class="pt-card-stats">
-                    <div class="pt-stat">
-                        <span class="pt-stat-value"><?= $postCounts[$slug] ?? 0 ?></span>
-                        <span class="pt-stat-label">Items</span>
+                <div class="pt-stats">
+                    <div>
+                        <div class="pt-stat-value"><?= $postCounts[$slug] ?? 0 ?></div>
+                        <div class="pt-stat-label">Items</div>
                     </div>
-                    <div class="pt-stat">
-                        <span class="pt-stat-value"><?= count($config['fields'] ?? []) ?></span>
-                        <span class="pt-stat-label">Custom Fields</span>
+                    <div>
+                        <div class="pt-stat-value"><?= count($config['fields'] ?? []) ?></div>
+                        <div class="pt-stat-label">Custom Fields</div>
                     </div>
                 </div>
-                <div class="pt-card-meta">
+                <div class="pt-badges">
                     <?php if ($config['public'] ?? true): ?>
-                    <span class="pt-meta-badge active">Public</span>
+                    <span class="pt-badge active">Public</span>
                     <?php else: ?>
-                    <span class="pt-meta-badge">Private</span>
+                    <span class="pt-badge">Private</span>
                     <?php endif; ?>
                     <?php if ($config['has_archive'] ?? true): ?>
-                    <span class="pt-meta-badge active">Has Archive</span>
+                    <span class="pt-badge active">Has Archive</span>
                     <?php endif; ?>
-                    <?php foreach (($config['supports'] ?? []) as $support): ?>
-                    <span class="pt-meta-badge"><?= esc(ucfirst($support)) ?></span>
-                    <?php endforeach; ?>
                 </div>
-                <div class="pt-card-actions">
-                    <button type="button" class="pt-btn pt-btn-edit" onclick="editPostType('<?= esc($slug) ?>')">
+                <div class="pt-actions">
+                    <button type="button" class="pt-btn pt-btn-edit" data-slug="<?= esc($slug) ?>">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -983,7 +734,7 @@ include ADMIN_PATH . '/includes/header.php';
                         </svg>
                         View
                     </a>
-                    <button type="button" class="pt-btn pt-btn-delete" onclick="deletePostType('<?= esc($slug) ?>')" title="Delete">
+                    <button type="button" class="pt-btn pt-btn-delete" data-slug="<?= esc($slug) ?>" title="Delete">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -997,12 +748,12 @@ include ADMIN_PATH . '/includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="postTypeModal">
+<!-- Main Modal -->
+<div class="modal-overlay" id="modal">
     <div class="modal">
         <div class="modal-header">
             <h2 id="modalTitle">New Post Type</h2>
-            <button type="button" class="modal-close" onclick="closeModal()">
+            <button type="button" class="modal-close" id="modalClose">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1010,177 +761,85 @@ include ADMIN_PATH . '/includes/header.php';
             </button>
         </div>
         <div class="modal-body">
-            <form id="postTypeForm">
-                <input type="hidden" id="editingSlug" value="">
-                
-                <div class="form-section">
-                    <div class="form-section-title">Basic Information</div>
-                    <div class="form-grid form-grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Singular Label</label>
-                            <input type="text" id="labelSingular" class="form-input" placeholder="e.g. Product">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Plural Label</label>
-                            <input type="text" id="labelPlural" class="form-input" placeholder="e.g. Products">
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Slug (URL identifier)</label>
-                        <input type="text" id="ptSlug" class="form-input" placeholder="e.g. product" pattern="[a-z0-9_]+">
-                        <span class="form-hint">Lowercase letters, numbers, and underscores only</span>
-                    </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Singular Label *</label>
+                    <input type="text" id="inputSingular" class="form-input" placeholder="e.g. Product">
                 </div>
-                
-                <div class="form-section">
-                    <div class="form-section-title">Settings</div>
-                    <div class="form-grid form-grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Visibility</label>
-                            <select id="isPublic" class="form-select">
-                                <option value="1">Public (shown in admin menu)</option>
-                                <option value="0">Private (hidden from menu)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Archive</label>
-                            <select id="hasArchive" class="form-select">
-                                <option value="1">Has archive page</option>
-                                <option value="0">No archive</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Plural Label *</label>
+                    <input type="text" id="inputPlural" class="form-input" placeholder="e.g. Products">
                 </div>
-                
-                <div class="form-section">
-                    <div class="form-section-title expandable" onclick="toggleLabelsSection()">
-                        <span>Advanced Labels</span>
-                        <span class="expand-hint" id="labelsExpandHint">Click to customize</span>
-                        <svg id="labelsExpandIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
-                    <div id="labelsSection" class="labels-section" style="display: none;">
-                        <p class="labels-hint">Customize how this post type is labeled throughout the admin interface. Leave blank to use defaults.</p>
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Add New Button</label>
-                                <input type="text" id="labelAddNew" class="form-input" placeholder="Add New">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Add New Item</label>
-                                <input type="text" id="labelAddNewItem" class="form-input" placeholder="Add New [Singular]">
-                            </div>
-                        </div>
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Edit Item</label>
-                                <input type="text" id="labelEditItem" class="form-input" placeholder="Edit [Singular]">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">New Item</label>
-                                <input type="text" id="labelNewItem" class="form-input" placeholder="New [Singular]">
-                            </div>
-                        </div>
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">View Item</label>
-                                <input type="text" id="labelViewItem" class="form-input" placeholder="View [Singular]">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">View Items</label>
-                                <input type="text" id="labelViewItems" class="form-input" placeholder="View [Plural]">
-                            </div>
-                        </div>
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Search Items</label>
-                                <input type="text" id="labelSearchItems" class="form-input" placeholder="Search [Plural]">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Not Found</label>
-                                <input type="text" id="labelNotFound" class="form-input" placeholder="No [Plural] found">
-                            </div>
-                        </div>
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">All Items</label>
-                                <input type="text" id="labelAllItems" class="form-input" placeholder="All [Plural]">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Menu Name</label>
-                                <input type="text" id="labelMenuName" class="form-input" placeholder="[Plural]">
-                            </div>
-                        </div>
-                    </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Slug (URL identifier) *</label>
+                <input type="text" id="inputSlug" class="form-input" placeholder="e.g. product">
+                <div class="form-hint">Lowercase letters, numbers, and underscores only</div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Visibility</label>
+                    <select id="inputPublic" class="form-select">
+                        <option value="1">Public</option>
+                        <option value="0">Private</option>
+                    </select>
                 </div>
-                
-                <div class="form-section">
-                    <div class="form-section-title">Icon</div>
-                    <div class="icon-grid" id="iconGrid">
-                        <!-- Icons will be populated by JavaScript -->
-                    </div>
-                    <input type="hidden" id="selectedIcon" value="file">
+                <div class="form-group">
+                    <label class="form-label">Archive Page</label>
+                    <select id="inputArchive" class="form-select">
+                        <option value="1">Has archive</option>
+                        <option value="0">No archive</option>
+                    </select>
                 </div>
-                
-                <div class="form-section">
-                    <div class="form-section-title">Supports</div>
-                    <div class="checkbox-grid">
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="title" checked>
-                            <span>Title</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="editor" checked>
-                            <span>Editor</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="excerpt">
-                            <span>Excerpt</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="thumbnail">
-                            <span>Thumbnail</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="author">
-                            <span>Author</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="supports[]" value="comments">
-                            <span>Comments</span>
-                        </label>
-                    </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Icon</label>
+                <div class="icon-grid" id="iconGrid"></div>
+                <input type="hidden" id="inputIcon" value="file">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Supports</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-item"><input type="checkbox" value="title" checked> Title</label>
+                    <label class="checkbox-item"><input type="checkbox" value="editor" checked> Editor</label>
+                    <label class="checkbox-item"><input type="checkbox" value="excerpt"> Excerpt</label>
+                    <label class="checkbox-item"><input type="checkbox" value="thumbnail"> Thumbnail</label>
+                    <label class="checkbox-item"><input type="checkbox" value="author"> Author</label>
+                    <label class="checkbox-item"><input type="checkbox" value="comments"> Comments</label>
                 </div>
-                
-                <div class="form-section">
-                    <div class="form-section-title">Custom Fields</div>
-                    <div class="fields-list" id="fieldsList">
-                        <div class="fields-empty" id="fieldsEmpty">No custom fields added yet</div>
-                    </div>
-                    <button type="button" class="add-field-btn" onclick="addField()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Add Custom Field
-                    </button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Custom Fields</label>
+                <div class="fields-list" id="fieldsList">
+                    <div class="fields-empty" id="fieldsEmpty">No custom fields added</div>
                 </div>
-            </form>
+                <button type="button" class="btn-add-field" id="btnAddField">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Field
+                </button>
+            </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-            <button type="button" class="btn-save" onclick="savePostType()">Save Post Type</button>
+            <button type="button" class="btn-cancel" id="btnCancel">Cancel</button>
+            <button type="button" class="btn-save" id="btnSave">Save Post Type</button>
         </div>
     </div>
 </div>
 
 <!-- Field Modal -->
 <div class="modal-overlay" id="fieldModal">
-    <div class="modal" style="max-width: 500px;">
+    <div class="modal" style="max-width: 450px;">
         <div class="modal-header">
-            <h2>Add Custom Field</h2>
-            <button type="button" class="modal-close" onclick="closeFieldModal()">
+            <h2>Add Field</h2>
+            <button type="button" class="modal-close" id="fieldModalClose">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1194,8 +853,8 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
             <div class="form-group">
                 <label class="form-label">Field Key</label>
-                <input type="text" id="fieldKey" class="form-input" placeholder="e.g. price" pattern="[a-z0-9_]+">
-                <span class="form-hint">Lowercase letters, numbers, and underscores only</span>
+                <input type="text" id="fieldKey" class="form-input" placeholder="e.g. price">
+                <div class="form-hint">Lowercase, no spaces</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Field Type</label>
@@ -1206,19 +865,11 @@ include ADMIN_PATH . '/includes/header.php';
                     <option value="email">Email</option>
                     <option value="url">URL</option>
                     <option value="date">Date</option>
-                    <option value="datetime">Date & Time</option>
-                    <option value="select">Select Dropdown</option>
+                    <option value="select">Select</option>
                     <option value="checkbox">Checkbox</option>
-                    <option value="radio">Radio Buttons</option>
                     <option value="image">Image</option>
-                    <option value="file">File</option>
-                    <option value="wysiwyg">Rich Text Editor</option>
-                    <option value="color">Color Picker</option>
+                    <option value="wysiwyg">Rich Editor</option>
                 </select>
-            </div>
-            <div class="form-group" id="optionsGroup" style="display: none;">
-                <label class="form-label">Options (one per line)</label>
-                <textarea id="fieldOptions" class="form-input" style="min-height: 80px;" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
             </div>
             <div class="form-group">
                 <label class="checkbox-item" style="background: none; padding: 0;">
@@ -1228,359 +879,562 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeFieldModal()">Cancel</button>
-            <button type="button" class="btn-save" onclick="saveField()">Add Field</button>
+            <button type="button" class="btn-cancel" id="fieldCancel">Cancel</button>
+            <button type="button" class="btn-save" id="fieldSave">Add Field</button>
         </div>
     </div>
 </div>
 
 <script>
-const csrfToken = '<?= csrfToken() ?>';
-let customFields = [];
-let editingFieldIndex = -1;
-
-// Available icons
-const icons = ['file', 'file-text', 'image', 'box', 'layers', 'grid', 'tool', 'users', 'settings', 'dashboard', 'palette'];
-
-// Initialize icon grid
-function initIconGrid() {
-    const grid = document.getElementById('iconGrid');
-    grid.innerHTML = icons.map(icon => `
-        <div class="icon-option ${icon === 'file' ? 'selected' : ''}" data-icon="${icon}" onclick="selectIcon('${icon}')">
-            ${getIconSvg(icon)}
-        </div>
-    `).join('');
-}
-
-function getIconSvg(icon) {
-    const iconPaths = {
+(function() {
+    'use strict';
+    
+    // === CONFIG ===
+    const CSRF_TOKEN = '<?= csrfToken() ?>';
+    const DEBUG = <?= $debug ? 'true' : 'false' ?>;
+    
+    // === STATE ===
+    let editingSlug = null;
+    let customFields = [];
+    
+    // === ICONS ===
+    const ICONS = {
         'file': '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>',
         'file-text': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>',
         'image': '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>',
-        'box': '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+        'box': '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>',
         'layers': '<polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline>',
         'grid': '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>',
-        'tool': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>',
-        'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
-        'settings': '<circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>',
-        'dashboard': '<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>',
-        'palette': '<path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle>'
+        'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle>',
+        'tag': '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>',
+        'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+        'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>'
     };
-    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconPaths[icon] || iconPaths['file']}</svg>`;
-}
-
-function selectIcon(icon) {
-    document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
-    document.querySelector(`.icon-option[data-icon="${icon}"]`).classList.add('selected');
-    document.getElementById('selectedIcon').value = icon;
-}
-
-function openModal(slug = null) {
-    document.getElementById('postTypeModal').classList.add('active');
-    document.getElementById('modalTitle').textContent = slug ? 'Edit Post Type' : 'New Post Type';
-    document.getElementById('editingSlug').value = slug || '';
-    document.getElementById('ptSlug').disabled = !!slug;
     
-    // Reset labels section
-    document.getElementById('labelsSection').style.display = 'none';
-    document.getElementById('labelsExpandIcon').style.transform = '';
-    document.getElementById('labelsExpandHint').textContent = 'Click to customize';
-    
-    if (!slug) {
-        // Reset form
-        document.getElementById('labelSingular').value = '';
-        document.getElementById('labelPlural').value = '';
-        document.getElementById('ptSlug').value = '';
-        document.getElementById('isPublic').value = '1';
-        document.getElementById('hasArchive').value = '1';
-        document.querySelectorAll('input[name="supports[]"]').forEach(cb => {
-            cb.checked = ['title', 'editor'].includes(cb.value);
-        });
-        selectIcon('file');
-        customFields = [];
-        renderFields();
-        clearLabelsFields();
-    }
-}
-
-function toggleLabelsSection() {
-    const section = document.getElementById('labelsSection');
-    const icon = document.getElementById('labelsExpandIcon');
-    const hint = document.getElementById('labelsExpandHint');
-    
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        icon.style.transform = 'rotate(180deg)';
-        hint.textContent = 'Click to collapse';
-    } else {
-        section.style.display = 'none';
-        icon.style.transform = '';
-        hint.textContent = 'Click to customize';
-    }
-}
-
-function clearLabelsFields() {
-    document.getElementById('labelAddNew').value = '';
-    document.getElementById('labelAddNewItem').value = '';
-    document.getElementById('labelEditItem').value = '';
-    document.getElementById('labelNewItem').value = '';
-    document.getElementById('labelViewItem').value = '';
-    document.getElementById('labelViewItems').value = '';
-    document.getElementById('labelSearchItems').value = '';
-    document.getElementById('labelNotFound').value = '';
-    document.getElementById('labelAllItems').value = '';
-    document.getElementById('labelMenuName').value = '';
-}
-
-function loadLabelsFields(labels) {
-    if (!labels) return;
-    document.getElementById('labelAddNew').value = labels.add_new || '';
-    document.getElementById('labelAddNewItem').value = labels.add_new_item || '';
-    document.getElementById('labelEditItem').value = labels.edit_item || '';
-    document.getElementById('labelNewItem').value = labels.new_item || '';
-    document.getElementById('labelViewItem').value = labels.view_item || '';
-    document.getElementById('labelViewItems').value = labels.view_items || '';
-    document.getElementById('labelSearchItems').value = labels.search_items || '';
-    document.getElementById('labelNotFound').value = labels.not_found || '';
-    document.getElementById('labelAllItems').value = labels.all_items || '';
-    document.getElementById('labelMenuName').value = labels.menu_name || '';
-}
-
-function closeModal() {
-    document.getElementById('postTypeModal').classList.remove('active');
-}
-
-async function editPostType(slug) {
-    const formData = new FormData();
-    formData.append('ajax_action', 'get_post_type');
-    formData.append('csrf_token', csrfToken);
-    formData.append('slug', slug);
-    
-    try {
-        const res = await fetch('', { method: 'POST', body: formData });
-        const result = await res.json();
+    // === DEBUG LOGGING ===
+    function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix = '[PostTypes]';
         
-        if (result.success) {
-            const data = result.data;
-            openModal(slug);
+        if (type === 'error') {
+            console.error(prefix, message);
+        } else if (type === 'success') {
+            console.log('%c' + prefix + ' ' + message, 'color: #10b981');
+        } else {
+            console.log(prefix, message);
+        }
+        
+        if (DEBUG) {
+            const logEl = document.getElementById('debugLog');
+            if (logEl) {
+                logEl.innerHTML += '<div class="' + type + '">[' + timestamp + '] ' + message + '</div>';
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+        }
+    }
+    
+    // === DOM HELPERS ===
+    function $(id) {
+        const el = document.getElementById(id);
+        if (!el) {
+            log('Element not found: #' + id, 'error');
+        }
+        return el;
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // === ICON GRID ===
+    function initIconGrid() {
+        log('Initializing icon grid');
+        const grid = $('iconGrid');
+        if (!grid) return;
+        
+        let html = '';
+        for (const [name, path] of Object.entries(ICONS)) {
+            html += '<div class="icon-option' + (name === 'file' ? ' selected' : '') + '" data-icon="' + name + '">';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + path + '</svg>';
+            html += '</div>';
+        }
+        grid.innerHTML = html;
+        
+        grid.addEventListener('click', function(e) {
+            const option = e.target.closest('.icon-option');
+            if (!option) return;
             
-            document.getElementById('labelSingular').value = data.label_singular || '';
-            document.getElementById('labelPlural').value = data.label_plural || '';
-            document.getElementById('ptSlug').value = slug;
-            document.getElementById('ptSlug').disabled = true;
-            document.getElementById('isPublic').value = data.public ? '1' : '0';
-            document.getElementById('hasArchive').value = data.has_archive ? '1' : '0';
-            
-            document.querySelectorAll('input[name="supports[]"]').forEach(cb => {
-                cb.checked = (data.supports || []).includes(cb.value);
+            grid.querySelectorAll('.icon-option').forEach(function(el) {
+                el.classList.remove('selected');
             });
-            
-            selectIcon(data.icon || 'file');
-            customFields = data.fields || [];
-            renderFields();
-            
-            // Load labels
-            loadLabelsFields(data.labels);
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (e) {
-        alert('Error loading post type');
-    }
-}
-
-async function savePostType() {
-    const slug = document.getElementById('editingSlug').value || document.getElementById('ptSlug').value;
-    const supports = Array.from(document.querySelectorAll('input[name="supports[]"]:checked')).map(cb => cb.value);
-    
-    const formData = new FormData();
-    formData.append('ajax_action', 'save_post_type');
-    formData.append('csrf_token', csrfToken);
-    formData.append('slug', slug);
-    formData.append('label_singular', document.getElementById('labelSingular').value);
-    formData.append('label_plural', document.getElementById('labelPlural').value);
-    formData.append('icon', document.getElementById('selectedIcon').value);
-    formData.append('is_public', document.getElementById('isPublic').value);
-    formData.append('has_archive', document.getElementById('hasArchive').value);
-    formData.append('fields', JSON.stringify(customFields));
-    supports.forEach(s => formData.append('supports[]', s));
-    
-    // Labels
-    formData.append('label_add_new', document.getElementById('labelAddNew').value);
-    formData.append('label_add_new_item', document.getElementById('labelAddNewItem').value);
-    formData.append('label_edit_item', document.getElementById('labelEditItem').value);
-    formData.append('label_new_item', document.getElementById('labelNewItem').value);
-    formData.append('label_view_item', document.getElementById('labelViewItem').value);
-    formData.append('label_view_items', document.getElementById('labelViewItems').value);
-    formData.append('label_search_items', document.getElementById('labelSearchItems').value);
-    formData.append('label_not_found', document.getElementById('labelNotFound').value);
-    formData.append('label_all_items', document.getElementById('labelAllItems').value);
-    formData.append('label_menu_name', document.getElementById('labelMenuName').value);
-    
-    try {
-        const res = await fetch('', { method: 'POST', body: formData });
-        const result = await res.json();
+            option.classList.add('selected');
+            $('inputIcon').value = option.dataset.icon;
+            log('Icon selected: ' + option.dataset.icon);
+        });
         
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (e) {
-        alert('Error saving post type');
+        log('Icon grid ready with ' + Object.keys(ICONS).length + ' icons', 'success');
     }
-}
-
-async function deletePostType(slug) {
-    if (!confirm('Delete this post type? This cannot be undone.')) return;
     
-    const formData = new FormData();
-    formData.append('ajax_action', 'delete_post_type');
-    formData.append('csrf_token', csrfToken);
-    formData.append('slug', slug);
-    
-    try {
-        const res = await fetch('', { method: 'POST', body: formData });
-        const result = await res.json();
+    // === FIELDS MANAGEMENT ===
+    function renderFields() {
+        const list = $('fieldsList');
+        if (!list) return;
         
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
+        if (customFields.length === 0) {
+            list.innerHTML = '<div class="fields-empty">No custom fields added</div>';
+            return;
         }
-    } catch (e) {
-        alert('Error deleting post type');
-    }
-}
-
-// Custom Fields
-function renderFields() {
-    const list = document.getElementById('fieldsList');
-    const empty = document.getElementById('fieldsEmpty');
-    
-    if (customFields.length === 0) {
-        empty.style.display = 'block';
-        list.innerHTML = '<div class="fields-empty" id="fieldsEmpty">No custom fields added yet</div>';
-        return;
-    }
-    
-    list.innerHTML = customFields.map((field, index) => `
-        <div class="field-item">
-            <div class="field-item-drag">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="8" y1="6" x2="8" y2="6.01"></line>
-                    <line x1="8" y1="12" x2="8" y2="12.01"></line>
-                    <line x1="8" y1="18" x2="8" y2="18.01"></line>
-                    <line x1="16" y1="6" x2="16" y2="6.01"></line>
-                    <line x1="16" y1="12" x2="16" y2="12.01"></line>
-                    <line x1="16" y1="18" x2="16" y2="18.01"></line>
-                </svg>
-            </div>
-            <div class="field-item-info">
-                <div class="field-item-name">${escapeHtml(field.label)}</div>
-                <div class="field-item-meta">${escapeHtml(field.key)} • ${field.type}${field.required ? ' • Required' : ''}</div>
-            </div>
-            <div class="field-item-actions">
-                <button type="button" class="field-item-btn delete" onclick="removeField(${index})">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function addField() {
-    document.getElementById('fieldModal').classList.add('active');
-    document.getElementById('fieldLabel').value = '';
-    document.getElementById('fieldKey').value = '';
-    document.getElementById('fieldType').value = 'text';
-    document.getElementById('fieldOptions').value = '';
-    document.getElementById('fieldRequired').checked = false;
-    document.getElementById('optionsGroup').style.display = 'none';
-    editingFieldIndex = -1;
-}
-
-function closeFieldModal() {
-    document.getElementById('fieldModal').classList.remove('active');
-}
-
-function saveField() {
-    const label = document.getElementById('fieldLabel').value.trim();
-    const key = document.getElementById('fieldKey').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-    const type = document.getElementById('fieldType').value;
-    const options = document.getElementById('fieldOptions').value.split('\n').filter(o => o.trim());
-    const required = document.getElementById('fieldRequired').checked;
-    
-    if (!label || !key) {
-        alert('Label and key are required');
-        return;
+        
+        let html = '';
+        for (let i = 0; i < customFields.length; i++) {
+            const field = customFields[i];
+            html += '<div class="field-item">';
+            html += '<div class="field-info">';
+            html += '<div class="field-label">' + escapeHtml(field.label) + '</div>';
+            html += '<div class="field-meta">' + escapeHtml(field.key) + ' &bull; ' + escapeHtml(field.type);
+            if (field.required) html += ' &bull; Required';
+            html += '</div></div>';
+            html += '<button type="button" class="field-remove" data-index="' + i + '">';
+            html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">';
+            html += '<polyline points="3 6 5 6 21 6"></polyline>';
+            html += '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>';
+            html += '</svg></button></div>';
+        }
+        list.innerHTML = html;
+        
+        // Attach remove handlers
+        list.querySelectorAll('.field-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.dataset.index);
+                if (confirm('Remove this field?')) {
+                    customFields.splice(index, 1);
+                    renderFields();
+                    log('Field removed at index ' + index);
+                }
+            });
+        });
     }
     
-    const field = { label, key, type, required };
-    if (['select', 'radio', 'checkbox'].includes(type)) {
-        field.options = options;
-    }
-    
-    if (editingFieldIndex >= 0) {
-        customFields[editingFieldIndex] = field;
-    } else {
-        customFields.push(field);
-    }
-    
-    renderFields();
-    closeFieldModal();
-}
-
-function removeField(index) {
-    if (confirm('Remove this field?')) {
-        customFields.splice(index, 1);
+    // === MODAL FUNCTIONS ===
+    function openModal(slug) {
+        log('Opening modal' + (slug ? ' for: ' + slug : ' for new'));
+        
+        const modal = $('modal');
+        if (!modal) return;
+        
+        editingSlug = slug || null;
+        $('modalTitle').textContent = slug ? 'Edit Post Type' : 'New Post Type';
+        
+        // Reset form
+        $('inputSingular').value = '';
+        $('inputPlural').value = '';
+        $('inputSlug').value = '';
+        $('inputSlug').disabled = false;
+        $('inputPublic').value = '1';
+        $('inputArchive').value = '1';
+        $('inputIcon').value = 'file';
+        customFields = [];
+        
+        // Reset checkboxes
+        document.querySelectorAll('.checkbox-grid input').forEach(function(cb) {
+            cb.checked = (cb.value === 'title' || cb.value === 'editor');
+        });
+        
+        // Reset icon selection
+        document.querySelectorAll('.icon-option').forEach(function(el) {
+            el.classList.toggle('selected', el.dataset.icon === 'file');
+        });
+        
         renderFields();
+        
+        if (slug) {
+            loadPostType(slug);
+        }
+        
+        modal.classList.add('active');
+        log('Modal opened', 'success');
     }
-}
-
-// Show/hide options based on field type
-document.getElementById('fieldType')?.addEventListener('change', function() {
-    const optionsGroup = document.getElementById('optionsGroup');
-    optionsGroup.style.display = ['select', 'radio'].includes(this.value) ? 'block' : 'none';
-});
-
-// Auto-generate key from label
-document.getElementById('fieldLabel')?.addEventListener('input', function() {
-    const keyInput = document.getElementById('fieldKey');
-    if (!keyInput.value || keyInput.dataset.auto === 'true') {
-        keyInput.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-        keyInput.dataset.auto = 'true';
+    
+    function closeModal() {
+        log('Closing modal');
+        var modal = $('modal');
+        if (modal) modal.classList.remove('active');
+        editingSlug = null;
     }
-});
-
-document.getElementById('fieldKey')?.addEventListener('input', function() {
-    this.dataset.auto = 'false';
-});
-
-// Auto-generate slug from singular label
-document.getElementById('labelSingular')?.addEventListener('input', function() {
-    const slugInput = document.getElementById('ptSlug');
-    if (!slugInput.disabled && (!slugInput.value || slugInput.dataset.auto === 'true')) {
-        slugInput.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-        slugInput.dataset.auto = 'true';
+    
+    function openFieldModal() {
+        log('Opening field modal');
+        $('fieldLabel').value = '';
+        $('fieldKey').value = '';
+        $('fieldType').value = 'text';
+        $('fieldRequired').checked = false;
+        $('fieldModal').classList.add('active');
     }
-});
-
-document.getElementById('ptSlug')?.addEventListener('input', function() {
-    this.dataset.auto = 'false';
-});
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Initialize
-initIconGrid();
+    
+    function closeFieldModal() {
+        var modal = $('fieldModal');
+        if (modal) modal.classList.remove('active');
+    }
+    
+    // === API CALLS ===
+    function apiCall(action, data) {
+        log('API call: ' + action);
+        
+        return new Promise(function(resolve, reject) {
+            var formData = new FormData();
+            formData.append('ajax_action', action);
+            formData.append('csrf_token', CSRF_TOKEN);
+            
+            if (data) {
+                for (var key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        var value = data[key];
+                        if (Array.isArray(value)) {
+                            for (var i = 0; i < value.length; i++) {
+                                formData.append(key + '[]', value[i]);
+                            }
+                        } else {
+                            formData.append(key, value);
+                        }
+                    }
+                }
+            }
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.pathname, true);
+            
+            xhr.onload = function() {
+                log('Response status: ' + xhr.status);
+                log('Response text: ' + xhr.responseText.substring(0, 500));
+                
+                if (xhr.status === 200) {
+                    try {
+                        var result = JSON.parse(xhr.responseText);
+                        if (result.success) {
+                            log('API success: ' + action, 'success');
+                            resolve(result);
+                        } else {
+                            log('API error: ' + (result.error || 'Unknown'), 'error');
+                            reject(new Error(result.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        log('JSON parse error: ' + e.message, 'error');
+                        log('Raw response: ' + xhr.responseText, 'error');
+                        reject(new Error('Invalid JSON response'));
+                    }
+                } else {
+                    log('HTTP error: ' + xhr.status, 'error');
+                    reject(new Error('HTTP error: ' + xhr.status));
+                }
+            };
+            
+            xhr.onerror = function() {
+                log('Network error', 'error');
+                reject(new Error('Network error'));
+            };
+            
+            xhr.send(formData);
+        });
+    }
+    
+    function loadPostType(slug) {
+        log('Loading post type: ' + slug);
+        
+        apiCall('get_post_type', { slug: slug })
+            .then(function(result) {
+                var data = result.data;
+                
+                $('inputSingular').value = data.label_singular || '';
+                $('inputPlural').value = data.label_plural || '';
+                $('inputSlug').value = slug;
+                $('inputSlug').disabled = true;
+                $('inputPublic').value = data.public ? '1' : '0';
+                $('inputArchive').value = data.has_archive ? '1' : '0';
+                $('inputIcon').value = data.icon || 'file';
+                
+                // Set icon
+                document.querySelectorAll('.icon-option').forEach(function(el) {
+                    el.classList.toggle('selected', el.dataset.icon === (data.icon || 'file'));
+                });
+                
+                // Set supports
+                var supports = data.supports || [];
+                document.querySelectorAll('.checkbox-grid input').forEach(function(cb) {
+                    cb.checked = supports.indexOf(cb.value) !== -1;
+                });
+                
+                // Set fields
+                customFields = data.fields || [];
+                renderFields();
+                
+                log('Post type loaded: ' + slug, 'success');
+            })
+            .catch(function(error) {
+                alert('Error loading: ' + error.message);
+            });
+    }
+    
+    function savePostType() {
+        log('Saving post type...');
+        
+        var singular = $('inputSingular').value.trim();
+        var plural = $('inputPlural').value.trim();
+        var slug = $('inputSlug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        
+        // Validation
+        if (!singular) {
+            alert('Singular label is required');
+            $('inputSingular').focus();
+            return;
+        }
+        if (!plural) {
+            alert('Plural label is required');
+            $('inputPlural').focus();
+            return;
+        }
+        if (!slug) {
+            alert('Slug is required');
+            $('inputSlug').focus();
+            return;
+        }
+        
+        // Get supports
+        var supports = [];
+        document.querySelectorAll('.checkbox-grid input:checked').forEach(function(cb) {
+            supports.push(cb.value);
+        });
+        
+        var data = {
+            slug: editingSlug || slug,
+            label_singular: singular,
+            label_plural: plural,
+            icon: $('inputIcon').value,
+            is_public: $('inputPublic').value,
+            has_archive: $('inputArchive').value,
+            supports: supports,
+            fields: JSON.stringify(customFields)
+        };
+        
+        log('Save data: ' + JSON.stringify(data));
+        
+        var btnSave = $('btnSave');
+        btnSave.disabled = true;
+        btnSave.textContent = 'Saving...';
+        
+        apiCall('save_post_type', data)
+            .then(function(result) {
+                log('Saved successfully!', 'success');
+                window.location.reload();
+            })
+            .catch(function(error) {
+                alert('Error: ' + error.message);
+                btnSave.disabled = false;
+                btnSave.textContent = 'Save Post Type';
+            });
+    }
+    
+    function deletePostType(slug) {
+        if (!confirm('Delete "' + slug + '"? This cannot be undone.')) {
+            return;
+        }
+        
+        log('Deleting: ' + slug);
+        
+        apiCall('delete_post_type', { slug: slug })
+            .then(function(result) {
+                log('Deleted: ' + slug, 'success');
+                window.location.reload();
+            })
+            .catch(function(error) {
+                alert('Error: ' + error.message);
+            });
+    }
+    
+    function saveField() {
+        var label = $('fieldLabel').value.trim();
+        var key = $('fieldKey').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        var type = $('fieldType').value;
+        var required = $('fieldRequired').checked;
+        
+        if (!label) {
+            alert('Field label is required');
+            $('fieldLabel').focus();
+            return;
+        }
+        if (!key) {
+            alert('Field key is required');
+            $('fieldKey').focus();
+            return;
+        }
+        
+        customFields.push({
+            label: label,
+            key: key,
+            type: type,
+            required: required
+        });
+        
+        renderFields();
+        closeFieldModal();
+        log('Field added: ' + key, 'success');
+    }
+    
+    // === AUTO SLUG ===
+    function setupAutoSlug() {
+        var singularInput = $('inputSingular');
+        var slugInput = $('inputSlug');
+        
+        if (!singularInput || !slugInput) return;
+        
+        var autoSlug = true;
+        
+        singularInput.addEventListener('input', function() {
+            if (autoSlug && !slugInput.disabled) {
+                slugInput.value = this.value.toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '_')
+                    .replace(/^_|_$/g, '');
+            }
+        });
+        
+        slugInput.addEventListener('input', function() {
+            autoSlug = false;
+        });
+        
+        log('Auto-slug setup complete');
+    }
+    
+    // === EVENT BINDING ===
+    function bindEvents() {
+        log('Binding events...');
+        
+        // New Post Type buttons
+        var btnNew = $('btnNewType');
+        if (btnNew) {
+            btnNew.addEventListener('click', function() {
+                log('New button clicked');
+                openModal();
+            });
+        }
+        
+        var btnNewEmpty = $('btnNewTypeEmpty');
+        if (btnNewEmpty) {
+            btnNewEmpty.addEventListener('click', function() {
+                log('New (empty state) button clicked');
+                openModal();
+            });
+        }
+        
+        // Modal controls
+        var modalClose = $('modalClose');
+        if (modalClose) {
+            modalClose.addEventListener('click', closeModal);
+        }
+        
+        var btnCancel = $('btnCancel');
+        if (btnCancel) {
+            btnCancel.addEventListener('click', closeModal);
+        }
+        
+        var btnSave = $('btnSave');
+        if (btnSave) {
+            btnSave.addEventListener('click', savePostType);
+        }
+        
+        // Field modal
+        var btnAddField = $('btnAddField');
+        if (btnAddField) {
+            btnAddField.addEventListener('click', openFieldModal);
+        }
+        
+        var fieldModalClose = $('fieldModalClose');
+        if (fieldModalClose) {
+            fieldModalClose.addEventListener('click', closeFieldModal);
+        }
+        
+        var fieldCancel = $('fieldCancel');
+        if (fieldCancel) {
+            fieldCancel.addEventListener('click', closeFieldModal);
+        }
+        
+        var fieldSave = $('fieldSave');
+        if (fieldSave) {
+            fieldSave.addEventListener('click', saveField);
+        }
+        
+        // Edit buttons
+        document.querySelectorAll('.pt-btn-edit').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var slug = this.dataset.slug;
+                log('Edit clicked: ' + slug);
+                openModal(slug);
+            });
+        });
+        
+        // Delete buttons
+        document.querySelectorAll('.pt-btn-delete').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var slug = this.dataset.slug;
+                log('Delete clicked: ' + slug);
+                deletePostType(slug);
+            });
+        });
+        
+        // Close modal on overlay click
+        var modal = $('modal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+        }
+        
+        var fieldModal = $('fieldModal');
+        if (fieldModal) {
+            fieldModal.addEventListener('click', function(e) {
+                if (e.target === this) closeFieldModal();
+            });
+        }
+        
+        // Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var fm = $('fieldModal');
+                var m = $('modal');
+                if (fm && fm.classList.contains('active')) {
+                    closeFieldModal();
+                } else if (m && m.classList.contains('active')) {
+                    closeModal();
+                }
+            }
+        });
+        
+        log('Events bound', 'success');
+    }
+    
+    // === INIT ===
+    function init() {
+        log('=== Post Types Initializing ===');
+        
+        try {
+            initIconGrid();
+            setupAutoSlug();
+            bindEvents();
+            log('=== Initialization Complete ===', 'success');
+        } catch (e) {
+            log('Init error: ' + e.message, 'error');
+            console.error(e);
+        }
+    }
+    
+    // Run when DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    
+})();
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Theme Settings - Forge CMS v1.0.7
+ * Admin Theme Settings - Forge CMS v1.0.8
  * Backend color schemes, fonts, and icon styles
  */
 
@@ -247,13 +247,13 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 .color-picker-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .color-picker-item {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .color-picker-item label {
@@ -269,40 +269,68 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 }
 
 .color-input-group input[type="color"] {
-    width: 48px;
-    height: 40px;
+    width: 56px;
+    height: 44px;
     padding: 0;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     background: none;
+    transition: all 0.2s ease;
+}
+
+.color-input-group input[type="color"]:hover {
+    border-color: #6366f1;
+    transform: scale(1.05);
 }
 
 .color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
-    padding: 2px;
+    padding: 3px;
 }
 
 .color-input-group input[type="color"]::-webkit-color-swatch {
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
 }
 
 .color-text-input {
     flex: 1;
-    padding: 0.625rem 0.75rem;
+    padding: 0.75rem 0.875rem;
     font-size: 0.875rem;
-    font-family: 'Monaco', 'Menlo', monospace;
+    font-family: 'JetBrains Mono', 'Monaco', monospace;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #f8fafc;
     color: #1e293b;
     text-transform: uppercase;
+    transition: all 0.2s ease;
 }
 
 .color-text-input:focus {
     outline: none;
     border-color: #6366f1;
     background: #fff;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.color-presets {
+    display: flex;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+}
+
+.color-preset {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.color-preset:hover {
+    transform: scale(1.15);
+    border-color: #1e293b;
 }
 
 @media (max-width: 768px) {
@@ -621,30 +649,57 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
                             <label>Primary Color</label>
                             <div class="color-input-group">
                                 <input type="color" name="custom_primary" id="customPrimary" 
-                                       value="<?= esc($currentTheme['custom_primary']) ?>">
+                                       value="<?= esc($currentTheme['custom_primary']) ?>"
+                                       onchange="document.getElementById('customPrimaryText').value = this.value">
                                 <input type="text" value="<?= esc($currentTheme['custom_primary']) ?>" 
                                        id="customPrimaryText" class="color-text-input"
                                        oninput="document.getElementById('customPrimary').value = this.value">
+                            </div>
+                            <div class="color-presets">
+                                <button type="button" class="color-preset" style="background: #6366f1" onclick="setColor('Primary', '#6366f1')"></button>
+                                <button type="button" class="color-preset" style="background: #0ea5e9" onclick="setColor('Primary', '#0ea5e9')"></button>
+                                <button type="button" class="color-preset" style="background: #10b981" onclick="setColor('Primary', '#10b981')"></button>
+                                <button type="button" class="color-preset" style="background: #f43f5e" onclick="setColor('Primary', '#f43f5e')"></button>
+                                <button type="button" class="color-preset" style="background: #f59e0b" onclick="setColor('Primary', '#f59e0b')"></button>
+                                <button type="button" class="color-preset" style="background: #8b5cf6" onclick="setColor('Primary', '#8b5cf6')"></button>
                             </div>
                         </div>
                         <div class="color-picker-item">
                             <label>Secondary Color</label>
                             <div class="color-input-group">
                                 <input type="color" name="custom_secondary" id="customSecondary" 
-                                       value="<?= esc($currentTheme['custom_secondary']) ?>">
+                                       value="<?= esc($currentTheme['custom_secondary']) ?>"
+                                       onchange="document.getElementById('customSecondaryText').value = this.value">
                                 <input type="text" value="<?= esc($currentTheme['custom_secondary']) ?>" 
                                        id="customSecondaryText" class="color-text-input"
                                        oninput="document.getElementById('customSecondary').value = this.value">
+                            </div>
+                            <div class="color-presets">
+                                <button type="button" class="color-preset" style="background: #8b5cf6" onclick="setColor('Secondary', '#8b5cf6')"></button>
+                                <button type="button" class="color-preset" style="background: #06b6d4" onclick="setColor('Secondary', '#06b6d4')"></button>
+                                <button type="button" class="color-preset" style="background: #14b8a6" onclick="setColor('Secondary', '#14b8a6')"></button>
+                                <button type="button" class="color-preset" style="background: #ec4899" onclick="setColor('Secondary', '#ec4899')"></button>
+                                <button type="button" class="color-preset" style="background: #fbbf24" onclick="setColor('Secondary', '#fbbf24')"></button>
+                                <button type="button" class="color-preset" style="background: #a855f7" onclick="setColor('Secondary', '#a855f7')"></button>
                             </div>
                         </div>
                         <div class="color-picker-item">
                             <label>Sidebar Background</label>
                             <div class="color-input-group">
                                 <input type="color" name="custom_sidebar" id="customSidebar" 
-                                       value="<?= esc($currentTheme['custom_sidebar']) ?>">
+                                       value="<?= esc($currentTheme['custom_sidebar']) ?>"
+                                       onchange="document.getElementById('customSidebarText').value = this.value">
                                 <input type="text" value="<?= esc($currentTheme['custom_sidebar']) ?>" 
                                        id="customSidebarText" class="color-text-input"
                                        oninput="document.getElementById('customSidebar').value = this.value">
+                            </div>
+                            <div class="color-presets">
+                                <button type="button" class="color-preset" style="background: #0f172a" onclick="setColor('Sidebar', '#0f172a')"></button>
+                                <button type="button" class="color-preset" style="background: #1e1b4b" onclick="setColor('Sidebar', '#1e1b4b')"></button>
+                                <button type="button" class="color-preset" style="background: #0c4a6e" onclick="setColor('Sidebar', '#0c4a6e')"></button>
+                                <button type="button" class="color-preset" style="background: #064e3b" onclick="setColor('Sidebar', '#064e3b')"></button>
+                                <button type="button" class="color-preset" style="background: #4c0519" onclick="setColor('Sidebar', '#4c0519')"></button>
+                                <button type="button" class="color-preset" style="background: #1e293b" onclick="setColor('Sidebar', '#1e293b')"></button>
                             </div>
                         </div>
                     </div>
@@ -795,6 +850,15 @@ document.querySelectorAll('input[name="color_scheme"]').forEach(function(radio) 
         }
     });
 });
+
+// Set color from preset
+function setColor(type, color) {
+    var picker = document.getElementById('custom' + type);
+    var text = document.getElementById('custom' + type + 'Text');
+    if (picker) picker.value = color;
+    if (text) text.value = color.toUpperCase();
+    updateCustomPreview();
+}
 
 // Sync color picker with text input
 document.getElementById('customPrimary').addEventListener('input', function() {

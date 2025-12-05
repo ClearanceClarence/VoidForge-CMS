@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.8] - 2024-12-05
+
+### Fixed
+
+#### Critical Bug Fixes
+- **Frontend pages (500 error)** - Fixed null value handling in formatDate() and theme templates
+- **Media uploads** - Fixed database column name mismatch (`filesize` vs `file_size`)
+- **Post/Page templates** - Added null-safe access to all template variables
+- **Database schema** - Added missing columns: `parent_id`, `menu_order`, `featured_image_id` to posts table
+
+#### Installation Improvements
+- Database table structure now matches all required columns
+- Added `media_folders` table to installation
+- Added sample page creation during installation
+- Improved config.php detection for re-installation
+
+### Enhanced
+
+#### Custom Color Picker (Admin Theme)
+- Added color preset palette with 6 quick-select colors per field
+- Improved color picker UI with larger click targets
+- Visual feedback on hover for color presets
+- Better text input styling with monospace font
+
+#### Thumbnail Page
+- Redesigned action buttons with modern styling
+- Better visual hierarchy with primary/danger button variants
+- Improved hover states and animations
+
+#### Plugin Code Snippet
+- Fixed code formatting with proper `<pre>` tag
+- Added syntax highlighting for PHP variables
+- Improved monospace font rendering with JetBrains Mono
+
+### Technical Notes
+- formatDate() and formatDatetime() now handle null values gracefully
+- Theme templates wrap database queries in try-catch blocks
+- Added migrations for posts table columns (parent_id, menu_order, featured_image_id)
+
+---
+
 ## [1.0.7] - 2024-12-05
 
 ### Added
@@ -93,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Landing Page
 - Complete redesign with modern aesthetics
 - Updated hero section with gradient text
-- New feature cards highlighting v1.0.7 features
+- New feature cards highlighting v1.0.8 features
 - Cleaner, more focused layout
 - Better responsive behavior
 

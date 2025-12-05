@@ -337,7 +337,7 @@ class Media
             'filename' => $filename,
             'filepath' => $filepath,
             'mime_type' => $mimeType,
-            'file_size' => $file['size'],
+            'filesize' => $file['size'],
             'width' => $width,
             'height' => $height,
             'title' => pathinfo($file['name'], PATHINFO_FILENAME),

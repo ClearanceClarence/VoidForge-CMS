@@ -211,10 +211,11 @@ function closeModal(id) {
  * Format file size
  */
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes || isNaN(bytes) || bytes <= 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+    if (i < 0 || i >= sizes.length) return '0 Bytes';
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 

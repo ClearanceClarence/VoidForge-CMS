@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Login - Forge CMS v1.0.7
+ * Admin Login - Forge CMS v1.0.8
  * Light mode design
  */
 

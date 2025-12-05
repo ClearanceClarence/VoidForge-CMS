@@ -396,7 +396,7 @@ class Post
     {
         if ($permanent) {
             // Delete meta first
-            Database::delete(Database::table('post_meta'), 'post_id = ?', [$id]);
+            Database::delete(Database::table('postmeta'), 'post_id = ?', [$id]);
             return Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
         }
 
@@ -417,7 +417,7 @@ class Post
      */
     public static function getMeta(int $postId, $key = null)
     {
-        $table = Database::table('post_meta');
+        $table = Database::table('postmeta');
         if ($key) {
             $meta = Database::queryOne(
                 "SELECT meta_value FROM {$table} WHERE post_id = ? AND meta_key = ?",
@@ -455,16 +455,16 @@ class Post
             $value = json_encode($value);
         }
 
-        $table = Database::table('post_meta');
+        $table = Database::table('postmeta');
         $existing = Database::queryOne(
             "SELECT id FROM {$table} WHERE post_id = ? AND meta_key = ?",
             [$postId, $key]
         );
 
         if ($existing) {
-            Database::update(Database::table('post_meta'), ['meta_value' => $value], 'id = ?', [$existing['id']]);
+            Database::update(Database::table('postmeta'), ['meta_value' => $value], 'id = ?', [$existing['id']]);
         } else {
-            Database::insert(Database::table('post_meta'), [
+            Database::insert(Database::table('postmeta'), [
                 'post_id' => $postId,
                 'meta_key' => $key,
                 'meta_value' => $value,
@@ -477,7 +477,7 @@ class Post
      */
     public static function deleteMeta(int $postId, string $key): bool
     {
-        return Database::delete(Database::table('post_meta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
+        return Database::delete(Database::table('postmeta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
     }
 
     /**
@@ -532,6 +532,3 @@ class Post
         return SITE_URL . '/' . $post['post_type'] . '/' . $post['slug'];
     }
 }
-
-// Initialize post types
-Post::init();

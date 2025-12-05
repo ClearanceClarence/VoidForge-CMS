@@ -11,7 +11,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'Forge');
-define('CMS_VERSION', '1.0.7');
+define('CMS_VERSION', '1.0.8');
 
 // Database settings - configured during installation
 define('DB_HOST', '');
@@ -32,6 +32,8 @@ define('THEMES_PATH', CMS_ROOT . '/themes');
 define('UPLOADS_PATH', CMS_ROOT . '/uploads');
 define('UPLOADS_URL', SITE_URL . '/uploads');
 define('PLUGINS_PATH', CMS_ROOT . '/plugins');
+define('PLUGINS_URL', SITE_URL . '/plugins');
+define('THEMES_URL', SITE_URL . '/themes');
 
 // Current theme
 define('CURRENT_THEME', 'default');
@@ -43,6 +45,8 @@ define('SESSION_LIFETIME', 86400); // 24 hours
 
 // Security
 define('HASH_COST', 12);
+define('AUTH_SALT', '');
+define('SECURE_AUTH_SALT', '');
 
 // Timezone
 date_default_timezone_set('UTC');

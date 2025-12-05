@@ -802,10 +802,11 @@ button, input[type="button"], input[type="submit"], input[type="reset"] {
 
 .stat-icon { width: 48px; height: 48px; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .stat-icon svg { width: 24px; height: 24px; }
-.stat-icon.primary { background: rgba(99, 102, 241, 0.1); color: var(--forge-primary); }
-.stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--forge-success); }
-.stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--forge-warning); }
-.stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--forge-danger); }
+.stat-icon.primary { background: linear-gradient(135deg, var(--forge-primary), var(--forge-secondary, var(--forge-primary))); color: #fff; }
+.stat-icon.success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+.stat-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+.stat-icon.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+.stat-icon.accent { background: linear-gradient(135deg, var(--forge-secondary, #8b5cf6), var(--forge-primary)); color: #fff; }
 
 .stat-content { flex: 1; min-width: 0; }
 .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
@@ -1452,7 +1453,7 @@ button, input[type="button"], input[type="submit"], input[type="reset"] {
 .text-sm { font-size: 0.8125rem; }
 
 /* Stat icon accent */
-.stat-icon.accent { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
 
 /* ==========================================================================
    Sidebar Submenu Styles

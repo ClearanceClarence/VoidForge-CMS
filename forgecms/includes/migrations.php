@@ -1,13 +1,49 @@
 <?php
 /**
- * Database Migrations - Forge CMS v1.0.7
+ * Database Migrations - Forge CMS v1.0.8
  * Run automatically during update process
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+$postsTable = Database::table('posts');
 $foldersTable = Database::table('media_folders');
 $mediaTable = Database::table('media');
+
+// Fix posts table - add missing columns
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'parent_id'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$postsTable} ADD COLUMN parent_id INT DEFAULT NULL AFTER author_id");
+        Database::execute("ALTER TABLE {$postsTable} ADD INDEX idx_parent_id (parent_id)");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'menu_order'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$postsTable} ADD COLUMN menu_order INT DEFAULT 0 AFTER parent_id");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'featured_image_id'");
+    if (empty($columns)) {
+        // Check if old column exists
+        $oldCol = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'featured_image'");
+        if (!empty($oldCol)) {
+            Database::execute("ALTER TABLE {$postsTable} CHANGE COLUMN featured_image featured_image_id INT DEFAULT NULL");
+        } else {
+            Database::execute("ALTER TABLE {$postsTable} ADD COLUMN featured_image_id INT DEFAULT NULL AFTER menu_order");
+        }
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
 
 // Create media_folders table if it doesn't exist
 try {
@@ -45,5 +81,5 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '1.0.7');
+setOption('cms_version', '1.0.8');
 setOption('last_update', date('Y-m-d H:i:s'));

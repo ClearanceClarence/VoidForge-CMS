@@ -152,16 +152,22 @@ function verifyCsrf(?string $token = null): bool
 /**
  * Format date for display
  */
-function formatDate(string $date, string $format = 'M j, Y'): string
+function formatDate(?string $date, string $format = 'M j, Y'): string
 {
+    if (empty($date)) {
+        return '';
+    }
     return date($format, strtotime($date));
 }
 
 /**
  * Format date for datetime input
  */
-function formatDatetime(string $date): string
+function formatDatetime(?string $date): string
 {
+    if (empty($date)) {
+        return '';
+    }
     return date('Y-m-d\TH:i', strtotime($date));
 }
 

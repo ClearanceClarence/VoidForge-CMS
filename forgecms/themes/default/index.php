@@ -1,7 +1,7 @@
 <?php
 /**
  * Default Theme - Landing Page
- * Forge CMS v1.0.7
+ * Forge CMS v1.0.8
  */
 
 defined('CMS_ROOT') or die;

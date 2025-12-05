@@ -14,7 +14,8 @@ class Database
     {
         if (self::$instance === null) {
             try {
-                $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+                $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
+                $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . $charset;
                 
                 self::$instance = new PDO($dsn, DB_USER, DB_PASS, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

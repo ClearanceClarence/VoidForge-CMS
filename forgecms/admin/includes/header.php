@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Header - Forge CMS v1.0.7
+ * Admin Header - Forge CMS v1.0.8
  * With dynamic theme support
  */
 

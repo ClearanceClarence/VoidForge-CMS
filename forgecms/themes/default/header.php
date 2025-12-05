@@ -39,17 +39,24 @@ $customCss = getOption('custom_frontend_css', '');
                 <div class="nav-links">
                     <a href="<?= SITE_URL ?>">Home</a>
                     <?php
-                    $pages = Post::query([
-                        'post_type' => 'page',
-                        'status' => 'published',
-                        'orderby' => 'menu_order',
-                        'order' => 'ASC',
-                        'limit' => 5
-                    ]);
-                    foreach ($pages as $navPage):
+                    try {
+                        $pages = Post::query([
+                            'post_type' => 'page',
+                            'status' => 'published',
+                            'orderby' => 'menu_order',
+                            'order' => 'ASC',
+                            'limit' => 5
+                        ]);
+                        foreach ($pages as $navPage):
+                            $permalink = Post::permalink($navPage);
                     ?>
-                        <a href="<?= esc(Post::permalink($navPage)) ?>"><?= esc($navPage['title']) ?></a>
-                    <?php endforeach; ?>
+                        <a href="<?= esc($permalink) ?>"><?= esc($navPage['title'] ?? 'Untitled') ?></a>
+                    <?php 
+                        endforeach;
+                    } catch (Exception $e) {
+                        // Silently fail if database not ready
+                    }
+                    ?>
                     <a href="<?= ADMIN_URL ?>" class="btn btn-primary btn-sm">Dashboard</a>
                 </div>
             </div>

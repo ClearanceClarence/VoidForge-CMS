@@ -1,6 +1,6 @@
 <?php
 /**
- * Media Library - Forge CMS v1.0.7
+ * Media Library - Forge CMS v1.0.8
  * Single-click selection with slide-in panel
  */
 
@@ -478,7 +478,7 @@ include ADMIN_PATH . '/includes/header.php';
                  data-alt="<?= esc($item['alt_text'] ?? '') ?>"
                  data-url="<?= esc($item['url']) ?>"
                  data-mime="<?= esc($item['mime_type']) ?>"
-                 data-size="<?= $item['file_size'] ?>"
+                 data-size="<?= $item['filesize'] ?? 0 ?>"
                  data-width="<?= $item['width'] ?? '' ?>"
                  data-height="<?= $item['height'] ?? '' ?>"
                  data-date="<?= $item['created_at'] ?>"

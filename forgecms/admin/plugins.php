@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugins Management - Forge CMS v1.0.7
+ * Plugins Management - Forge CMS v1.0.8
  * WordPress-like table design
  */
 
@@ -357,16 +357,19 @@ include ADMIN_PATH . '/includes/header.php';
     color: #e2e8f0;
     padding: 1.25rem;
     border-radius: 8px;
-    font-family: 'Monaco', 'Menlo', monospace;
+    font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
     font-size: 0.8125rem;
     line-height: 1.7;
     overflow-x: auto;
+    white-space: pre;
+    margin: 0;
 }
 
 .code-block .comment { color: #64748b; }
 .code-block .keyword { color: #f472b6; }
 .code-block .string { color: #a5f3fc; }
 .code-block .function { color: #fbbf24; }
+.code-block .variable { color: #c4b5fd; }
 
 @media (max-width: 768px) {
     .plugins-table thead { display: none; }
@@ -486,8 +489,7 @@ include ADMIN_PATH . '/includes/header.php';
         </div>
         <div class="info-card-body">
             <p>To create a plugin, add a folder to <code>/plugins</code> with a main PHP file matching the folder name.</p>
-            <div class="code-block">
-<span class="keyword">&lt;?php</span>
+            <pre class="code-block"><span class="keyword">&lt;?php</span>
 <span class="comment">/**
  * Plugin Name: My Plugin
  * Description: A sample plugin for Forge CMS
@@ -499,13 +501,13 @@ include ADMIN_PATH . '/includes/header.php';
     <span class="comment">// Initialize your plugin here</span>
 });
 
-<span class="function">add_filter</span>(<span class="string">'the_content'</span>, <span class="keyword">function</span>($content) {
-    <span class="keyword">return</span> $content;
+<span class="function">add_filter</span>(<span class="string">'the_content'</span>, <span class="keyword">function</span>(<span class="variable">$content</span>) {
+    <span class="keyword">return</span> <span class="variable">$content</span>;
 });
 
-<span class="function">add_shortcode</span>(<span class="string">'hello'</span>, <span class="keyword">function</span>($atts) {
+<span class="function">add_shortcode</span>(<span class="string">'hello'</span>, <span class="keyword">function</span>(<span class="variable">$atts</span>) {
     <span class="keyword">return</span> <span class="string">'Hello, World!'</span>;
-});</div>
+});</pre>
         </div>
     </div>
 </div>
