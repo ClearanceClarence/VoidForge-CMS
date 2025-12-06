@@ -1,10 +1,50 @@
 <?php
 /**
- * Admin Dashboard - Forge CMS v1.0.8
+ * Admin Dashboard - Forge CMS v1.0.10
  */
 
 define('CMS_ROOT', dirname(__DIR__));
 require_once CMS_ROOT . '/includes/config.php';
+
+// Check if CMS is installed
+if (!defined('DB_NAME') || DB_NAME === '' || !defined('DB_HOST') || DB_HOST === '') {
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Install Required - Forge CMS</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: #f1f5f9;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+            }
+            .box { background: #fff; border-radius: 12px; padding: 2rem; text-align: center; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            h1 { font-size: 1.25rem; color: #1e293b; margin-bottom: 0.5rem; }
+            p { color: #64748b; margin-bottom: 1.5rem; }
+            .btn { display: inline-block; padding: 0.75rem 1.5rem; background: #6366f1; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 500; }
+            .btn:hover { background: #4f46e5; }
+        </style>
+    </head>
+    <body>
+        <div class="box">
+            <h1>Installation Required</h1>
+            <p>Forge CMS is not installed yet. Please run the installer first.</p>
+            <a href="../install.php" class="btn">Go to Installer</a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 require_once CMS_ROOT . '/includes/database.php';
 require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';

@@ -1,498 +1,221 @@
 # Forge CMS
 
-**A modern, lightweight content management system built with pure PHP.**
+A modern, lightweight content management system built with PHP. Forge CMS provides a clean, intuitive admin interface with powerful features for managing your website content.
 
-Forge CMS is designed for developers who want full control without the bloat. Zero external dependencies, clean architecture, and a beautiful admin interface.
+![Forge CMS](https://img.shields.io/badge/version-1.0.10-6366f1) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/license-MIT-green)
 
----
+## ✨ Features
 
-## Table of Contents
-
-1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Installation](#installation)
-4. [Quick Start](#quick-start)
-5. [Directory Structure](#directory-structure)
-6. [Admin Interface](#admin-interface)
-7. [Content Management](#content-management)
-8. [Custom Post Types](#custom-post-types)
-9. [Custom Fields](#custom-fields)
-10. [Media Library](#media-library)
-11. [Themes](#themes)
-12. [Plugins](#plugins)
-13. [Admin Theming](#admin-theming)
-14. [User Roles](#user-roles)
-15. [Security](#security)
-16. [API Reference](#api-reference)
-17. [Troubleshooting](#troubleshooting)
-18. [Contributing](#contributing)
-19. [License](#license)
-
----
-
-## Features
-
-### Core CMS
-- **Posts & Pages** — Full CRUD with revisions, drafts, and scheduling
-- **Custom Post Types** — Visual builder for any content structure
-- **Custom Fields** — 14 field types including WYSIWYG, repeaters, and file uploads
-- **Media Library** — Drag-and-drop uploads with automatic thumbnail generation
-- **User Management** — Role-based access control (Admin, Editor, Author)
-- **SEO-Friendly URLs** — Customizable slugs independent from titles
+### Content Management
+- **Posts & Pages** - Create and manage blog posts and static pages with a rich text editor
+- **Custom Post Types** - Define your own content types (products, portfolios, testimonials, etc.)
+- **Custom Fields** - Add custom data fields to any post type (text, numbers, dates, images, etc.)
+- **Media Library** - Upload, organize, and manage images and files with folder support
+- **Categories & Tags** - Organize content with taxonomies
 
 ### Admin Interface
-- **Modern Dashboard** — Clean, responsive design with quick stats
-- **Admin Themes** — 6 color schemes, 6 fonts, 3 icon styles
-- **Live CSS Editor** — Real-time preview for admin and frontend styles
-- **Collapsible Navigation** — Organized sidebar with expandable submenus
+- **Modern Dashboard** - Clean, responsive admin panel with quick stats and recent activity
+- **Live Preview** - Preview posts before publishing
+- **Customizable Theme** - Change admin colors and branding
+- **User Management** - Multiple user roles (Admin, Editor, Author)
 
 ### Developer Features
-- **Plugin System** — Hooks, filters, and shortcodes
-- **Theme System** — Clean template hierarchy
-- **Menu API** — Dynamically register sidebar items
-- **Auto Updates** — ZIP upload with backup and rollback
-- **Database Migrations** — Automatic schema updates
+- **Theme System** - Create custom themes with PHP templates
+- **Plugin Architecture** - Extend functionality with plugins
+- **Custom Field Functions** - Easy programmatic access to custom data
+- **Clean URLs** - SEO-friendly permalink structure
+- **Auto-Updates** - Upload ZIP files to update the CMS
 
-### Performance
-- **< 200KB** — Total package size
-- **0 Dependencies** — No Composer, no npm, no frameworks
-- **< 50ms** — Typical response time
-- **PHP 8+ Native** — Modern, type-safe code
+## 📋 Requirements
 
----
+- PHP 7.4 or higher
+- MySQL 5.7+ or MariaDB 10.3+
+- Apache with mod_rewrite enabled
+- PHP Extensions: PDO, PDO_MySQL, GD, JSON, ZIP
 
-## Requirements
+## 🚀 Installation
 
-| Component | Minimum Version |
-|-----------|----------------|
-| PHP | 8.0+ |
-| MySQL | 5.7+ |
-| MariaDB | 10.3+ (alternative to MySQL) |
-| Apache/Nginx | With mod_rewrite enabled |
-| GD Library | For image processing |
+1. **Download** the latest release and extract to your web server
+2. **Navigate** to your site in a browser (e.g., `http://localhost/forge-cms/`)
+3. **Follow** the installation wizard:
+   - Enter database credentials
+   - Set site URL and title
+   - Create admin account
+4. **Done!** Access the admin panel at `/admin`
 
-### PHP Extensions Required
-- `pdo_mysql` — Database connectivity
-- `gd` — Image manipulation
-- `json` — Data handling
-- `mbstring` — String functions
+### Manual Database Setup (Optional)
 
----
+If you prefer to set up the database manually:
 
-## Installation
-
-### Method 1: Quick Install
-
-1. Download `forge-cms-v1.0.8.zip`
-2. Extract to your web directory (e.g., `/var/www/html/` or `htdocs/`)
-3. Create a MySQL database
-4. Navigate to `http://yoursite.com/install.php`
-5. Enter database credentials and create admin account
-6. Delete `install.php` after installation
-
-### Method 2: Manual Setup
-
-1. Extract files to web directory
-2. Copy `includes/config.sample.php` to `includes/config.php`
-3. Edit `config.php` with your database credentials:
-
-```php
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'forge_cms');
-define('DB_USER', 'your_username');
-define('DB_PASS', 'your_password');
-define('DB_PREFIX', 'forge_');
-
-define('SITE_URL', 'http://yoursite.com');
-define('SITE_NAME', 'My Website');
+```sql
+CREATE DATABASE forge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-4. Import the database schema from `install.php` or run migrations
-5. Create an admin user in the `users` table
-
-### Post-Installation
-
-- Set proper permissions:
-  ```bash
-  chmod 755 /path/to/forge-cms
-  chmod -R 755 uploads/
-  chmod 644 includes/config.php
-  ```
-- Configure `.htaccess` for pretty URLs (included by default)
-- Remove `install.php` for security
-
----
-
-## Quick Start
-
-### Accessing the Admin
-
-Navigate to `http://yoursite.com/admin/` and log in with your credentials.
-
-### Creating Your First Post
-
-1. Go to **Content → Posts**
-2. Click **New Post**
-3. Enter title and content
-4. Set status to **Published**
-5. Click **Save**
-
-### Customizing Your Site
-
-1. Go to **Design → Customize**
-2. Edit frontend CSS in the live editor
-3. Preview changes in real-time
-4. Click **Save Changes**
-
----
-
-## Directory Structure
+## 📁 Directory Structure
 
 ```
 forge-cms/
-├── admin/                    # Admin panel
-│   ├── assets/              # Admin CSS, JS, images
-│   │   ├── css/
-│   │   │   └── admin.css    # Main admin stylesheet
-│   │   ├── js/
-│   │   │   └── admin.js     # Admin JavaScript
-│   │   └── images/
-│   ├── includes/            # Admin partials
-│   │   ├── header.php       # Admin header with theme loading
-│   │   ├── footer.php       # Admin footer
-│   │   └── sidebar.php      # Navigation sidebar
-│   ├── index.php            # Dashboard
-│   ├── posts.php            # Post listing
-│   ├── post-edit.php        # Post editor
-│   ├── media.php            # Media library
-│   ├── thumbnails.php       # Thumbnail manager
-│   ├── users.php            # User management
-│   ├── settings.php         # Site settings
-│   ├── post-types.php       # Custom post type builder
-│   ├── admin-theme.php      # Admin theme customizer
-│   ├── customize.php        # Live CSS editor
-│   ├── plugins.php          # Plugin manager
-│   ├── update.php           # System updater
-│   └── login.php            # Authentication
-│
-├── includes/                 # Core PHP classes
-│   ├── config.php           # Configuration constants
-│   ├── database.php         # PDO wrapper class
-│   ├── functions.php        # Helper functions
-│   ├── user.php             # User class
-│   ├── post.php             # Post class
-│   ├── media.php            # Media class
-│   ├── plugin.php           # Plugin system
-│   └── migrations.php       # Database migrations
-│
-├── plugins/                  # Plugin directory
-│   └── forge-toolkit/       # Example plugin
-│       └── forge-toolkit.php
-│
-├── themes/                   # Theme directory
-│   └── default/             # Default theme
-│       ├── index.php        # Homepage template
-│       ├── single.php       # Single post template
-│       ├── page.php         # Page template
-│       ├── header.php       # Theme header
-│       ├── footer.php       # Theme footer
-│       ├── 404.php          # Not found template
-│       ├── search.php       # Search results
-│       └── assets/          # Theme assets
-│
-├── uploads/                  # User uploads
-│   └── [year]/[month]/      # Organized by date
-│
-├── backups/                  # System backups
-│
-├── index.php                 # Front controller
-├── install.php               # Installer (delete after use)
-├── .htaccess                 # Apache rewrite rules
-├── README.md                 # This file
-└── CHANGELOG.md              # Version history
+├── admin/              # Admin panel files
+│   ├── assets/         # Admin CSS, JS, images
+│   ├── includes/       # Header, footer, sidebar
+│   └── *.php           # Admin pages
+├── includes/           # Core PHP classes
+│   ├── config.php      # Configuration (auto-generated)
+│   ├── database.php    # Database connection
+│   ├── functions.php   # Helper functions
+│   ├── post.php        # Post class
+│   ├── user.php        # User authentication
+│   ├── media.php       # Media handling
+│   └── plugin.php      # Plugin system
+├── themes/             # Frontend themes
+│   └── default/        # Default theme
+├── plugins/            # Plugin directory
+├── uploads/            # Media uploads
+├── backups/            # Update backups
+└── index.php           # Frontend entry point
 ```
 
----
+## 🎨 Theming
 
-## Admin Interface
-
-### Dashboard
-
-The dashboard provides an overview of your site:
-- Post count with status breakdown
-- Page count
-- Media library size
-- User count
-- Recent activity
-- Quick action buttons
-
-### Navigation
-
-The sidebar organizes features into logical groups:
-
-**Content**
-- Dashboard
-- Posts (with count)
-- Pages (with count)
-- Custom Post Types
-
-**Media**
-- Library
-- Thumbnails (admin only)
-
-**Design**
-- Customize (Live CSS editor)
-
-**Admin**
-- Users
-- Settings
-  - General
-  - Post Types
-  - Admin Theme
-- Tools
-  - Update
-  - Plugins
-
----
-
-## Content Management
-
-### Posts
-
-Posts are the primary content type. Each post has:
-
-| Field | Description |
-|-------|-------------|
-| Title | The post headline |
-| Slug | URL-friendly identifier (auto-generated or custom) |
-| Content | Rich text content with WYSIWYG editor |
-| Excerpt | Summary text (manual or auto-generated) |
-| Status | draft, published, or trash |
-| Featured Image | Thumbnail for listings |
-| Author | Post creator |
-| Created/Updated | Timestamps |
-
-### Pages
-
-Pages work like posts but are designed for static content (About, Contact, etc.).
-
-### Statuses
-
-- **Draft** — Work in progress, not visible on frontend
-- **Published** — Live and visible
-- **Trash** — Soft-deleted, can be restored
-
-### Slugs
-
-Slugs are URL-friendly identifiers. By default, they're generated from the title, but you can customize them:
+Themes are located in the `/themes` directory. Each theme should contain:
 
 ```
-Title: "My Amazing Post!"
-Auto-slug: my-amazing-post
-Custom slug: awesome-post → yoursite.com/awesome-post
+themes/your-theme/
+├── index.php          # Homepage template
+├── single.php         # Single post template
+├── page.php           # Page template
+├── search.php         # Search results
+├── 404.php            # Not found page
+├── header.php         # Header partial
+├── footer.php         # Footer partial
+└── assets/            # Theme assets (CSS, JS, images)
 ```
 
----
+### Template Tags
 
-## Custom Post Types
+```php
+// Get site info
+<?= SITE_URL ?>
+<?= CMS_NAME ?>
 
-Create custom content structures without writing code.
+// Get posts
+$posts = Post::query(['post_type' => 'post', 'status' => 'published', 'limit' => 10]);
 
-### Creating a Post Type
+// Display post data
+<?= esc($post['title']) ?>
+<?= $post['content'] ?>
+<?= esc($post['excerpt']) ?>
+
+// Get featured image
+<?= get_featured_image_url($post['id']) ?>
+
+// Get custom fields
+<?= get_custom_field('price', $post['id']) ?>
+<?= get_custom_field('sku', $post['id']) ?>
+
+// Get all custom fields
+$fields = get_all_custom_fields($post['id']);
+```
+
+### Custom Post Type Templates
+
+Create type-specific templates by naming them `single-{post_type}.php`:
+
+```
+themes/your-theme/
+├── single.php           # Default single template
+├── single-product.php   # Product post type template
+├── single-portfolio.php # Portfolio post type template
+```
+
+## 🔧 Custom Post Types
+
+### Creating via Admin
 
 1. Go to **Settings → Post Types**
 2. Click **New Post Type**
 3. Configure:
-   - **Singular Label**: e.g., "Product"
-   - **Plural Label**: e.g., "Products"
-   - **Slug**: e.g., "product" (URL identifier)
-   - **Icon**: Choose from 12 icons
-   - **Public**: Whether to show on frontend
-   - **Has Archive**: Enable archive pages
-   - **Supports**: Title, Editor, Excerpt, Thumbnail, Author, Comments
+   - Labels (singular/plural)
+   - URL slug
+   - Icon
+   - Features (title, editor, thumbnail, etc.)
+   - Custom fields
 
-### Example: Products
+### Custom Fields in Templates
 
+```php
+// Get a single field
+$price = get_custom_field('price', $post['id']);
+$color = get_custom_field('color', $post['id'], '#000000'); // with default
+
+// Get all fields
+$fields = get_all_custom_fields($post['id']);
+
+// Set a field programmatically
+set_custom_field('price', 29.99, $post['id']);
+
+// Delete a field
+delete_custom_field('old_field', $post['id']);
 ```
-Singular: Product
-Plural: Products
-Slug: product
-Icon: box
-Supports: Title, Editor, Thumbnail
-Custom Fields: Price, SKU, Stock Status
-```
-
-Results in URLs like: `yoursite.com/product/blue-widget`
-
----
-
-## Custom Fields
-
-Add structured data to any post type with 14 field types.
 
 ### Available Field Types
 
-| Type | Description | Example Use |
-|------|-------------|-------------|
-| `text` | Single line text | Product SKU |
-| `textarea` | Multi-line text | Short description |
-| `number` | Numeric input | Price, quantity |
-| `email` | Email validation | Contact email |
-| `url` | URL validation | External link |
-| `date` | Date picker | Event date |
-| `datetime` | Date and time | Event start time |
-| `select` | Dropdown menu | Category selection |
-| `radio` | Radio buttons | Size options |
-| `checkbox` | Checkboxes | Features list |
-| `image` | Image upload | Product gallery |
-| `file` | File upload | Downloadable PDF |
-| `wysiwyg` | Rich text editor | Detailed description |
-| `color` | Color picker | Product color |
+| Type | Description |
+|------|-------------|
+| `text` | Single line text |
+| `textarea` | Multi-line text |
+| `number` | Numeric input |
+| `email` | Email address |
+| `url` | URL/link |
+| `date` | Date picker |
+| `datetime` | Date and time |
+| `color` | Color picker |
+| `select` | Dropdown menu |
+| `checkbox` | Yes/no toggle |
+| `image` | Image from media library |
+| `file` | File upload |
+| `wysiwyg` | Rich text editor |
 
-### Adding Custom Fields
+## 🔌 Plugins
 
-1. Edit a post type in **Settings → Post Types**
-2. Click **Add Field**
-3. Configure:
-   - **Label**: Display name
-   - **Key**: Database identifier (lowercase, underscores)
-   - **Type**: Select from dropdown
-   - **Options**: For select/radio/checkbox (one per line)
-   - **Required**: Validation flag
+Plugins extend Forge CMS functionality. Place plugins in `/plugins/plugin-name/`.
 
-### Field Configuration Example
+### Forge Toolkit (Built-in)
 
-```
-Label: Price
-Key: price
-Type: number
-Required: Yes
+The **Forge Toolkit** plugin provides 30+ shortcodes for building rich content pages:
 
-Label: Product Color
-Key: product_color
-Type: select
-Options:
-  Red
-  Blue
-  Green
-  Black
-```
+**Content Components:**
+- `{button}` - Styled buttons with icons
+- `{alert}` - Info, success, warning, error alerts
+- `{card}` - Content cards with icons
+- `{quote}` - Blockquotes (classic & modern styles)
+- `{code}` - Syntax-highlighted code blocks
+- `{badge}` - Inline badges and labels
 
----
+**Layout Components:**
+- `{tabs}` - Tabbed content panels
+- `{accordion}` - Collapsible FAQ sections
+- `{grid}` - Responsive grid layouts
+- `{columns}` - Multi-column layouts
+- `{timeline}` - Vertical timelines
 
-## Media Library
+**Data Display:**
+- `{progress}` - Progress bars (animated/striped)
+- `{stats}` - Statistics counters
+- `{pricing}` - Pricing tables
+- `{testimonial}` - Customer testimonials
+- `{features}` - Feature lists with checkmarks
 
-### Uploading Files
+**Media & Utilities:**
+- `{youtube}` / `{vimeo}` - Video embeds
+- `{icon}` - 60+ SVG icons
+- `{tooltip}` - Hover tooltips
+- `{modal}` - Modal dialogs
+- `{salts}` - Security key generator
 
-- Drag and drop files onto the media library
-- Click "Upload" to select files
-- Supports: JPG, PNG, GIF, WebP, PDF, and more
-
-### Automatic Thumbnails
-
-When you upload an image, Forge CMS automatically generates:
-
-| Size | Dimensions | Crop |
-|------|------------|------|
-| thumbnail | 150×150 | Yes |
-| medium | 300×300 | No |
-| large | 1024×1024 | No |
-
-### Thumbnail Manager
-
-Access via **Media → Thumbnails**:
-- View all images and their thumbnail status
-- Regenerate thumbnails individually or in bulk
-- System diagnostics (GD library, supported formats)
-
-### Using Media in Content
-
-Click the media button in the editor to:
-- Browse existing uploads
-- Upload new files
-- Insert images with size selection
-- Copy URLs for manual use
-
----
-
-## Themes
-
-### Template Hierarchy
-
-Forge CMS looks for templates in this order:
-
-**Single Post:**
-1. `single-{post_type}.php`
-2. `single.php`
-
-**Page:**
-1. `page-{slug}.php`
-2. `page.php`
-
-**Archive:**
-1. `archive-{post_type}.php`
-2. `archive.php`
-
-**Homepage:**
-1. `front-page.php`
-2. `index.php`
-
-### Creating a Theme
-
-1. Create a folder in `/themes/`
-2. Add required files:
-   - `index.php` — Main template
-   - `style.css` — Theme info header
-
-```php
-<?php
-/**
- * Theme Name: My Theme
- * Description: A custom theme
- * Version: 1.0.0
- * Author: Your Name
- */
-```
-
-### Theme Functions
-
-```php
-// Get site info
-<?= SITE_NAME ?>
-<?= SITE_URL ?>
-
-// Get posts
-$posts = Post::query([
-    'post_type' => 'post',
-    'status' => 'published',
-    'limit' => 10
-]);
-
-// Display post
-<?= $post['title'] ?>
-<?= $post['content'] ?>
-<?= $post['excerpt'] ?>
-
-// Get thumbnail
-<?= Post::getThumbnailUrl($post['id'], 'medium') ?>
-
-// Get custom field
-<?= Post::getMeta($post['id'], 'price') ?>
-```
-
----
-
-## Plugins
+Activate the plugin and visit `/toolkit-demo` for a complete interactive demo.
 
 ### Plugin Structure
-
-```
-plugins/
-└── my-plugin/
-    └── my-plugin.php
-```
-
-### Plugin Header
 
 ```php
 <?php
@@ -502,233 +225,152 @@ plugins/
  * Version: 1.0.0
  * Author: Your Name
  */
-```
 
-### Hooks and Filters
-
-```php
-// Action hook
-add_action('init', function() {
-    // Runs on initialization
+// Hook into actions
+Plugin::addAction('after_post_save', function($postId) {
+    // Do something after a post is saved
 });
 
-// Filter hook
-add_filter('the_content', function($content) {
-    return $content . '<p>Added by plugin</p>';
-});
-
-// Activation hook
-register_activation_hook(__FILE__, function() {
-    // Setup code
-});
-
-// Deactivation hook
-register_deactivation_hook(__FILE__, function() {
-    // Cleanup code
+// Add filters
+Plugin::addFilter('post_content', function($content) {
+    return str_replace('foo', 'bar', $content);
 });
 ```
 
-### Shortcodes
+### Available Hooks
+
+**Actions:**
+- `init` - After CMS initializes
+- `after_post_save` - After a post is saved
+- `after_post_delete` - After a post is deleted
+- `admin_head` - In admin `<head>`
+- `admin_footer` - Before admin `</body>`
+
+**Filters:**
+- `post_content` - Filter post content
+- `post_title` - Filter post title
+- `the_excerpt` - Filter excerpt
+
+## ⚙️ Configuration
+
+After installation, configuration is stored in `/includes/config.php`:
 
 ```php
-add_shortcode('greeting', function($atts) {
-    $atts = shortcode_atts([
-        'name' => 'World'
-    ], $atts);
-    
-    return "<p>Hello, {$atts['name']}!</p>";
-});
+// Database
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'forge_cms');
+define('DB_USER', 'username');
+define('DB_PASS', 'password');
+define('DB_PREFIX', 'forge_');
 
-// Usage: [greeting name="Adrian"]
+// Site
+define('SITE_URL', 'http://example.com');
+define('CURRENT_THEME', 'default');
 ```
 
-### Admin Menu Registration
+## 🔄 Updates
 
-```php
-// Add top-level menu
-registerAdminMenu('my-plugin', [
-    'label' => 'My Plugin',
-    'icon' => 'box',
-    'url' => ADMIN_URL . '/my-plugin.php',
-    'capability' => 'admin',
-    'position' => 60
-]);
+### Automatic Updates
 
-// Add submenu
-registerAdminSubmenu('settings', 'my-settings', [
-    'label' => 'My Settings',
-    'url' => ADMIN_URL . '/my-settings.php',
-    'capability' => 'admin'
-]);
+1. Download the new version ZIP
+2. Go to **Settings → Updates**
+3. Upload the ZIP file
+4. Click **Install Update**
+
+The system automatically:
+- Creates a backup
+- Extracts new files
+- Preserves your config, uploads, and themes
+- Runs database migrations
+
+### Manual Updates (FTP)
+
+1. Download and extract the new version
+2. Upload files via FTP (skip `config.php`, `uploads/`, custom themes)
+3. Visit `/admin/update.php?run_migrations=1`
+
+## 🔒 Security
+
+- CSRF protection on all forms
+- Prepared statements for database queries
+- Password hashing with bcrypt
+- Session security with regeneration
+- Input sanitization and output escaping
+
+### Security Keys & Salts API
+
+Forge CMS includes a WordPress-style security salt generator. Generate cryptographically secure keys for your configuration:
+
+**API Endpoints** (when Forge Toolkit plugin is active):
+
+| Endpoint | Format | Description |
+|----------|--------|-------------|
+| `/api/salts` | PHP | Returns `define()` constants ready for config.php |
+| `/api/salts/json` | JSON | Returns keys as JSON object |
+
+**Example Usage:**
+
+```bash
+# Get PHP constants
+curl http://yoursite.com/api/salts
+
+# Get JSON format
+curl http://yoursite.com/api/salts/json
 ```
 
----
+**Generated Keys:**
+- `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`
+- `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT`, `NONCE_SALT`
+- `SESSION_KEY`, `CSRF_KEY`, `API_KEY`, `ENCRYPTION_KEY`
 
-## Admin Theming
+You can also use the `{salts}` shortcode on any page to display a salt generator with a regenerate button.
 
-Personalize your admin experience at **Settings → Admin Theme**.
-
-### Color Schemes
-
-| Scheme | Primary | Secondary | Description |
-|--------|---------|-----------|-------------|
-| Indigo | #6366f1 | #8b5cf6 | Default purple theme |
-| Ocean | #0ea5e9 | #06b6d4 | Blue and cyan |
-| Emerald | #10b981 | #14b8a6 | Green and teal |
-| Rose | #f43f5e | #ec4899 | Pink and red |
-| Amber | #f59e0b | #eab308 | Orange and yellow |
-| Slate | #64748b | #94a3b8 | Neutral gray |
-
-### Typography Options
-
-- Inter (default)
-- Poppins
-- Nunito
-- Roboto
-- Source Sans
-- DM Sans
-
-### Icon Styles
-
-| Style | Stroke Width | Description |
-|-------|-------------|-------------|
-| Outlined | 2px | Default, balanced |
-| Light | 1.5px | Thinner, elegant |
-| Bold | 2.5px | Heavier, prominent |
-
-### Preferences
-
-- **Animations**: Toggle transitions and hover effects
-- **Compact Sidebar**: Reduce spacing for more content area
-
----
-
-## User Roles
-
-### Role Capabilities
-
-| Capability | Admin | Editor | Author |
-|------------|-------|--------|--------|
-| Manage all posts | ✓ | ✓ | Own only |
-| Manage pages | ✓ | ✓ | ✗ |
-| Manage media | ✓ | ✓ | ✓ |
-| Manage users | ✓ | ✗ | ✗ |
-| Manage settings | ✓ | ✗ | ✗ |
-| Manage plugins | ✓ | ✗ | ✗ |
-| Access thumbnails | ✓ | ✗ | ✗ |
-| System updates | ✓ | ✗ | ✗ |
-
-### Creating Users
-
-1. Go to **Admin → Users**
-2. Click **Add User**
-3. Enter username, email, password
-4. Select role
-5. Save
-
----
-
-## Security
-
-### Built-in Protection
-
-- **CSRF Tokens**: All forms include token validation
-- **Password Hashing**: bcrypt with automatic rehashing
-- **SQL Injection Prevention**: Prepared statements throughout
-- **XSS Prevention**: Output escaping helpers
-- **Session Security**: Secure session handling
-
-### Security Functions
-
-```php
-// Generate CSRF field
-<?= csrfField() ?>
-
-// Verify CSRF token
-if (verifyCsrf()) {
-    // Process form
-}
-
-// Escape output
-<?= esc($userInput) ?>
-
-// Escape for attributes
-<input value="<?= escAttr($value) ?>">
-```
-
-### Recommendations
-
-1. Delete `install.php` after installation
-2. Use strong passwords
-3. Keep PHP and MySQL updated
-4. Set proper file permissions
-5. Use HTTPS in production
-6. Regular backups
-
----
-
-## API Reference
-
-### Database Class
-
-```php
-// Get instance
-$db = Database::getInstance();
-
-// Query
-$results = $db->query("SELECT * FROM posts WHERE status = ?", ['published']);
-
-// Single row
-$post = $db->fetch("SELECT * FROM posts WHERE id = ?", [$id]);
-
-// Insert
-$id = $db->insert('posts', [
-    'title' => 'New Post',
-    'content' => 'Content here'
-]);
-
-// Update
-$db->update('posts', ['title' => 'Updated'], 'id = ?', [$id]);
-
-// Delete
-$db->delete('posts', 'id = ?', [$id]);
-```
+## 📖 API Reference
 
 ### Post Class
 
 ```php
 // Query posts
-$posts = Post::query([
+Post::query([
     'post_type' => 'post',
     'status' => 'published',
     'limit' => 10,
     'offset' => 0,
     'orderby' => 'created_at',
-    'order' => 'DESC',
-    'search' => 'keyword'
+    'order' => 'DESC'
 ]);
 
 // Get single post
-$post = Post::find($id);
-$post = Post::findBySlug('my-post');
+Post::find($id);
+Post::findBySlug($slug, $postType);
 
-// Create post
-$id = Post::create([
-    'title' => 'Title',
-    'content' => 'Content',
+// Count posts
+Post::count(['post_type' => 'post', 'status' => 'published']);
+
+// Save post
+Post::save([
+    'title' => 'My Post',
+    'content' => 'Content here',
     'post_type' => 'post',
     'status' => 'published'
 ]);
 
-// Update post
-Post::update($id, ['title' => 'New Title']);
-
 // Delete post
 Post::delete($id);
+```
 
-// Post meta
-Post::setMeta($id, 'key', 'value');
-$value = Post::getMeta($id, 'key');
+### Media Class
+
+```php
+// Upload file
+Media::upload($_FILES['file']);
+
+// Get media
+Media::find($id);
+Media::query(['folder_id' => 1, 'limit' => 20]);
+
+// Delete media
+Media::delete($id);
 ```
 
 ### User Class
@@ -737,143 +379,72 @@ $value = Post::getMeta($id, 'key');
 // Authentication
 User::login($username, $password);
 User::logout();
+User::isLoggedIn();
+User::current();
+
+// Authorization
 User::requireLogin();
 User::requireRole('admin');
-
-// Current user
-$user = User::current();
-User::isLoggedIn();
-User::isAdmin();
-
-// User management
-User::create(['username' => '...', 'email' => '...', 'password' => '...']);
-User::update($id, ['display_name' => '...']);
-User::delete($id);
+User::hasRole('editor');
 ```
 
 ### Helper Functions
 
 ```php
-// Options
-setOption('key', 'value');
-$value = getOption('key', 'default');
-
-// Flash messages
-setFlash('success', 'Saved!');
-$message = getFlash('success');
-
-// Redirects
-redirect('/admin/');
+// Escaping
+esc($string);           // HTML escape
+esc_attr($string);      // Attribute escape
 
 // URLs
-siteUrl('/page');
-adminUrl('/posts');
+url($path);             // Site URL
+admin_url($path);       // Admin URL
 
-// Escaping
-esc($string);
-escAttr($string);
+// Options
+getOption($key, $default);
+setOption($key, $value);
+deleteOption($key);
 
-// Formatting
-formatDate($timestamp);
-formatFileSize($bytes);
+// Custom Fields
+get_custom_field($key, $postId, $default);
+set_custom_field($key, $value, $postId);
+get_all_custom_fields($postId);
+
+// Security
+csrfToken();
+verifyCsrf($token);
 ```
 
----
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-**"Cannot connect to database"**
-- Verify database credentials in `config.php`
-- Ensure MySQL service is running
-- Check that the database exists
+**404 errors on posts/pages**
+- Ensure mod_rewrite is enabled
+- Check `.htaccess` file exists and is readable
+- Verify `AllowOverride All` in Apache config
 
-**"Permission denied" on uploads**
-```bash
-chmod -R 755 uploads/
-chown -R www-data:www-data uploads/  # Linux
-```
+**Database connection failed**
+- Verify credentials in `config.php`
+- Ensure MySQL/MariaDB is running
+- Check database user permissions
 
-**"Thumbnails not generating"**
-- Verify GD library is installed: `php -m | grep gd`
-- Check **Media → Thumbnails** for diagnostics
+**Upload errors**
+- Check `/uploads` directory permissions (755 or 775)
+- Verify PHP `upload_max_filesize` and `post_max_size`
 
-**"CSS not updating"**
-- Clear browser cache
-- Check file permissions on `assets/css/`
-
-**"Blank page / 500 error"**
-- Enable PHP error display temporarily
+**White screen / 500 error**
+- Enable error reporting in `config.php`
 - Check PHP error logs
-- Verify PHP version is 8.0+
+- Verify PHP version requirements
 
-### Debug Mode
+## 📄 License
 
-Add to `config.php`:
-```php
-define('DEBUG', true);
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-```
+Forge CMS is open-source software licensed under the MIT License.
 
----
+## 🤝 Contributing
 
-## Contributing
-
-We welcome contributions! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-### Code Style
-
-- PSR-12 coding standard
-- Meaningful variable names
-- Comment complex logic
-- Test all changes
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ---
 
-## License
-
-Forge CMS is released under the MIT License.
-
-```
-MIT License
-
-Copyright (c) 2024 Forge CMS
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-## Links
-
-- **Admin Dashboard**: `/admin/`
-- **Documentation**: This README
-- **Changelog**: See `CHANGELOG.md`
-
----
-
-**Built with ❤️ for developers who appreciate simplicity.**
+Built with ❤️ by the Forge CMS team

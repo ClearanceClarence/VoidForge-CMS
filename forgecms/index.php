@@ -3,8 +3,22 @@
  * Front-end Entry Point
  */
 
+// Handle install.php requests that might be routed here by .htaccess
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+if (preg_match('/install\.php/', $requestUri)) {
+    include __DIR__ . '/install.php';
+    exit;
+}
+
 define('CMS_ROOT', __DIR__);
 require_once CMS_ROOT . '/includes/config.php';
+
+// Check if CMS is installed - redirect to install if not
+if (!defined('DB_NAME') || DB_NAME === '' || !defined('DB_HOST') || DB_HOST === '') {
+    header('Location: install.php');
+    exit;
+}
+
 require_once CMS_ROOT . '/includes/database.php';
 require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
@@ -31,6 +45,12 @@ if ($basePath && strpos($path, $basePath) === 0) {
 
 $path = trim($path, '/');
 
+// Get custom post types for routing
+$customPostTypes = getOption('custom_post_types');
+if (!is_array($customPostTypes)) {
+    $customPostTypes = [];
+}
+
 // Route to appropriate template
 if (!empty($_GET['s'])) {
     // Search results
@@ -49,6 +69,38 @@ if (!empty($_GET['s'])) {
     } else {
         http_response_code(404);
         include THEMES_PATH . '/' . CURRENT_THEME . '/404.php';
+    }
+} elseif (preg_match('#^([^/]+)/([^/]+)$#', $path, $matches)) {
+    // Check if first segment is a custom post type
+    $postType = $matches[1];
+    $slug = $matches[2];
+    
+    if (isset($customPostTypes[$postType])) {
+        // Custom post type single
+        $post = Post::findBySlug($slug, $postType);
+        
+        if ($post && $post['status'] === 'published') {
+            // Try post-type specific template first, then fall back to single.php
+            $templateFile = THEMES_PATH . '/' . CURRENT_THEME . '/single-' . $postType . '.php';
+            if (file_exists($templateFile)) {
+                include $templateFile;
+            } else {
+                include THEMES_PATH . '/' . CURRENT_THEME . '/single.php';
+            }
+        } else {
+            http_response_code(404);
+            include THEMES_PATH . '/' . CURRENT_THEME . '/404.php';
+        }
+    } else {
+        // Not a custom post type, try as page
+        $post = Post::findBySlug($path, 'page');
+        
+        if ($post && $post['status'] === 'published') {
+            include THEMES_PATH . '/' . CURRENT_THEME . '/page.php';
+        } else {
+            http_response_code(404);
+            include THEMES_PATH . '/' . CURRENT_THEME . '/404.php';
+        }
     }
 } else {
     // Try to find a page with this slug

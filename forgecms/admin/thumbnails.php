@@ -1,6 +1,6 @@
 <?php
 /**
- * Thumbnail Manager - Forge CMS v1.0.8
+ * Thumbnail Manager - Forge CMS v1.0.10
  * Modern redesigned interface
  */
 

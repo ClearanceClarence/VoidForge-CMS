@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugins Management - Forge CMS v1.0.8
+ * Plugins Management - Forge CMS v1.0.10
  * WordPress-like table design
  */
 

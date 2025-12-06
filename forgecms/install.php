@@ -1,12 +1,12 @@
 <?php
 /**
- * Forge CMS Installer v1.0.8
+ * Forge CMS Installer v1.0.10
  */
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('CMS_VERSION', '1.0.8');
+define('CMS_VERSION', '1.0.10');
 define('CMS_NAME', 'Forge CMS');
 define('CMS_ROOT', __DIR__);
 

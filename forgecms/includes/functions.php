@@ -513,9 +513,158 @@ function getAdminMenuIcon(string $icon, int $size = 20): string
         'upload' => '<polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>',
         'grid' => '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>',
         'box' => '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+        'tag' => '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>',
+        'star' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+        'heart' => '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>',
+        'shopping-bag' => '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>',
+        'calendar' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>',
+        'map-pin' => '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>',
+        'video' => '<polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>',
+        'music' => '<path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle>',
+        'book' => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>',
     ];
     
     $path = $icons[$icon] ?? $icons['file'];
     
     return '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $path . '</svg>';
+}
+
+// =========================================================================
+// Custom Field Functions
+// =========================================================================
+
+/**
+ * Get a custom field value for a post
+ * 
+ * Usage: get_custom_field('price', $post_id)
+ * 
+ * @param string $key The field key
+ * @param int $postId The post ID
+ * @param mixed $default Default value if field doesn't exist
+ * @return mixed The field value or default
+ */
+function get_custom_field(string $key, int $postId, $default = null)
+{
+    $table = Database::table('postmeta');
+    $result = Database::queryOne(
+        "SELECT meta_value FROM {$table} WHERE post_id = ? AND meta_key = ?",
+        [$postId, $key]
+    );
+    
+    if ($result) {
+        $value = $result['meta_value'];
+        // Try to decode JSON (for arrays/objects)
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
+            return $decoded;
+        }
+        return $value;
+    }
+    
+    return $default;
+}
+
+/**
+ * Set a custom field value for a post
+ * 
+ * Usage: set_custom_field('price', 29.99, $post_id)
+ * 
+ * @param string $key The field key
+ * @param mixed $value The value to set
+ * @param int $postId The post ID
+ * @return bool Success
+ */
+function set_custom_field(string $key, $value, int $postId): bool
+{
+    $table = Database::table('postmeta');
+    
+    // Encode arrays/objects as JSON
+    if (is_array($value) || is_object($value)) {
+        $value = json_encode($value);
+    }
+    
+    // Check if exists
+    $existing = Database::queryOne(
+        "SELECT id FROM {$table} WHERE post_id = ? AND meta_key = ?",
+        [$postId, $key]
+    );
+    
+    if ($existing) {
+        return Database::update($table, ['meta_value' => $value], 'id = ?', [$existing['id']]);
+    } else {
+        return Database::insert($table, [
+            'post_id' => $postId,
+            'meta_key' => $key,
+            'meta_value' => $value
+        ]);
+    }
+}
+
+/**
+ * Delete a custom field from a post
+ * 
+ * @param string $key The field key
+ * @param int $postId The post ID
+ * @return bool Success
+ */
+function delete_custom_field(string $key, int $postId): bool
+{
+    $table = Database::table('postmeta');
+    return Database::delete($table, 'post_id = ? AND meta_key = ?', [$postId, $key]);
+}
+
+/**
+ * Get all custom fields for a post
+ * 
+ * @param int $postId The post ID
+ * @return array Associative array of key => value
+ */
+function get_all_custom_fields(int $postId): array
+{
+    $table = Database::table('postmeta');
+    $results = Database::query(
+        "SELECT meta_key, meta_value FROM {$table} WHERE post_id = ?",
+        [$postId]
+    );
+    
+    $fields = [];
+    foreach ($results as $row) {
+        $value = $row['meta_value'];
+        // Try to decode JSON
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
+            $fields[$row['meta_key']] = $decoded;
+        } else {
+            $fields[$row['meta_key']] = $value;
+        }
+    }
+    
+    return $fields;
+}
+
+/**
+ * Get the custom post type configuration
+ * 
+ * @param string $slug Post type slug
+ * @return array|null Configuration or null if not found
+ */
+function get_post_type_config(string $slug): ?array
+{
+    $customPostTypes = getOption('custom_post_types');
+    if (!is_array($customPostTypes)) {
+        return null;
+    }
+    return $customPostTypes[$slug] ?? null;
+}
+
+/**
+ * Get custom fields definition for a post type
+ * 
+ * @param string $postType Post type slug
+ * @return array Array of field definitions
+ */
+function get_post_type_fields(string $postType): array
+{
+    $config = get_post_type_config($postType);
+    return $config['fields'] ?? [];
 }

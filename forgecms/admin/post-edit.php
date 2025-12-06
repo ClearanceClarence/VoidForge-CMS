@@ -70,15 +70,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
                 $data['slug'] = uniqueSlug($data['slug'], $postType, $post['id']);
             }
             Post::update($post['id'], $data);
+            $savedPostId = $post['id'];
             setFlash('success', $typeConfig['singular'] . ' updated successfully.');
         } else {
             $data['slug'] = uniqueSlug($data['slug'], $postType);
-            $postId = Post::create($data);
+            $savedPostId = Post::create($data);
             setFlash('success', $typeConfig['singular'] . ' created successfully.');
-            redirect(ADMIN_URL . '/post-edit.php?id=' . $postId);
         }
         
-        redirect(ADMIN_URL . '/post-edit.php?id=' . ($post['id'] ?? $postId));
+        // Save custom fields
+        $customFieldsDefs = get_post_type_fields($postType);
+        foreach ($customFieldsDefs as $field) {
+            $fieldKey = $field['key'];
+            if (isset($_POST['cf_' . $fieldKey])) {
+                $fieldValue = $_POST['cf_' . $fieldKey];
+                // Handle checkbox (unchecked = not sent)
+                if ($field['type'] === 'checkbox') {
+                    $fieldValue = $fieldValue ? '1' : '0';
+                }
+                set_custom_field($fieldKey, $fieldValue, $savedPostId);
+            } elseif ($field['type'] === 'checkbox') {
+                // Checkbox unchecked
+                set_custom_field($fieldKey, '0', $savedPostId);
+            }
+        }
+        
+        redirect(ADMIN_URL . '/post-edit.php?id=' . $savedPostId);
     }
 }
 
@@ -90,6 +107,13 @@ if ($typeConfig['hierarchical']) {
 $featuredImage = null;
 if ($post && $post['featured_image_id']) {
     $featuredImage = Media::find($post['featured_image_id']);
+}
+
+// Get custom fields for this post type
+$customFieldsDefs = get_post_type_fields($postType);
+$customFieldsValues = [];
+if ($post && $post['id']) {
+    $customFieldsValues = get_all_custom_fields($post['id']);
 }
 
 $permalinkBase = SITE_URL . '/';
@@ -531,6 +555,88 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </div>
             <?php endif; ?>
+            
+            <?php if (!empty($customFieldsDefs)): ?>
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">Custom Fields</div>
+                <div class="sidebar-card-body">
+                    <?php foreach ($customFieldsDefs as $field): 
+                        $fieldKey = $field['key'];
+                        $fieldValue = $customFieldsValues[$fieldKey] ?? $_POST['cf_' . $fieldKey] ?? '';
+                        $fieldId = 'cf_' . $fieldKey;
+                        $isRequired = !empty($field['required']);
+                    ?>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8125rem; margin-bottom: 0.375rem; display: block;">
+                            <?= esc($field['label']) ?>
+                            <?php if ($isRequired): ?><span style="color: var(--forge-danger);">*</span><?php endif; ?>
+                        </label>
+                        
+                        <?php if ($field['type'] === 'textarea'): ?>
+                        <textarea name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-textarea" rows="3" <?= $isRequired ? 'required' : '' ?>><?= esc($fieldValue) ?></textarea>
+                        
+                        <?php elseif ($field['type'] === 'select' && !empty($field['options'])): ?>
+                        <select name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-select" <?= $isRequired ? 'required' : '' ?>>
+                            <option value="">— Select —</option>
+                            <?php foreach ($field['options'] as $opt): ?>
+                            <option value="<?= esc($opt) ?>" <?= $fieldValue === $opt ? 'selected' : '' ?>><?= esc($opt) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        
+                        <?php elseif ($field['type'] === 'checkbox'): ?>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="<?= $fieldId ?>" id="<?= $fieldId ?>" value="1" <?= $fieldValue ? 'checked' : '' ?>>
+                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Yes</span>
+                        </label>
+                        
+                        <?php elseif ($field['type'] === 'number'): ?>
+                        <input type="number" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" step="any" <?= $isRequired ? 'required' : '' ?>>
+                        
+                        <?php elseif ($field['type'] === 'email'): ?>
+                        <input type="email" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
+                        
+                        <?php elseif ($field['type'] === 'url'): ?>
+                        <input type="url" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
+                        
+                        <?php elseif ($field['type'] === 'date'): ?>
+                        <input type="date" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
+                        
+                        <?php elseif ($field['type'] === 'datetime'): ?>
+                        <input type="datetime-local" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
+                        
+                        <?php elseif ($field['type'] === 'color'): ?>
+                        <input type="color" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue ?: '#000000') ?>" style="height: 40px; padding: 0.25rem;">
+                        
+                        <?php elseif ($field['type'] === 'image'): ?>
+                        <div class="cf-image-field" data-field="<?= $fieldId ?>">
+                            <input type="hidden" name="<?= $fieldId ?>" id="<?= $fieldId ?>" value="<?= esc($fieldValue) ?>">
+                            <div class="cf-image-preview" style="<?= $fieldValue ? '' : 'display:none;' ?> margin-bottom: 0.5rem;">
+                                <?php if ($fieldValue): 
+                                    $cfImg = Media::find((int)$fieldValue);
+                                    if ($cfImg): ?>
+                                <img src="<?= esc($cfImg['url']) ?>" style="max-width: 100%; border-radius: var(--border-radius);">
+                                <?php endif; endif; ?>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openCfImageModal('<?= $fieldId ?>')" style="width: 100%;">
+                                <?= $fieldValue ? 'Change Image' : 'Select Image' ?>
+                            </button>
+                            <?php if ($fieldValue): ?>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="removeCfImage('<?= $fieldId ?>')" style="width: 100%; margin-top: 0.25rem;">Remove</button>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php elseif ($field['type'] === 'wysiwyg'): ?>
+                        <textarea name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-textarea" rows="6" <?= $isRequired ? 'required' : '' ?>><?= esc($fieldValue) ?></textarea>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">HTML allowed</div>
+                        
+                        <?php else: ?>
+                        <input type="text" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </form>
@@ -775,6 +881,66 @@ function removeFeatured() {
     document.getElementById('featured_image_id').value = '';
     document.getElementById('featuredPreview').style.display = 'none';
     document.getElementById('setFeaturedBtn').style.display = 'block';
+}
+
+// Custom field image picker
+let currentCfImageField = null;
+
+function openCfImageModal(fieldId) {
+    currentCfImageField = fieldId;
+    document.getElementById('mediaModal').classList.add('active');
+    loadMedia();
+}
+
+function removeCfImage(fieldId) {
+    document.getElementById(fieldId).value = '';
+    const wrapper = document.querySelector('.cf-image-field[data-field="' + fieldId + '"]');
+    if (wrapper) {
+        const preview = wrapper.querySelector('.cf-image-preview');
+        if (preview) {
+            preview.style.display = 'none';
+            preview.innerHTML = '';
+        }
+        // Update buttons
+        const buttons = wrapper.querySelectorAll('button');
+        buttons.forEach((btn, i) => {
+            if (i === 0) btn.textContent = 'Select Image';
+            if (i === 1) btn.style.display = 'none';
+        });
+    }
+}
+
+// Override selectMedia to handle both featured image and custom fields
+const originalSelectMedia = selectMedia;
+function selectMedia() {
+    if (!selectedMediaId) return;
+    
+    if (currentCfImageField) {
+        // Custom field image
+        document.getElementById(currentCfImageField).value = selectedMediaId;
+        const wrapper = document.querySelector('.cf-image-field[data-field="' + currentCfImageField + '"]');
+        if (wrapper) {
+            const preview = wrapper.querySelector('.cf-image-preview');
+            if (preview) {
+                preview.innerHTML = '<img src="' + selectedMediaUrl + '" style="max-width: 100%; border-radius: var(--border-radius);">';
+                preview.style.display = 'block';
+            }
+            // Update buttons
+            const buttons = wrapper.querySelectorAll('button');
+            buttons.forEach((btn, i) => {
+                if (i === 0) btn.textContent = 'Change Image';
+                if (i === 1) btn.style.display = 'block';
+            });
+        }
+        currentCfImageField = null;
+    } else {
+        // Featured image
+        document.getElementById('featured_image_id').value = selectedMediaId;
+        document.getElementById('featuredPreview').innerHTML = '<div class="featured-image-preview"><img src="' + selectedMediaUrl + '" alt=""></div><button type="button" class="btn btn-secondary btn-sm" onclick="removeFeatured()" style="width:100%;">Remove</button>';
+        document.getElementById('featuredPreview').style.display = 'block';
+        document.getElementById('setFeaturedBtn').style.display = 'none';
+    }
+    closeMediaModal();
 }
 </script>
 

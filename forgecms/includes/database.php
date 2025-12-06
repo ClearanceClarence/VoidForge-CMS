@@ -10,9 +10,22 @@ class Database
     /** @var PDO|null */
     private static $instance = null;
 
+    /**
+     * Check if database is configured
+     */
+    public static function isConfigured(): bool
+    {
+        return defined('DB_NAME') && !empty(DB_NAME) && defined('DB_HOST') && !empty(DB_HOST);
+    }
+
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
+            // Check if database is configured
+            if (!self::isConfigured()) {
+                die('<h1>Database Not Configured</h1><p>Please run the <a href="install.php">installer</a> to set up Forge CMS.</p>');
+            }
+            
             try {
                 $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
                 $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . $charset;
@@ -23,7 +36,7 @@ class Database
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]);
             } catch (PDOException $e) {
-                die('Database connection failed: ' . $e->getMessage());
+                die('<h1>Database Connection Failed</h1><p>' . htmlspecialchars($e->getMessage()) . '</p>');
             }
         }
         

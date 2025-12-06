@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Theme Settings - Forge CMS v1.0.8
+ * Admin Theme Settings - Forge CMS v1.0.10
  * Backend color schemes, fonts, and icon styles
  */
 

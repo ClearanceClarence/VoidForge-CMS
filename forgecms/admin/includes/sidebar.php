@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Sidebar - Forge CMS v1.0.8
+ * Admin Sidebar - Forge CMS v1.0.10
  * With submenu support and dynamic menu registration
  */
 

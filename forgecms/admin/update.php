@@ -191,21 +191,159 @@ if (isset($_GET['run_migrations'])) {
     $migrationLog = runMigrations();
     setOption('last_update', date('Y-m-d H:i:s'));
     
-    // Show results
-    echo '<!DOCTYPE html><html><head><title>Migrations Complete</title>';
-    echo '<style>body{font-family:system-ui,sans-serif;max-width:600px;margin:50px auto;padding:20px;background:#1a1a2e;color:#e0e0e0;}';
-    echo '.log{background:#252542;padding:1rem;border-radius:8px;margin:1rem 0;font-family:monospace;font-size:14px;}';
-    echo '.success{color:#10b981;font-weight:600;font-size:1.25rem;}';
-    echo 'a{color:#818cf8;}</style></head><body>';
-    echo '<h1>Database Migrations</h1>';
-    echo '<p class="success">✓ Migrations completed successfully!</p>';
-    echo '<div class="log">';
-    foreach ($migrationLog as $line) {
-        echo htmlspecialchars($line) . '<br>';
-    }
-    echo '</div>';
-    echo '<p><a href="' . ADMIN_URL . '/update.php">← Back to Update Page</a></p>';
-    echo '</body></html>';
+    // Show results with proper admin styling
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Database Migrations - Forge CMS</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+            }
+            .migration-card {
+                background: #fff;
+                border-radius: 20px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+                max-width: 520px;
+                width: 100%;
+                overflow: hidden;
+            }
+            .migration-header {
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                color: #fff;
+                padding: 2rem;
+                text-align: center;
+            }
+            .migration-header .icon {
+                width: 64px;
+                height: 64px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1rem;
+            }
+            .migration-header .icon svg { width: 32px; height: 32px; }
+            .migration-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+            .migration-header p { opacity: 0.9; font-size: 0.9375rem; }
+            .migration-body { padding: 2rem; }
+            .success-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: rgba(16, 185, 129, 0.1);
+                color: #059669;
+                padding: 0.625rem 1rem;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 0.9375rem;
+                margin-bottom: 1.5rem;
+            }
+            .success-badge svg { width: 20px; height: 20px; }
+            .log-section {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+            .log-section h3 {
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                margin-bottom: 0.75rem;
+            }
+            .log-item {
+                display: flex;
+                align-items: center;
+                gap: 0.625rem;
+                padding: 0.5rem 0;
+                font-size: 0.875rem;
+                color: #334155;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .log-item:last-child { border-bottom: none; }
+            .log-item svg { width: 16px; height: 16px; color: #10b981; flex-shrink: 0; }
+            .btn-back {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.875rem 1.5rem;
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                color: #fff;
+                text-decoration: none;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 0.9375rem;
+                transition: all 0.2s;
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-back:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);
+            }
+            .btn-back svg { width: 18px; height: 18px; }
+        </style>
+    </head>
+    <body>
+        <div class="migration-card">
+            <div class="migration-header">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <h1>Database Migrations</h1>
+                <p>Schema updates have been applied</p>
+            </div>
+            <div class="migration-body">
+                <div class="success-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    All migrations completed successfully
+                </div>
+                
+                <div class="log-section">
+                    <h3>Migration Log</h3>
+                    <?php foreach ($migrationLog as $line): ?>
+                    <div class="log-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span><?= htmlspecialchars(str_replace(['→', '✓', '⚠'], '', trim($line))) ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <a href="<?= ADMIN_URL ?>/update.php" class="btn-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Updates
+                </a>
+            </div>
+        </div>
+    </body>
+    </html>
+    <?php
     exit;
 }
 

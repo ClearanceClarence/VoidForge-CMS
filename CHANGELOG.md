@@ -7,6 +7,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.10] - 2024-12-06
+
+### Added
+
+#### Security Keys & Salts API
+- WordPress-style salt generator for configuration security
+- **API Endpoints** (via Forge Toolkit plugin):
+  - `GET /api/salts` — Returns PHP `define()` constants
+  - `GET /api/salts/json` — Returns JSON format
+- **Generated Keys**: AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY, NONCE_KEY, AUTH_SALT, SECURE_AUTH_SALT, LOGGED_IN_SALT, NONCE_SALT, SESSION_KEY, CSRF_KEY, API_KEY, ENCRYPTION_KEY
+- `{salts}` shortcode with regenerate button
+
+#### Forge Toolkit v3.0.0 (Major Upgrade)
+- **Fixed tabs** — JavaScript now properly handles tab switching
+- **60+ SVG icons** in icon library (up from 20)
+- **New shortcodes**:
+  - `{stats}` / `{stat}` — Statistics counters with animated numbers
+  - `{pricing}` / `{plan}` — Pricing tables with featured tier support
+  - `{testimonial}` — Customer testimonials with star ratings
+  - `{features}` / `{feature}` — Feature lists with checkmarks
+  - `{modal}` / `{modal-trigger}` — Modal dialogs
+  - `{vimeo}` — Vimeo video embeds
+  - `{map}` — OpenStreetMap embeds
+  - `{salts}` — Security key generator display
+- **Comprehensive demo page** — Deactivate/reactivate plugin to regenerate
+
+#### Custom Post Type Frontend Routing
+- Custom post types now have proper frontend URLs (e.g., `/product/my-product`)
+- Support for post-type-specific templates (`single-product.php`, `single-portfolio.php`)
+- Falls back to `single.php` if no specific template exists
+
+#### Frontend Homepage Redesign
+- Modern light theme with professional design
+- Dashboard preview mockup showing admin interface
+- Live statistics from database (posts, pages, media, custom types)
+- Code examples with syntax highlighting
+- Feature showcase cards
+- Responsive design with mobile breakpoints
+
+#### Comprehensive README
+- Complete documentation for installation, theming, and development
+- API reference for Post, Media, and User classes
+- Custom post types and custom fields usage guide
+- Forge Toolkit shortcode reference
+- Security salts API documentation
+- Troubleshooting section for common issues
+
+### Changed
+
+#### Migrations Page Redesign
+- Modern card-based design with gradient header
+- Clean log display with checkmark icons
+- Consistent styling with admin interface
+- Better visual feedback for completed migrations
+
+#### Empty State Button Styling
+- Fixed oversized button in post types empty state
+- Corrected SVG icon sizing and colors
+- Consistent button styling across empty states
+
+### Fixed
+- **Tabs not working** — Added proper JavaScript event handlers for tab switching
+- Custom post type single pages returning 404
+- Empty state SVG selector specificity issue
+
+---
+
+## [1.0.9] - 2024-12-06
+
+### Added
+
+#### Custom Post Types - Complete Rebuild
+- **Multi-page UI**: Replaced modal with dedicated list and editor pages
+- **Post Types List** (`post-types.php`):
+  - Clean table view of all custom post types
+  - Shows post count, field count, and public/private status
+  - Built-in types displayed separately
+  - Delete protection when posts exist
+- **Post Type Editor** (`post-type-edit.php`):
+  - Dedicated page for creating/editing
+  - Auto-slug generation from label
+  - Icon picker with 20+ icons
+  - Feature toggles (title, editor, excerpt, thumbnail, etc.)
+  - Custom fields builder with modal interface
+
+#### Custom Fields in Post Editor
+- Custom fields now display in post editor sidebar
+- Field rendering based on type (text, textarea, number, date, color, select, etc.)
+- Image fields use media library picker
+- Required field indicators
+- Values saved to postmeta table
+
+#### Custom Field Functions
+- `get_custom_field($key, $postId, $default)` - Get single field value
+- `set_custom_field($key, $value, $postId)` - Set field value
+- `delete_custom_field($key, $postId)` - Remove field
+- `get_all_custom_fields($postId)` - Get all fields for post
+- `get_post_type_config($slug)` - Get post type configuration
+- `get_post_type_fields($postType)` - Get field definitions
+
+#### Installation Protection
+- Database configuration check before loading
+- Friendly welcome page when not installed
+- Clear "Start Installation" button
+- Works from both frontend and admin
+
+### Changed
+
+#### Delete Error Handling
+- Graceful inline error messages instead of JavaScript alerts
+- Clear messaging: "Cannot delete: X posts are using this type"
+- Styled error box with icon
+
+### Fixed
+- Post types form submission issues
+- Install redirect loop errors
+- `.htaccess` routing for `install.php`
+
+---
+
 ## [1.0.8] - 2024-12-05
 
 ### Fixed
@@ -490,4 +610,4 @@ Thank you to everyone who has contributed to Forge CMS!
 
 ---
 
-*Last updated: December 4, 2024*
+*Last updated: December 6, 2024*

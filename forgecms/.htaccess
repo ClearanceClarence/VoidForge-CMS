@@ -1,17 +1,19 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Dynamically set base from current directory
-# RewriteBase will be auto-detected
+# Allow direct access to install.php
+RewriteRule ^install\.php$ - [L]
 
 # Don't rewrite requests for existing files or directories
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
 # Don't rewrite admin, uploads, or themes
-RewriteCond %{REQUEST_URI} !^.*/admin/
-RewriteCond %{REQUEST_URI} !^.*/uploads/
-RewriteCond %{REQUEST_URI} !^.*/themes/
+RewriteCond %{REQUEST_URI} ^.*/admin/ [OR]
+RewriteCond %{REQUEST_URI} ^.*/uploads/ [OR]
+RewriteCond %{REQUEST_URI} ^.*/themes/
+RewriteRule ^ - [L]
 
 # Rewrite everything else to index.php
 RewriteRule ^(.*)$ index.php [L,QSA]

@@ -1,6 +1,6 @@
 <?php
 /**
- * Media Library - Forge CMS v1.0.8
+ * Media Library - Forge CMS v1.0.10
  * Single-click selection with slide-in panel
  */
 
