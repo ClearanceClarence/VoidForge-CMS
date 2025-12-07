@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('DB_CHARSET', 'utf8mb4');";
                 $configLines[] = "";
                 $configLines[] = "define('SITE_URL', " . var_export($siteUrl, true) . ");";
-                $configLines[] = "define('CMS_VERSION', '1.0.8');";
+                $configLines[] = "define('CMS_VERSION', '1.0.10');";
                 $configLines[] = "define('CMS_NAME', 'Forge CMS');";
                 $configLines[] = "";
                 $configLines[] = "define('ADMIN_PATH', CMS_ROOT . '/admin');";

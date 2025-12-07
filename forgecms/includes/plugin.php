@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin System - Forge CMS v1.0.3
+ * Plugin System - Forge CMS v1.0.10
  * Provides hooks, filters, and content tags for extending CMS functionality
  */
 

@@ -1,5 +1,5 @@
 /**
- * Forge CMS Admin JavaScript v1.0.3
+ * Forge CMS Admin JavaScript v1.0.10
  */
 
 // Global toggle functions
