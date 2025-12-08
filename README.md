@@ -1,8 +1,8 @@
-# Forge CMS
+# VoidForge CMS
 
-A modern, lightweight content management system built with PHP. Forge CMS provides a clean, intuitive admin interface with powerful features for managing your website content.
+A modern, lightweight content management system built with PHP. VoidForge CMS provides a clean, intuitive admin interface with powerful features for managing your website content.
 
-![Forge CMS](https://img.shields.io/badge/version-1.0.10-6366f1) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/license-MIT-green)
+![VoidForge CMS](https://img.shields.io/badge/version-beta_0.1.0-7c3aed) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## ✨ Features
 
@@ -36,7 +36,7 @@ A modern, lightweight content management system built with PHP. Forge CMS provid
 ## 🚀 Installation
 
 1. **Download** the latest release and extract to your web server
-2. **Navigate** to your site in a browser (e.g., `http://localhost/forge-cms/`)
+2. **Navigate** to your site in a browser (e.g., `http://localhost/voidforge-cms/`)
 3. **Follow** the installation wizard:
    - Enter database credentials
    - Set site URL and title
@@ -48,13 +48,13 @@ A modern, lightweight content management system built with PHP. Forge CMS provid
 If you prefer to set up the database manually:
 
 ```sql
-CREATE DATABASE forge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ## 📁 Directory Structure
 
 ```
-forge-cms/
+voidforge-cms/
 ├── admin/              # Admin panel files
 │   ├── assets/         # Admin CSS, JS, images
 │   ├── includes/       # Header, footer, sidebar
@@ -178,11 +178,11 @@ delete_custom_field('old_field', $post['id']);
 
 ## 🔌 Plugins
 
-Plugins extend Forge CMS functionality. Place plugins in `/plugins/plugin-name/`.
+Plugins extend VoidForge CMS functionality. Place plugins in `/plugins/plugin-name/`.
 
-### Forge Toolkit (Built-in)
+### VoidForge Toolkit (Built-in)
 
-The **Forge Toolkit** plugin provides 30+ shortcodes for building rich content pages:
+The **VoidForge Toolkit** plugin provides 30+ shortcodes for building rich content pages:
 
 **Content Components:**
 - `{button}` - Styled buttons with icons
@@ -258,7 +258,7 @@ After installation, configuration is stored in `/includes/config.php`:
 ```php
 // Database
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'forge_cms');
+define('DB_NAME', 'voidforge_cms');
 define('DB_USER', 'username');
 define('DB_PASS', 'password');
 define('DB_PREFIX', 'forge_');
@@ -299,7 +299,7 @@ The system automatically:
 
 ### Security Keys & Salts API
 
-Forge CMS includes a WordPress-style security salt generator. Generate cryptographically secure keys for your configuration:
+VoidForge CMS includes a WordPress-style security salt generator. Generate cryptographically secure keys for your configuration:
 
 **API Endpoints** (when Forge Toolkit plugin is active):
 
@@ -439,7 +439,7 @@ verifyCsrf($token);
 
 ## 📄 License
 
-Forge CMS is open-source software licensed under the MIT License.
+VoidForge CMS is open-source software licensed under the MIT License.
 
 ## 🤝 Contributing
 
@@ -447,4 +447,4 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ---
 
-Built with ❤️ by the Forge CMS team
+Built with ❤️ by the VoidForge CMS team
