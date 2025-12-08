@@ -1,450 +1,438 @@
 # VoidForge CMS
 
-A modern, lightweight content management system built with PHP. VoidForge CMS provides a clean, intuitive admin interface with powerful features for managing your website content.
+<div align="center">
 
-![VoidForge CMS](https://img.shields.io/badge/version-beta_0.1.0-7c3aed) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/license-MIT-green)
+![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
+![Version](https://img.shields.io/badge/version-0.1.1--beta-8b5cf6?style=for-the-badge)
+![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
+
+**A modern, lightweight content management system built with pure PHP.**
+
+No frameworks. No bloat. Just powerful features and elegant code.
+
+[Features](#features) • [Installation](#installation) • [Documentation](#documentation) • [Contributing](#contributing)
+
+</div>
+
+---
 
 ## ✨ Features
 
 ### Content Management
-- **Posts & Pages** - Create and manage blog posts and static pages with a rich text editor
-- **Custom Post Types** - Define your own content types (products, portfolios, testimonials, etc.)
-- **Custom Fields** - Add custom data fields to any post type (text, numbers, dates, images, etc.)
-- **Media Library** - Upload, organize, and manage images and files with folder support
-- **Categories & Tags** - Organize content with taxonomies
+- **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
+- **Custom Fields** — 14+ field types including text, WYSIWYG, images, files, colors, dates, and more
+- **Field Groups** — Create reusable field groups and assign them to any post type or users
+- **Media Library** — Organize uploads with folders, automatic thumbnails, and drag-and-drop support
+- **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
 
-### Admin Interface
-- **Modern Dashboard** - Clean, responsive admin panel with quick stats and recent activity
-- **Live Preview** - Preview posts before publishing
-- **Customizable Theme** - Change admin colors and branding
-- **User Management** - Multiple user roles (Admin, Editor, Author)
+### Administration
+- **Modern Admin Interface** — Beautiful dark sidebar with customizable color schemes
+- **Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
+- **Live CSS Editor** — Real-time styling with instant preview for admin and frontend
+- **Granular Font Sizes** — Separate font size controls for sidebar, header, and content areas
+- **80+ Admin Icons** — Extensive icon library for post types and navigation
+
+### User Management
+- **Role-Based Permissions** — Admin, Editor, and Subscriber roles
+- **User Profiles** — Gravatar support and customizable profile fields
+- **Secure Authentication** — Password hashing, CSRF protection, secure sessions
 
 ### Developer Features
-- **Theme System** - Create custom themes with PHP templates
-- **Plugin Architecture** - Extend functionality with plugins
-- **Custom Field Functions** - Easy programmatic access to custom data
-- **Clean URLs** - SEO-friendly permalink structure
-- **Auto-Updates** - Upload ZIP files to update the CMS
+- **Plugin System** — WordPress-style hooks and filters for extending functionality
+- **Theme Support** — Simple PHP templates with full access to all data
+- **REST API** — Built-in API endpoints for security salts and more
+- **Auto Updates** — One-click updates with automatic backups
+- **Clean Architecture** — No framework magic, just readable PHP code
+
+### Security
+- **CSRF Protection** — Token-based form protection
+- **XSS Prevention** — Output escaping helpers
+- **Secure Sessions** — Properly configured PHP sessions
+- **Password Security** — bcrypt password hashing
+
+---
 
 ## 📋 Requirements
 
-- PHP 7.4 or higher
+- PHP 8.0 or higher
 - MySQL 5.7+ or MariaDB 10.3+
-- Apache with mod_rewrite enabled
-- PHP Extensions: PDO, PDO_MySQL, GD, JSON, ZIP
+- Apache with mod_rewrite (or nginx)
+- GD Library (for image processing)
+
+---
 
 ## 🚀 Installation
 
-1. **Download** the latest release and extract to your web server
-2. **Navigate** to your site in a browser (e.g., `http://localhost/voidforge-cms/`)
-3. **Follow** the installation wizard:
-   - Enter database credentials
-   - Set site URL and title
-   - Create admin account
-4. **Done!** Access the admin panel at `/admin`
+### Quick Install
 
-### Manual Database Setup (Optional)
+1. **Download** the latest release and extract to your web directory
+2. **Navigate** to your site URL in a browser
+3. **Follow** the installation wizard
+4. **Done!** Log in to your new admin dashboard
 
-If you prefer to set up the database manually:
+### Manual Installation
 
-```sql
-CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+1. Clone or download the repository:
+   ```bash
+   git clone https://github.com/yourusername/voidforge-cms.git
+   ```
+
+2. Create a MySQL database:
+   ```sql
+   CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+
+3. Copy the sample config (if available) or run the installer:
+   ```bash
+   cp includes/config.sample.php includes/config.php
+   ```
+
+4. Configure your web server to point to the project root
+
+5. Visit your domain and complete the installation wizard
+
+---
 
 ## 📁 Directory Structure
 
 ```
 voidforge-cms/
-├── admin/              # Admin panel files
-│   ├── assets/         # Admin CSS, JS, images
-│   ├── includes/       # Header, footer, sidebar
-│   └── *.php           # Admin pages
-├── includes/           # Core PHP classes
-│   ├── config.php      # Configuration (auto-generated)
-│   ├── database.php    # Database connection
-│   ├── functions.php   # Helper functions
-│   ├── post.php        # Post class
-│   ├── user.php        # User authentication
-│   ├── media.php       # Media handling
-│   └── plugin.php      # Plugin system
-├── themes/             # Frontend themes
-│   └── default/        # Default theme
-├── plugins/            # Plugin directory
-├── uploads/            # Media uploads
-├── backups/            # Update backups
-└── index.php           # Frontend entry point
+├── admin/                  # Admin panel files
+│   ├── assets/            # Admin CSS, JS, images
+│   │   ├── css/
+│   │   │   └── admin.css  # Main admin stylesheet
+│   │   └── js/
+│   │       └── admin.js   # Admin JavaScript
+│   ├── includes/          # Admin includes (header, footer, sidebar)
+│   ├── index.php          # Admin dashboard
+│   ├── posts.php          # Post management
+│   ├── post-edit.php      # Post editor
+│   ├── post-types.php     # Custom post types
+│   ├── custom-fields.php  # Custom field groups
+│   ├── media.php          # Media library
+│   ├── users.php          # User management
+│   ├── settings.php       # Site settings
+│   ├── admin-theme.php    # Admin theme settings
+│   └── ...
+├── includes/              # Core PHP files
+│   ├── config.php         # Database configuration (generated)
+│   ├── database.php       # Database class
+│   ├── functions.php      # Helper functions
+│   ├── user.php           # User class
+│   ├── post.php           # Post class
+│   ├── media.php          # Media class
+│   └── plugin.php         # Plugin system
+├── plugins/               # Plugin directory
+├── themes/                # Theme directory
+│   └── default/           # Default theme
+│       ├── header.php
+│       ├── footer.php
+│       ├── home.php
+│       ├── single.php
+│       ├── page.php
+│       ├── welcome.php    # Landing page
+│       └── 404.php
+├── uploads/               # Media uploads
+├── backups/               # Auto-update backups
+├── index.php              # Front-end router
+├── install.php            # Installation wizard
+└── .htaccess              # Apache configuration
 ```
 
-## 🎨 Theming
+---
 
-Themes are located in the `/themes` directory. Each theme should contain:
+## 🎨 Custom Post Types
 
-```
-themes/your-theme/
-├── index.php          # Homepage template
-├── single.php         # Single post template
-├── page.php           # Page template
-├── search.php         # Search results
-├── 404.php            # Not found page
-├── header.php         # Header partial
-├── footer.php         # Footer partial
-└── assets/            # Theme assets (CSS, JS, images)
-```
-
-### Template Tags
+Create custom post types from the admin panel or programmatically:
 
 ```php
-// Get site info
-<?= SITE_URL ?>
-<?= CMS_NAME ?>
+// Register via admin: Structure → Post Types → New Post Type
 
-// Get posts
-$posts = Post::query(['post_type' => 'post', 'status' => 'published', 'limit' => 10]);
-
-// Display post data
-<?= esc($post['title']) ?>
-<?= $post['content'] ?>
-<?= esc($post['excerpt']) ?>
-
-// Get featured image
-<?= get_featured_image_url($post['id']) ?>
-
-// Get custom fields
-<?= get_custom_field('price', $post['id']) ?>
-<?= get_custom_field('sku', $post['id']) ?>
-
-// Get all custom fields
-$fields = get_all_custom_fields($post['id']);
-```
-
-### Custom Post Type Templates
-
-Create type-specific templates by naming them `single-{post_type}.php`:
-
-```
-themes/your-theme/
-├── single.php           # Default single template
-├── single-product.php   # Product post type template
-├── single-portfolio.php # Portfolio post type template
-```
-
-## 🔧 Custom Post Types
-
-### Creating via Admin
-
-1. Go to **Settings → Post Types**
-2. Click **New Post Type**
-3. Configure:
-   - Labels (singular/plural)
-   - URL slug
-   - Icon
-   - Features (title, editor, thumbnail, etc.)
-   - Custom fields
-
-### Custom Fields in Templates
-
-```php
-// Get a single field
-$price = get_custom_field('price', $post['id']);
-$color = get_custom_field('color', $post['id'], '#000000'); // with default
-
-// Get all fields
-$fields = get_all_custom_fields($post['id']);
-
-// Set a field programmatically
-set_custom_field('price', 29.99, $post['id']);
-
-// Delete a field
-delete_custom_field('old_field', $post['id']);
+// Or use the API:
+$customTypes = getOption('custom_post_types', []);
+$customTypes['portfolio'] = [
+    'label_singular' => 'Project',
+    'label_plural' => 'Portfolio',
+    'icon' => 'briefcase',
+    'public' => true,
+    'fields' => [
+        ['label' => 'Client', 'key' => 'client', 'type' => 'text'],
+        ['label' => 'URL', 'key' => 'project_url', 'type' => 'url'],
+    ]
+];
+setOption('custom_post_types', $customTypes);
 ```
 
 ### Available Field Types
 
 | Type | Description |
 |------|-------------|
-| `text` | Single line text |
-| `textarea` | Multi-line text |
+| `text` | Single-line text input |
+| `textarea` | Multi-line text area |
 | `number` | Numeric input |
 | `email` | Email address |
 | `url` | URL/link |
 | `date` | Date picker |
-| `datetime` | Date and time |
+| `datetime` | Date and time picker |
 | `color` | Color picker |
-| `select` | Dropdown menu |
-| `checkbox` | Yes/no toggle |
-| `image` | Image from media library |
-| `file` | File upload |
+| `select` | Dropdown selection |
+| `checkbox` | Boolean checkbox |
+| `image` | Image upload/select |
+| `file` | File upload/select |
 | `wysiwyg` | Rich text editor |
 
-## 🔌 Plugins
+---
 
-Plugins extend VoidForge CMS functionality. Place plugins in `/plugins/plugin-name/`.
+## 🔌 Plugin Development
 
-### VoidForge Toolkit (Built-in)
-
-The **VoidForge Toolkit** plugin provides 30+ shortcodes for building rich content pages:
-
-**Content Components:**
-- `{button}` - Styled buttons with icons
-- `{alert}` - Info, success, warning, error alerts
-- `{card}` - Content cards with icons
-- `{quote}` - Blockquotes (classic & modern styles)
-- `{code}` - Syntax-highlighted code blocks
-- `{badge}` - Inline badges and labels
-
-**Layout Components:**
-- `{tabs}` - Tabbed content panels
-- `{accordion}` - Collapsible FAQ sections
-- `{grid}` - Responsive grid layouts
-- `{columns}` - Multi-column layouts
-- `{timeline}` - Vertical timelines
-
-**Data Display:**
-- `{progress}` - Progress bars (animated/striped)
-- `{stats}` - Statistics counters
-- `{pricing}` - Pricing tables
-- `{testimonial}` - Customer testimonials
-- `{features}` - Feature lists with checkmarks
-
-**Media & Utilities:**
-- `{youtube}` / `{vimeo}` - Video embeds
-- `{icon}` - 60+ SVG icons
-- `{tooltip}` - Hover tooltips
-- `{modal}` - Modal dialogs
-- `{salts}` - Security key generator
-
-Activate the plugin and visit `/toolkit-demo` for a complete interactive demo.
-
-### Plugin Structure
+Create plugins using WordPress-style hooks:
 
 ```php
 <?php
 /**
- * Plugin Name: My Plugin
- * Description: What it does
+ * Plugin Name: My Custom Plugin
+ * Description: Adds custom functionality
  * Version: 1.0.0
  * Author: Your Name
  */
 
-// Hook into actions
-Plugin::addAction('after_post_save', function($postId) {
-    // Do something after a post is saved
+// Hook into initialization
+add_action('init', function() {
+    // Your code here
 });
 
-// Add filters
-Plugin::addFilter('post_content', function($content) {
-    return str_replace('foo', 'bar', $content);
+// Modify content
+add_filter('the_content', function($content) {
+    return $content . '<p>Added by plugin!</p>';
+});
+
+// Add admin menu item
+add_action('admin_menu', function() {
+    // Register menu items
 });
 ```
 
 ### Available Hooks
 
 **Actions:**
-- `init` - After CMS initializes
-- `after_post_save` - After a post is saved
-- `after_post_delete` - After a post is deleted
-- `admin_head` - In admin `<head>`
-- `admin_footer` - Before admin `</body>`
+- `init` — After core loads
+- `admin_init` — Admin initialization
+- `admin_menu` — Register admin menus
+- `save_post` — After post is saved
+- `delete_post` — Before post deletion
+- `api_request` — Handle API endpoints
 
 **Filters:**
-- `post_content` - Filter post content
-- `post_title` - Filter post title
-- `the_excerpt` - Filter excerpt
+- `the_content` — Modify post content
+- `the_title` — Modify post title
+- `post_query` — Modify post queries
+
+---
+
+## 🎭 Theming
+
+Create custom themes in the `/themes` directory:
+
+```php
+<!-- themes/mytheme/single.php -->
+<?php get_header(); ?>
+
+<article class="post">
+    <h1><?= esc($post['title']) ?></h1>
+    
+    <?php if ($featuredImage = get_featured_image($post['id'])): ?>
+        <img src="<?= esc($featuredImage['url']) ?>" alt="">
+    <?php endif; ?>
+    
+    <div class="content">
+        <?= $post['content'] ?>
+    </div>
+    
+    <?php 
+    // Get custom field
+    $client = get_custom_field('client', $post['id']);
+    if ($client): ?>
+        <p>Client: <?= esc($client) ?></p>
+    <?php endif; ?>
+</article>
+
+<?php get_footer(); ?>
+```
+
+---
 
 ## ⚙️ Configuration
 
-After installation, configuration is stored in `/includes/config.php`:
+### Database Settings
+
+Edit `includes/config.php`:
 
 ```php
-// Database
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'voidforge_cms');
 define('DB_USER', 'username');
 define('DB_PASS', 'password');
-define('DB_PREFIX', 'forge_');
-
-// Site
-define('SITE_URL', 'http://example.com');
-define('CURRENT_THEME', 'default');
+define('DB_PREFIX', 'vf_');
 ```
 
-## 🔄 Updates
+### Site Settings
+
+```php
+define('SITE_URL', 'https://yoursite.com');
+define('CMS_VERSION', '0.1.1-beta');
+define('CMS_NAME', 'VoidForge');
+```
+
+---
+
+## 🔄 Updating
 
 ### Automatic Updates
 
-1. Download the new version ZIP
-2. Go to **Settings → Updates**
-3. Upload the ZIP file
-4. Click **Install Update**
+1. Go to **Admin → Updates**
+2. Upload the new version ZIP file
+3. Click **Install Update**
+4. VoidForge will:
+   - Create a timestamped backup
+   - Extract new files
+   - Preserve your config, uploads, and customizations
+   - Run any necessary migrations
 
-The system automatically:
-- Creates a backup
-- Extracts new files
-- Preserves your config, uploads, and themes
-- Runs database migrations
+### Manual Updates
 
-### Manual Updates (FTP)
+1. Backup your installation
+2. Replace all files except:
+   - `includes/config.php`
+   - `uploads/` directory
+   - Custom themes and plugins
+3. Visit the admin panel to run migrations
 
-1. Download and extract the new version
-2. Upload files via FTP (skip `config.php`, `uploads/`, custom themes)
-3. Visit `/admin/update.php?run_migrations=1`
+---
 
-## 🔒 Security
+## 🛡️ Security Best Practices
 
-- CSRF protection on all forms
-- Prepared statements for database queries
-- Password hashing with bcrypt
-- Session security with regeneration
-- Input sanitization and output escaping
+1. **Keep Updated** — Always run the latest version
+2. **Strong Passwords** — Use complex passwords for all accounts
+3. **File Permissions** — Set appropriate permissions (755 for directories, 644 for files)
+4. **HTTPS** — Always use SSL/TLS in production
+5. **Backups** — Regularly backup your database and files
 
-### Security Keys & Salts API
-
-VoidForge CMS includes a WordPress-style security salt generator. Generate cryptographically secure keys for your configuration:
-
-**API Endpoints** (when Forge Toolkit plugin is active):
-
-| Endpoint | Format | Description |
-|----------|--------|-------------|
-| `/api/salts` | PHP | Returns `define()` constants ready for config.php |
-| `/api/salts/json` | JSON | Returns keys as JSON object |
-
-**Example Usage:**
-
-```bash
-# Get PHP constants
-curl http://yoursite.com/api/salts
-
-# Get JSON format
-curl http://yoursite.com/api/salts/json
-```
-
-**Generated Keys:**
-- `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`
-- `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT`, `NONCE_SALT`
-- `SESSION_KEY`, `CSRF_KEY`, `API_KEY`, `ENCRYPTION_KEY`
-
-You can also use the `{salts}` shortcode on any page to display a salt generator with a regenerate button.
+---
 
 ## 📖 API Reference
 
-### Post Class
+### Posts
 
 ```php
+// Get all posts
+$posts = Post::all();
+
 // Query posts
-Post::query([
+$posts = Post::query([
     'post_type' => 'post',
     'status' => 'published',
     'limit' => 10,
-    'offset' => 0,
-    'orderby' => 'created_at',
+    'orderBy' => 'created_at',
     'order' => 'DESC'
 ]);
 
-// Get single post
-Post::find($id);
-Post::findBySlug($slug, $postType);
+// Find by ID
+$post = Post::find($id);
 
-// Count posts
-Post::count(['post_type' => 'post', 'status' => 'published']);
+// Find by slug
+$post = Post::findBySlug('hello-world', 'post');
 
-// Save post
-Post::save([
+// Create post
+$id = Post::create([
     'title' => 'My Post',
     'content' => 'Content here',
     'post_type' => 'post',
     'status' => 'published'
 ]);
 
+// Update post
+Post::update($id, ['title' => 'Updated Title']);
+
 // Delete post
 Post::delete($id);
 ```
 
-### Media Class
+### Custom Fields
 
 ```php
+// Get single field
+$value = get_custom_field('field_key', $post_id);
+
+// Get all fields
+$fields = get_all_custom_fields($post_id);
+
+// Set field
+set_custom_field('field_key', 'value', $post_id);
+
+// Delete field
+delete_custom_field('field_key', $post_id);
+```
+
+### Media
+
+```php
+// Get media item
+$media = Media::find($id);
+
 // Upload file
-Media::upload($_FILES['file']);
+$result = Media::upload($_FILES['file'], $folder_id);
 
-// Get media
-Media::find($id);
-Media::query(['folder_id' => 1, 'limit' => 20]);
+// Get featured image
+$image = get_featured_image($post_id);
 
-// Delete media
-Media::delete($id);
+// Get thumbnails
+$thumbs = Media::getThumbnails($media_id);
 ```
 
-### User Class
+### Options
 
 ```php
-// Authentication
-User::login($username, $password);
-User::logout();
-User::isLoggedIn();
-User::current();
+// Get option
+$value = getOption('option_name', 'default');
 
-// Authorization
-User::requireLogin();
-User::requireRole('admin');
-User::hasRole('editor');
+// Set option
+setOption('option_name', $value);
+
+// Delete option
+deleteOption('option_name');
 ```
-
-### Helper Functions
-
-```php
-// Escaping
-esc($string);           // HTML escape
-esc_attr($string);      // Attribute escape
-
-// URLs
-url($path);             // Site URL
-admin_url($path);       // Admin URL
-
-// Options
-getOption($key, $default);
-setOption($key, $value);
-deleteOption($key);
-
-// Custom Fields
-get_custom_field($key, $postId, $default);
-set_custom_field($key, $value, $postId);
-get_all_custom_fields($postId);
-
-// Security
-csrfToken();
-verifyCsrf($token);
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**404 errors on posts/pages**
-- Ensure mod_rewrite is enabled
-- Check `.htaccess` file exists and is readable
-- Verify `AllowOverride All` in Apache config
-
-**Database connection failed**
-- Verify credentials in `config.php`
-- Ensure MySQL/MariaDB is running
-- Check database user permissions
-
-**Upload errors**
-- Check `/uploads` directory permissions (755 or 775)
-- Verify PHP `upload_max_filesize` and `post_max_size`
-
-**White screen / 500 error**
-- Enable error reporting in `config.php`
-- Check PHP error logs
-- Verify PHP version requirements
-
-## 📄 License
-
-VoidForge CMS is open-source software licensed under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ---
 
-Built with ❤️ by the VoidForge CMS team
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Credits
+
+- Built with ❤️ by the VoidForge team
+- Icons from [Feather Icons](https://feathericons.com/)
+- Fonts from [Google Fonts](https://fonts.google.com/)
+
+---
+
+<div align="center">
+
+**[VoidForge CMS](https://github.com/yourusername/voidforge-cms)** — Modern Content Management
+
+</div>

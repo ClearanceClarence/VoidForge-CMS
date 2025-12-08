@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugins Management - VoidForge CMS v1.0.10
+ * Plugins Management - VoidForge CMS
  * WordPress-like table design
  */
 

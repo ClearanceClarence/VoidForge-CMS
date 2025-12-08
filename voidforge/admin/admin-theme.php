@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Theme Settings - VoidForge CMS v1.0.10
+ * Admin Theme Settings - VoidForge CMS
  * Backend color schemes, fonts, and icon styles
  */
 
@@ -11,6 +11,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 
@@ -24,11 +25,55 @@ if (!User::isAdmin()) {
 $currentPage = 'admin-theme';
 $pageTitle = 'Admin Theme';
 
+// Handle save custom scheme
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && isset($_POST['save_custom_scheme'])) {
+    $schemeName = trim($_POST['scheme_name'] ?? '');
+    $customPrimary = $_POST['custom_primary'] ?? '#6366f1';
+    $customSecondary = $_POST['custom_secondary'] ?? '#8b5cf6';
+    $customSidebar = $_POST['custom_sidebar'] ?? '#0f172a';
+    
+    if (!empty($schemeName)) {
+        $savedSchemes = getOption('custom_color_schemes', []);
+        
+        // Limit to 5 custom schemes
+        if (count($savedSchemes) >= 5) {
+            // Remove oldest
+            array_shift($savedSchemes);
+        }
+        
+        $schemeKey = preg_replace('/[^a-z0-9]/', '', strtolower($schemeName));
+        $savedSchemes[$schemeKey] = [
+            'name' => $schemeName,
+            'primary' => $customPrimary,
+            'secondary' => $customSecondary,
+            'sidebar_bg' => $customSidebar,
+            'preview' => [$customPrimary, $customSecondary, $customSidebar]
+        ];
+        
+        setOption('custom_color_schemes', $savedSchemes);
+        setFlash('success', 'Custom scheme "' . $schemeName . '" saved!');
+    }
+    redirect(ADMIN_URL . '/admin-theme.php');
+}
+
+// Handle delete custom scheme
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && isset($_POST['delete_scheme'])) {
+    $schemeKey = $_POST['delete_scheme'];
+    $savedSchemes = getOption('custom_color_schemes', []);
+    unset($savedSchemes[$schemeKey]);
+    setOption('custom_color_schemes', $savedSchemes);
+    setFlash('success', 'Custom scheme deleted.');
+    redirect(ADMIN_URL . '/admin-theme.php');
+}
+
 // Handle save
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && !isset($_POST['save_custom_scheme']) && !isset($_POST['delete_scheme'])) {
     $theme = [
         'color_scheme' => $_POST['color_scheme'] ?? 'default',
         'font' => $_POST['font'] ?? 'inter',
+        'font_size_sidebar' => $_POST['font_size_sidebar'] ?? 'medium',
+        'font_size_header' => $_POST['font_size_header'] ?? 'medium',
+        'font_size_content' => $_POST['font_size_content'] ?? 'medium',
         'icon_style' => $_POST['icon_style'] ?? 'outlined',
         'sidebar_compact' => isset($_POST['sidebar_compact']),
         'animations' => isset($_POST['animations']),
@@ -50,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
 $currentTheme = getOption('admin_theme', [
     'color_scheme' => 'default',
     'font' => 'inter',
+    'font_size_sidebar' => 'medium',
+    'font_size_header' => 'medium',
+    'font_size_content' => 'medium',
     'icon_style' => 'outlined',
     'sidebar_compact' => false,
     'animations' => true,
@@ -62,6 +110,9 @@ $currentTheme = getOption('admin_theme', [
 $currentTheme = array_merge([
     'color_scheme' => 'default',
     'font' => 'inter',
+    'font_size_sidebar' => 'medium',
+    'font_size_header' => 'medium',
+    'font_size_content' => 'medium',
     'icon_style' => 'outlined',
     'sidebar_compact' => false,
     'animations' => true,
@@ -69,6 +120,9 @@ $currentTheme = array_merge([
     'custom_secondary' => '#8b5cf6',
     'custom_sidebar' => '#0f172a',
 ], $currentTheme);
+
+// Get saved custom schemes for display
+$savedCustomSchemes = getOption('custom_color_schemes', []);
 
 include ADMIN_PATH . '/includes/header.php';
 
@@ -340,10 +394,41 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 }
 
 /* Font Grid */
+.font-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+}
+
+.font-tab {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.font-tab:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+
+.font-tab.active {
+    color: #6366f1;
+    background: #f5f3ff;
+    border-color: #e0e7ff;
+}
+
 .font-options {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.875rem;
 }
 
 .font-option {
@@ -360,11 +445,13 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 }
 
 .font-card {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
     background: #f8fafc;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
     transition: all 0.2s ease;
 }
 
@@ -380,17 +467,287 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 }
 
 .font-preview {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #1e293b;
-    margin-bottom: 0.5rem;
-    line-height: 1.2;
+    line-height: 1;
+    min-width: 36px;
+    text-align: center;
+}
+
+.font-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .font-name {
     font-size: 0.8125rem;
+    color: #1e293b;
+    font-weight: 600;
+    margin-bottom: 0.125rem;
+}
+
+.font-desc {
+    font-size: 0.6875rem;
+    color: #94a3b8;
+}
+
+/* Font Size Areas */
+.font-size-areas {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.font-size-area {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.font-size-area-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 100px;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.font-size-area-options {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.font-size-radio {
+    cursor: pointer;
+}
+
+.font-size-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.font-size-radio-label {
+    display: block;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
     color: #64748b;
     font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.font-size-radio:hover .font-size-radio-label {
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.font-size-radio input[type="radio"]:checked + .font-size-radio-label {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+    color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Save Scheme Box */
+.save-scheme-box {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.save-scheme-box h5 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 0.75rem 0;
+}
+
+.save-scheme-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.scheme-name-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.scheme-name-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.btn-save-scheme {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-save-scheme:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+.btn-save-scheme:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.saved-schemes-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.saved-scheme-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.saved-scheme-tag:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.scheme-colors {
+    display: flex;
+    gap: 2px;
+}
+
+.scheme-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.delete-scheme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 5px;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.delete-scheme-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Delete Modal */
+.delete-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-modal-overlay.active {
+    display: flex;
+}
+
+.delete-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.delete-modal h3 {
+    margin: 0 0 0.5rem 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+}
+
+.delete-modal p {
+    color: #64748b;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.875rem;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.btn-modal-cancel {
+    padding: 0.625rem 1.25rem;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-cancel:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn-modal-delete {
+    padding: 0.625rem 1.25rem;
+    background: #dc2626;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-delete:hover {
+    background: #b91c1c;
 }
 
 /* Icon Style Grid */
@@ -556,6 +913,7 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 @media (max-width: 768px) {
     .color-schemes,
     .font-options,
+    .font-size-options,
     .icon-options {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -564,6 +922,7 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
 @media (max-width: 480px) {
     .color-schemes,
     .font-options,
+    .font-size-options,
     .icon-options {
         grid-template-columns: 1fr;
     }
@@ -703,6 +1062,37 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Save Custom Scheme -->
+                    <div class="save-scheme-box">
+                        <h5>Save as Preset (<?= count($savedCustomSchemes) ?>/5)</h5>
+                        <div class="save-scheme-form">
+                            <input type="text" name="scheme_name" placeholder="Scheme name..." class="scheme-name-input" maxlength="20">
+                            <button type="submit" name="save_custom_scheme" value="1" class="btn-save-scheme" <?= count($savedCustomSchemes) >= 5 ? 'disabled title="Maximum 5 custom schemes"' : '' ?>>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                    <polyline points="7 3 7 8 15 8"></polyline>
+                                </svg>
+                                Save
+                            </button>
+                        </div>
+                        <?php if (!empty($savedCustomSchemes)): ?>
+                        <div class="saved-schemes-list">
+                            <?php foreach ($savedCustomSchemes as $key => $savedScheme): ?>
+                            <div class="saved-scheme-tag">
+                                <div class="scheme-colors">
+                                    <span class="scheme-color-dot" style="background: <?= esc($savedScheme['primary']) ?>"></span>
+                                    <span class="scheme-color-dot" style="background: <?= esc($savedScheme['secondary']) ?>"></span>
+                                    <span class="scheme-color-dot" style="background: <?= esc($savedScheme['sidebar_bg']) ?>"></span>
+                                </div>
+                                <span><?= esc($savedScheme['name']) ?></span>
+                                <button type="button" class="delete-scheme-btn" onclick="confirmDeleteScheme('<?= esc($key) ?>', '<?= esc($savedScheme['name']) ?>')" title="Delete">×</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -723,16 +1113,90 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
                 </div>
             </div>
             <div class="theme-section-body">
-                <div class="font-options">
-                    <?php foreach ($fonts as $key => $font): ?>
+                <!-- Font Category Tabs -->
+                <div class="font-tabs">
+                    <button type="button" class="font-tab active" data-category="sans">Sans-Serif</button>
+                    <button type="button" class="font-tab" data-category="serif">Serif</button>
+                    <button type="button" class="font-tab" data-category="mono">Monospace</button>
+                </div>
+                
+                <?php
+                // Group fonts by category
+                $fontsByCategory = ['sans' => [], 'serif' => [], 'mono' => []];
+                foreach ($fonts as $key => $font) {
+                    $cat = $font['category'] ?? 'sans';
+                    $fontsByCategory[$cat][$key] = $font;
+                }
+                ?>
+                
+                <?php foreach ($fontsByCategory as $category => $categoryFonts): ?>
+                <div class="font-options font-category" data-category="<?= $category ?>" style="<?= $category !== 'sans' ? 'display: none;' : '' ?>">
+                    <?php foreach ($categoryFonts as $key => $font): ?>
                     <label class="font-option">
                         <input type="radio" name="font" value="<?= $key ?>" 
                                <?= $currentTheme['font'] === $key ? 'checked' : '' ?>>
                         <div class="font-card">
                             <div class="font-preview" style="font-family: <?= $font['family'] ?>">Aa</div>
-                            <div class="font-name"><?= esc($font['name']) ?></div>
+                            <div class="font-info">
+                                <div class="font-name"><?= esc($font['name']) ?></div>
+                                <?php if (!empty($font['desc'])): ?>
+                                <div class="font-desc"><?= esc($font['desc']) ?></div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <!-- Font Size -->
+        <div class="theme-section">
+            <div class="theme-section-header">
+                <div class="theme-section-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 7V4h16v3"></path>
+                        <path d="M9 20h6"></path>
+                        <path d="M12 4v16"></path>
+                    </svg>
+                </div>
+                <div class="theme-section-title">
+                    <h3>Font Sizes</h3>
+                    <p>Customize font sizes for different areas of the admin</p>
+                </div>
+            </div>
+            <div class="theme-section-body">
+                <?php 
+                $fontSizes = [
+                    'small' => ['name' => 'Small', 'size' => '12px'],
+                    'medium' => ['name' => 'Medium', 'size' => '14px'],
+                    'large' => ['name' => 'Large', 'size' => '16px'],
+                ];
+                $fontAreas = [
+                    'sidebar' => ['label' => 'Sidebar', 'icon' => '<rect x="3" y="3" width="7" height="18" rx="1"></rect><line x1="14" y1="3" x2="21" y2="3"></line><line x1="14" y1="9" x2="21" y2="9"></line><line x1="14" y1="15" x2="17" y2="15"></line>'],
+                    'header' => ['label' => 'Header', 'icon' => '<rect x="3" y="3" width="18" height="5" rx="1"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="17" x2="15" y2="17"></line>'],
+                    'content' => ['label' => 'Content', 'icon' => '<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line>'],
+                ];
+                ?>
+                
+                <div class="font-size-areas">
+                    <?php foreach ($fontAreas as $areaKey => $area): ?>
+                    <div class="font-size-area">
+                        <div class="font-size-area-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><?= $area['icon'] ?></svg>
+                            <span><?= $area['label'] ?></span>
+                        </div>
+                        <div class="font-size-area-options">
+                            <?php foreach ($fontSizes as $sizeKey => $sizeOption): ?>
+                            <label class="font-size-radio">
+                                <input type="radio" name="font_size_<?= $areaKey ?>" value="<?= $sizeKey ?>" 
+                                       <?= ($currentTheme['font_size_' . $areaKey] ?? 'medium') === $sizeKey ? 'checked' : '' ?>>
+                                <span class="font-size-radio-label" style="font-size: <?= $sizeOption['size'] ?>"><?= $sizeOption['name'] ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -884,6 +1348,78 @@ function updateCustomPreview() {
         if (spans[2]) spans[2].style.background = document.getElementById('customSidebar').value;
     }
 }
+
+// Font category tabs
+document.querySelectorAll('.font-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        var category = this.dataset.category;
+        
+        // Update tab active state
+        document.querySelectorAll('.font-tab').forEach(function(t) {
+            t.classList.remove('active');
+        });
+        this.classList.add('active');
+        
+        // Show/hide font categories
+        document.querySelectorAll('.font-category').forEach(function(cat) {
+            if (cat.dataset.category === category) {
+                cat.style.display = 'grid';
+            } else {
+                cat.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Activate the tab containing the currently selected font
+(function() {
+    var checkedFont = document.querySelector('.font-option input[type="radio"]:checked');
+    if (checkedFont) {
+        var container = checkedFont.closest('.font-category');
+        if (container) {
+            var category = container.dataset.category;
+            // Activate the right tab
+            document.querySelectorAll('.font-tab').forEach(function(tab) {
+                tab.classList.toggle('active', tab.dataset.category === category);
+            });
+            // Show the right category
+            document.querySelectorAll('.font-category').forEach(function(cat) {
+                cat.style.display = cat.dataset.category === category ? 'grid' : 'none';
+            });
+        }
+    }
+})();
+
+// Delete scheme modal
+function confirmDeleteScheme(key, name) {
+    document.getElementById('deleteSchemeKey').value = key;
+    document.getElementById('deleteSchemeName').textContent = name;
+    document.getElementById('deleteSchemeModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteSchemeModal').classList.remove('active');
+}
+
+document.getElementById('deleteSchemeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
 </script>
+
+<!-- Delete Scheme Modal -->
+<div class="delete-modal-overlay" id="deleteSchemeModal">
+    <div class="delete-modal">
+        <h3>Delete Color Scheme?</h3>
+        <p>Are you sure you want to delete "<span id="deleteSchemeName"></span>"? This cannot be undone.</p>
+        <div class="delete-modal-actions">
+            <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <form method="post" style="display: inline;">
+                <?= csrfField() ?>
+                <input type="hidden" name="delete_scheme" id="deleteSchemeKey">
+                <button type="submit" class="btn-modal-delete">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

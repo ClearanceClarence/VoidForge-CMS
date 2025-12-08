@@ -969,14 +969,14 @@ register_tag('salts', function($attrs) {
 // =========================================================================
 // PLUGIN ACTIVATION - CREATE COMPREHENSIVE DEMO PAGE
 // =========================================================================
-add_action('plugin_activate_forge-toolkit', function() {
+add_action('plugin_activate_voidforge-toolkit', function() {
     $existingPage = Post::findBySlug('toolkit-demo', 'page');
     if ($existingPage) {
         Post::delete($existingPage['id']);
     }
     
     $content = <<<'HTML'
-{lead}Welcome to the <strong>Forge Toolkit</strong> — a comprehensive collection of shortcodes, components, and developer tools to build beautiful, interactive pages.{/lead}
+{lead}Welcome to the <strong>VoidForge Toolkit</strong> — a comprehensive collection of shortcodes, components, and developer tools to build beautiful, interactive pages.{/lead}
 
 {alert type="info" title="Pro Tip" icon="true"}Refresh this page anytime to see newly generated security salts. All shortcodes on this page are fully functional and can be copied for your own use.{/alert}
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Media Library - VoidForge CMS v1.0.10
+ * Media Library - VoidForge CMS
  * Single-click selection with slide-in panel
  */
 
@@ -54,6 +54,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'debug') {
     
     try {
         require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
         $debug['media_class'] = 'OK';
     } catch (Throwable $e) {
         $debug['errors'][] = 'media.php: ' . $e->getMessage();
@@ -109,6 +110,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'test_list') {
         require_once CMS_ROOT . '/includes/database.php';
         require_once CMS_ROOT . '/includes/functions.php';
         require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
         
         $media = Media::query(['type' => 'image', 'limit' => 5]);
         
@@ -156,6 +158,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 

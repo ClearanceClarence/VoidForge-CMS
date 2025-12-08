@@ -17,6 +17,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 
@@ -157,6 +158,19 @@ $diagnostics = [
     'php_sapi' => php_sapi_name(),
     'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
 ];
+
+// Simple ping endpoint for connectivity testing
+if (isset($_GET['ping'])) {
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+    echo json_encode([
+        'success' => true,
+        'time' => date('Y-m-d H:i:s'),
+        'php_version' => PHP_VERSION,
+        'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+    ]);
+    exit;
+}
 
 // Handle AJAX diagnostic test
 if (isset($_GET['test_timeout'])) {
@@ -1476,6 +1490,28 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
             <div id="timeoutResult" style="display: none; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem;"></div>
             
+            <!-- Network Troubleshooting (hidden by default, shown on error) -->
+            <div id="networkTroubleshooting" style="display: none; padding: 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 0.5rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; vertical-align: -3px; margin-right: 6px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Network Error Troubleshooting
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; color: #78350f; font-size: 0.875rem; line-height: 1.6;">
+                    <li><strong>Mixed Content:</strong> If your site uses HTTPS, ensure the admin URL also uses HTTPS</li>
+                    <li><strong>Firewall/WAF:</strong> Your server's firewall may be blocking large POST requests</li>
+                    <li><strong>mod_security:</strong> Apache's mod_security can block file uploads</li>
+                    <li><strong>Proxy/CDN:</strong> Cloudflare or other CDNs may timeout on large uploads</li>
+                    <li><strong>PHP Limits:</strong> Check <code>post_max_size</code> and <code>upload_max_filesize</code> in php.ini</li>
+                </ul>
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #fcd34d;">
+                    <strong style="color: #92400e;">Current URL:</strong> <code id="debugUrl" style="background: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;"></code>
+                </div>
+            </div>
+            
             <!-- Progress Section (hidden by default) -->
             <div id="updateProgress" style="display: none;">
                 <div class="progress-section">
@@ -1709,13 +1745,15 @@ async function runTimeoutTest() {
     resultDiv.innerHTML = '<span style="color: #64748b;">Testing server timeout (5 seconds)...</span>';
     
     const startTime = Date.now();
+    const baseUrl = window.location.href.split('?')[0];
     
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch('?test_timeout=1&duration=5', {
-            signal: controller.signal
+        const response = await fetch(baseUrl + '?test_timeout=1&duration=5', {
+            signal: controller.signal,
+            credentials: 'same-origin'
         });
         
         clearTimeout(timeoutId);
@@ -1736,7 +1774,12 @@ async function runTimeoutTest() {
         if (error.name === 'AbortError') {
             resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Request timed out after ${elapsed}s.</span>`;
         } else {
-            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Connection failed after ${elapsed}s.</span>`;
+            resultDiv.innerHTML = `<span style="color: #ef4444;">✗ Network error after ${elapsed}s. See troubleshooting tips below.</span>`;
+            // Show troubleshooting panel
+            const troublePanel = document.getElementById('networkTroubleshooting');
+            const debugUrl = document.getElementById('debugUrl');
+            troublePanel.style.display = 'block';
+            debugUrl.textContent = baseUrl;
         }
     }
 }
@@ -1761,6 +1804,7 @@ async function startUpdate() {
     document.getElementById('progressLog').innerHTML = '';
     
     const startTime = Date.now();
+    const updateUrl = window.location.href.split('?')[0]; // Current page URL without query string
     
     try {
         setProgress('Uploading...', 'Sending file to server');
@@ -1774,25 +1818,27 @@ async function startUpdate() {
         let uploadResponse;
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds for upload
             
-            uploadResponse = await fetch('', {
+            uploadResponse = await fetch(updateUrl, {
                 method: 'POST',
                 body: formData,
-                signal: controller.signal
+                signal: controller.signal,
+                credentials: 'same-origin'
             });
             
             clearTimeout(timeoutId);
         } catch (error) {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             if (error.name === 'AbortError') {
-                throw new Error(`Upload timed out after ${elapsed}s.`);
+                throw new Error(`Upload timed out after ${elapsed}s. Try a smaller update package.`);
             }
-            throw new Error(`Connection lost after ${elapsed}s. Try manual update.`);
+            // More helpful network error message
+            throw new Error(`Network error after ${elapsed}s. Check your server configuration and try again. If using HTTPS, ensure SSL is properly configured.`);
         }
         
         if (!uploadResponse.ok) {
-            throw new Error(`Server error: ${uploadResponse.status}`);
+            throw new Error(`Server error: ${uploadResponse.status} ${uploadResponse.statusText}`);
         }
         
         let uploadData;
@@ -1800,7 +1846,8 @@ async function startUpdate() {
         try {
             uploadData = JSON.parse(responseText);
         } catch (e) {
-            throw new Error('Invalid server response.');
+            console.error('Response text:', responseText);
+            throw new Error('Invalid server response. Check PHP error logs.');
         }
         
         if (!uploadData.success) {
@@ -1817,8 +1864,24 @@ async function startUpdate() {
         extractData.append('csrf_token', csrfToken);
         extractData.append('zip_path', uploadData.zip_path);
         
-        const extractResponse = await fetch('', { method: 'POST', body: extractData });
-        const extractResult = await extractResponse.json();
+        const extractResponse = await fetch(updateUrl, { 
+            method: 'POST', 
+            body: extractData,
+            credentials: 'same-origin'
+        });
+        
+        if (!extractResponse.ok) {
+            throw new Error(`Extract request failed: ${extractResponse.status}`);
+        }
+        
+        const extractText = await extractResponse.text();
+        let extractResult;
+        try {
+            extractResult = JSON.parse(extractText);
+        } catch (e) {
+            console.error('Extract response:', extractText);
+            throw new Error('Invalid extract response');
+        }
         
         if (!extractResult.success) {
             throw new Error(extractResult.error || 'Extraction failed');
@@ -1836,8 +1899,24 @@ async function startUpdate() {
         installData.append('backup_dir', extractResult.backup_dir);
         installData.append('temp_dir', extractResult.temp_dir);
         
-        const installResponse = await fetch('', { method: 'POST', body: installData });
-        const installResult = await installResponse.json();
+        const installResponse = await fetch(updateUrl, { 
+            method: 'POST', 
+            body: installData,
+            credentials: 'same-origin'
+        });
+        
+        if (!installResponse.ok) {
+            throw new Error(`Install request failed: ${installResponse.status}`);
+        }
+        
+        const installText = await installResponse.text();
+        let installResult;
+        try {
+            installResult = JSON.parse(installText);
+        } catch (e) {
+            console.error('Install response:', installText);
+            throw new Error('Invalid install response');
+        }
         
         if (!installResult.success) {
             throw new Error(installResult.error || 'Installation failed');
@@ -1856,6 +1935,14 @@ async function startUpdate() {
         
         addLog('✗ ' + error.message, true);
         
+        // Show troubleshooting panel for network errors
+        if (error.message.includes('Network') || error.message.includes('network') || error.message.includes('fetch')) {
+            const troublePanel = document.getElementById('networkTroubleshooting');
+            const debugUrl = document.getElementById('debugUrl');
+            troublePanel.style.display = 'block';
+            debugUrl.textContent = window.location.href.split('?')[0];
+        }
+        
         document.getElementById('progressSpinner').style.display = 'none';
         setProgress('Update Failed', '');
         
@@ -1871,6 +1958,7 @@ function resetUpdate() {
     document.getElementById('updateError').style.display = 'none';
     document.getElementById('uploadForm').style.display = 'block';
     document.getElementById('progressSpinner').style.display = 'block';
+    document.getElementById('networkTroubleshooting').style.display = 'none';
     clearFile();
 }
 </script>

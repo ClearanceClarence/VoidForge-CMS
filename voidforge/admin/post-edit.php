@@ -10,6 +10,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 
@@ -496,9 +497,15 @@ include ADMIN_PATH . '/includes/header.php';
                         </select>
                     </div>
                     
-                    <?php if ($post && $post['published_at']): ?>
-                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem;">
-                        Published: <?= formatDate($post['published_at'], 'M j, Y') ?>
+                    <?php if ($post): ?>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
+                        <?php if ($post['published_at']): ?>
+                        <div>Published: <?= formatDate($post['published_at'], 'M j, Y g:i a') ?></div>
+                        <?php endif; ?>
+                        <?php if ($post['updated_at'] && $post['updated_at'] !== $post['created_at']): ?>
+                        <div>Updated: <?= formatDate($post['updated_at'], 'M j, Y g:i a') ?></div>
+                        <?php endif; ?>
+                        <div style="color: var(--text-muted); opacity: 0.7;">Created: <?= formatDate($post['created_at'], 'M j, Y') ?></div>
                     </div>
                     <?php endif; ?>
                     

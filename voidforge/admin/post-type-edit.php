@@ -9,6 +9,7 @@ require_once CMS_ROOT . '/includes/database.php';
 require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 User::startSession();
@@ -108,22 +109,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Icons
 $icons = [
+    // Content
     'file' => 'Document',
     'file-text' => 'Article',
+    'book' => 'Book',
+    'bookmark' => 'Bookmark',
+    'archive' => 'Archive',
+    'folder' => 'Folder',
+    'copy' => 'Copy',
+    
+    // Media
     'image' => 'Image',
+    'video' => 'Video',
+    'music' => 'Music',
+    'mic' => 'Microphone',
+    'camera' => 'Camera',
+    
+    // Commerce
+    'shopping-bag' => 'Shopping',
+    'package' => 'Package',
+    'truck' => 'Delivery',
+    'briefcase' => 'Business',
+    'gift' => 'Gift',
+    'tag' => 'Tag',
+    
+    // People & Social
+    'users' => 'Users',
+    'user' => 'User',
+    'heart' => 'Heart',
+    'thumbs-up' => 'Like',
+    'share' => 'Share',
+    'mail' => 'Email',
+    'phone' => 'Phone',
+    
+    // Interface
+    'star' => 'Star',
+    'flag' => 'Flag',
+    'award' => 'Award',
+    'target' => 'Target',
+    'compass' => 'Compass',
+    'map-pin' => 'Location',
+    
+    // Objects
     'box' => 'Box',
     'layers' => 'Layers',
     'grid' => 'Grid',
-    'users' => 'Users',
-    'tag' => 'Tag',
-    'star' => 'Star',
-    'heart' => 'Heart',
-    'shopping-bag' => 'Shopping',
     'calendar' => 'Calendar',
-    'map-pin' => 'Location',
-    'video' => 'Video',
-    'music' => 'Music',
-    'book' => 'Book',
+    'clock' => 'Clock',
+    'tool' => 'Tool',
+    'key' => 'Key',
+    'shield' => 'Shield',
+    'lock' => 'Lock',
+    
+    // Tech
+    'code' => 'Code',
+    'terminal' => 'Terminal',
+    'database' => 'Database',
+    'server' => 'Server',
+    'cpu' => 'CPU',
+    'globe' => 'Globe',
+    'link' => 'Link',
+    'zap' => 'Zap',
+    
+    // Misc
+    'coffee' => 'Coffee',
+    'home' => 'Home',
+    'settings' => 'Settings',
+    'eye' => 'Eye',
+    'edit' => 'Edit',
+    'printer' => 'Printer',
+    'save' => 'Save',
+    'paperclip' => 'Attachment',
+    'headphones' => 'Headphones',
+    'monitor' => 'Monitor',
+    'smartphone' => 'Phone',
+    'wifi' => 'WiFi',
+    'cloud' => 'Cloud',
+    'sun' => 'Sun',
+    'moon' => 'Moon',
+    'feather' => 'Feather',
+    'send' => 'Send',
+    'bell' => 'Bell',
+    'activity' => 'Activity',
+    'trending-up' => 'Trending',
+    'pie-chart' => 'Chart',
+    'bar-chart' => 'Bar Chart',
 ];
 
 include ADMIN_PATH . '/includes/header.php';

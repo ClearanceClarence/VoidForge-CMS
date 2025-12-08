@@ -11,7 +11,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'VoidForge');
-define('CMS_VERSION', '0.1.0-beta');
+define('CMS_VERSION', '0.1.1-beta');
 
 // Database settings - configured during installation
 define('DB_HOST', '');
@@ -51,6 +51,6 @@ define('SECURE_AUTH_SALT', '');
 // Timezone
 date_default_timezone_set('UTC');
 
-// Error reporting (disable in production)
-error_reporting(0);
-ini_set('display_errors', 0);
+// Error reporting (set to 0 in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);

@@ -6,7 +6,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('CMS_VERSION', '0.1.0-beta');
+define('CMS_VERSION', '0.1.1-beta');
 define('CMS_NAME', 'VoidForge CMS');
 define('CMS_ROOT', __DIR__);
 
@@ -191,9 +191,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}posts` (title, slug, content, status, post_type, author_id, published_at) VALUES (?, ?, ?, 'published', 'post', 1, NOW())");
                 $stmt->execute(array('Welcome to VoidForge CMS', 'welcome-to-forge-cms', '<p>Congratulations! You have successfully installed VoidForge CMS. This is your first post. Edit or delete it to get started.</p>'));
                 
-                // Create sample page
+                // Create Home page with landing content
+                $homeContent = '<h2>About Us</h2>
+
+<p>Welcome to our website! This is a sample page created during installation. You can edit this content or create new pages from the admin dashboard.</p>
+
+<p>VoidForge CMS makes it easy to manage your content with a modern, intuitive interface.</p>';
+
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}posts` (title, slug, content, status, post_type, author_id, published_at) VALUES (?, ?, ?, 'published', 'page', 1, NOW())");
-                $stmt->execute(array('Sample Page', 'sample-page', '<p>This is a sample page. You can edit or delete this page and create new ones from the Pages section in the admin panel.</p>'));
+                $stmt->execute(array('About', 'about', $homeContent));
+                
+                // Note: homepage_id is NOT set - welcome.php demo page will show on frontpage
+                // Users can set a homepage in Settings → Reading
                 
                 // Create config file
                 $salt1 = bin2hex(random_bytes(32));
@@ -211,8 +220,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('DB_CHARSET', 'utf8mb4');";
                 $configLines[] = "";
                 $configLines[] = "define('SITE_URL', " . var_export($siteUrl, true) . ");";
-                $configLines[] = "define('CMS_VERSION', '1.0.8');";
-                $configLines[] = "define('CMS_NAME', 'VoidForge CMS');";
+                $configLines[] = "define('CMS_VERSION', '0.1.1-beta');";
+                $configLines[] = "define('CMS_NAME', 'VoidForge');";
                 $configLines[] = "";
                 $configLines[] = "define('ADMIN_PATH', CMS_ROOT . '/admin');";
                 $configLines[] = "define('ADMIN_URL', SITE_URL . '/admin');";
@@ -227,17 +236,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('CURRENT_THEME', 'default');";
                 $configLines[] = "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);";
                 $configLines[] = "";
-                $configLines[] = "define('SESSION_NAME', 'forge_session');";
+                $configLines[] = "define('SESSION_NAME', 'voidforge_session');";
                 $configLines[] = "define('SESSION_LIFETIME', 86400);";
                 $configLines[] = "define('HASH_COST', 12);";
                 $configLines[] = "";
                 $configLines[] = "define('AUTH_SALT', " . var_export($salt1, true) . ");";
                 $configLines[] = "define('SECURE_AUTH_SALT', " . var_export($salt2, true) . ");";
-                $configLines[] = "define('CMS_DEBUG', false);";
+                $configLines[] = "";
+                $configLines[] = "// Debug mode - set to false in production";
+                $configLines[] = "define('CMS_DEBUG', true);";
                 $configLines[] = "";
                 $configLines[] = "date_default_timezone_set('UTC');";
-                $configLines[] = "error_reporting(0);";
-                $configLines[] = "ini_set('display_errors', 0);";
+                $configLines[] = "";
+                $configLines[] = "// Error display - set both to 0 in production";
+                $configLines[] = "error_reporting(E_ALL);";
+                $configLines[] = "ini_set('display_errors', 1);";
                 
                 $configContent = implode("\n", $configLines);
                 

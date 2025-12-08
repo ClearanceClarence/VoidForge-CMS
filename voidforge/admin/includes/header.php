@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Header - VoidForge CMS v1.0.10
+ * Admin Header - VoidForge CMS
  * With dynamic theme support
  */
 
@@ -52,7 +52,19 @@ $colorSchemes = [
     'rose' => ['name' => 'Rose', 'primary' => '#f43f5e', 'secondary' => '#ec4899', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a10 0%, #4c0519 50%, #701a2e 100%)', 'preview' => ['#f43f5e', '#ec4899', '#4c0519']],
     'amber' => ['name' => 'Amber', 'primary' => '#f59e0b', 'secondary' => '#fbbf24', 'sidebar_bg' => 'linear-gradient(180deg, #1a1207 0%, #451a03 50%, #5c2a0a 100%)', 'preview' => ['#f59e0b', '#fbbf24', '#451a03']],
     'slate' => ['name' => 'Slate', 'primary' => '#64748b', 'secondary' => '#94a3b8', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 'preview' => ['#64748b', '#94a3b8', '#1e293b']],
+    'violet' => ['name' => 'Violet', 'primary' => '#8b5cf6', 'secondary' => '#a78bfa', 'sidebar_bg' => 'linear-gradient(180deg, #1e1033 0%, #2e1065 50%, #4c1d95 100%)', 'preview' => ['#8b5cf6', '#a78bfa', '#2e1065']],
+    'crimson' => ['name' => 'Crimson', 'primary' => '#dc2626', 'secondary' => '#ef4444', 'sidebar_bg' => 'linear-gradient(180deg, #1a0505 0%, #450a0a 50%, #7f1d1d 100%)', 'preview' => ['#dc2626', '#ef4444', '#450a0a']],
+    'lime' => ['name' => 'Lime', 'primary' => '#84cc16', 'secondary' => '#a3e635', 'sidebar_bg' => 'linear-gradient(180deg, #0a1a00 0%, #1a2e05 50%, #365314 100%)', 'preview' => ['#84cc16', '#a3e635', '#1a2e05']],
+    'sky' => ['name' => 'Sky', 'primary' => '#38bdf8', 'secondary' => '#7dd3fc', 'sidebar_bg' => 'linear-gradient(180deg, #0a1929 0%, #082f49 50%, #0369a1 100%)', 'preview' => ['#38bdf8', '#7dd3fc', '#082f49']],
+    'fuchsia' => ['name' => 'Fuchsia', 'primary' => '#d946ef', 'secondary' => '#e879f9', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a1e 0%, #4a044e 50%, #701a75 100%)', 'preview' => ['#d946ef', '#e879f9', '#4a044e']],
+    'midnight' => ['name' => 'Midnight', 'primary' => '#3b82f6', 'secondary' => '#60a5fa', 'sidebar_bg' => 'linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e293b 100%)', 'preview' => ['#3b82f6', '#60a5fa', '#0f172a']],
 ];
+
+// Load saved custom schemes
+$savedSchemes = getOption('custom_color_schemes', []);
+foreach ($savedSchemes as $key => $savedScheme) {
+    $colorSchemes['saved_' . $key] = $savedScheme;
+}
 
 // Handle custom color scheme
 if ($adminTheme['color_scheme'] === 'custom') {
@@ -70,13 +82,30 @@ if ($adminTheme['color_scheme'] === 'custom') {
     $scheme = $colorSchemes[$adminTheme['color_scheme']] ?? $colorSchemes['default'];
 }
 
+// Fonts organized by category
 $fonts = [
-    'inter' => ['name' => 'Inter', 'family' => "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 'google' => 'Inter:wght@400;500;600;700;800'],
-    'poppins' => ['name' => 'Poppins', 'family' => "'Poppins', sans-serif", 'google' => 'Poppins:wght@400;500;600;700'],
-    'nunito' => ['name' => 'Nunito', 'family' => "'Nunito', sans-serif", 'google' => 'Nunito:wght@400;500;600;700'],
-    'roboto' => ['name' => 'Roboto', 'family' => "'Roboto', sans-serif", 'google' => 'Roboto:wght@400;500;700'],
-    'source-sans' => ['name' => 'Source Sans', 'family' => "'Source Sans 3', sans-serif", 'google' => 'Source+Sans+3:wght@400;500;600;700'],
-    'dm-sans' => ['name' => 'DM Sans', 'family' => "'DM Sans', sans-serif", 'google' => 'DM+Sans:wght@400;500;600;700'],
+    // Sans-serif - Clean & Modern
+    'inter' => ['name' => 'Inter', 'family' => "'Inter', sans-serif", 'google' => 'Inter:wght@400;500;600;700;800', 'category' => 'sans', 'desc' => 'Clean & readable'],
+    'poppins' => ['name' => 'Poppins', 'family' => "'Poppins', sans-serif", 'google' => 'Poppins:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Geometric & friendly'],
+    'nunito' => ['name' => 'Nunito', 'family' => "'Nunito', sans-serif", 'google' => 'Nunito:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Rounded & soft'],
+    'roboto' => ['name' => 'Roboto', 'family' => "'Roboto', sans-serif", 'google' => 'Roboto:wght@400;500;700', 'category' => 'sans', 'desc' => 'Google\'s classic'],
+    'dm-sans' => ['name' => 'DM Sans', 'family' => "'DM Sans', sans-serif", 'google' => 'DM+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Low contrast'],
+    'outfit' => ['name' => 'Outfit', 'family' => "'Outfit', sans-serif", 'google' => 'Outfit:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Modern geometric'],
+    'plus-jakarta' => ['name' => 'Plus Jakarta Sans', 'family' => "'Plus Jakarta Sans', sans-serif", 'google' => 'Plus+Jakarta+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Professional'],
+    'manrope' => ['name' => 'Manrope', 'family' => "'Manrope', sans-serif", 'google' => 'Manrope:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Tech-forward'],
+    'space-grotesk' => ['name' => 'Space Grotesk', 'family' => "'Space Grotesk', sans-serif", 'google' => 'Space+Grotesk:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Monospace-inspired'],
+    'work-sans' => ['name' => 'Work Sans', 'family' => "'Work Sans', sans-serif", 'google' => 'Work+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Open & clear'],
+    'figtree' => ['name' => 'Figtree', 'family' => "'Figtree', sans-serif", 'google' => 'Figtree:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Warm & inviting'],
+    'sora' => ['name' => 'Sora', 'family' => "'Sora', sans-serif", 'google' => 'Sora:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Contemporary'],
+    // Source fonts
+    'source-sans' => ['name' => 'Source Sans 3', 'family' => "'Source Sans 3', sans-serif", 'google' => 'Source+Sans+3:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Adobe open source'],
+    // Serif fonts
+    'lora' => ['name' => 'Lora', 'family' => "'Lora', serif", 'google' => 'Lora:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Contemporary serif'],
+    'merriweather' => ['name' => 'Merriweather', 'family' => "'Merriweather', serif", 'google' => 'Merriweather:wght@400;700', 'category' => 'serif', 'desc' => 'Reading-friendly'],
+    'source-serif' => ['name' => 'Source Serif 4', 'family' => "'Source Serif 4', serif", 'google' => 'Source+Serif+4:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Adobe serif'],
+    // Mono fonts
+    'jetbrains' => ['name' => 'JetBrains Mono', 'family' => "'JetBrains Mono', monospace", 'google' => 'JetBrains+Mono:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'For developers'],
+    'fira-code' => ['name' => 'Fira Code', 'family' => "'Fira Code', monospace", 'google' => 'Fira+Code:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'Ligatures support'],
 ];
 
 $iconStyles = [
@@ -99,6 +128,17 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=<?= $font['google'] ?>&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= ADMIN_URL ?>/assets/css/admin.css">
+    <?php
+    // Font size mapping
+    $fontSizeMap = [
+        'small' => '12px',
+        'medium' => '14px',
+        'large' => '16px',
+    ];
+    $sidebarFontSize = $fontSizeMap[$adminTheme['font_size_sidebar'] ?? 'medium'] ?? '14px';
+    $headerFontSize = $fontSizeMap[$adminTheme['font_size_header'] ?? 'medium'] ?? '14px';
+    $contentFontSize = $fontSizeMap[$adminTheme['font_size_content'] ?? 'medium'] ?? '14px';
+    ?>
     <style>
         :root {
             --forge-primary: <?= $scheme['primary'] ?>;
@@ -110,8 +150,18 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
             --sidebar-gradient: <?= $scheme['sidebar_bg'] ?>;
             --font-family: <?= $font['family'] ?>;
             --icon-stroke-width: <?= $iconWeight ?>;
+            --sidebar-font-size: <?= $sidebarFontSize ?>;
+            --header-font-size: <?= $headerFontSize ?>;
+            --content-font-size: <?= $contentFontSize ?>;
         }
-        body { font-family: var(--font-family); }
+        body { 
+            font-family: var(--font-family); 
+        }
+        .admin-sidebar { font-size: var(--sidebar-font-size); }
+        .admin-sidebar .nav-label { font-size: var(--sidebar-font-size); }
+        .admin-sidebar .nav-section-title { font-size: calc(var(--sidebar-font-size) - 2px); }
+        .admin-header { font-size: var(--header-font-size); }
+        .admin-content { font-size: var(--content-font-size); }
         
         /* Apply icon stroke width to all SVG icons */
         .admin-sidebar svg:not(.logo-icon svg),

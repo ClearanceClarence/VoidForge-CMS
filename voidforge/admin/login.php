@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Login - VoidForge CMS v1.0.10
+ * Admin Login - VoidForge CMS
  * Light mode design
  */
 
@@ -443,18 +443,14 @@ try {
         <div class="login-card">
             <div class="logo-wrapper">
                 <div class="logo">
-                    <svg viewBox="0 0 48 48" fill="none">
+                    <svg viewBox="0 0 32 32" fill="none">
                         <defs>
                             <linearGradient id="loginVoidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#7c3aed"/>
-                                <stop offset="50%" style="stop-color:#4f46e5"/>
-                                <stop offset="100%" style="stop-color:#0ea5e9"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
                             </linearGradient>
                         </defs>
-                        <circle cx="24" cy="24" r="20" fill="none" stroke="url(#loginVoidGrad)" stroke-width="3"/>
-                        <circle cx="24" cy="24" r="13" fill="#1e1b4b"/>
-                        <path d="M24 10 Q33 16 30 24 Q27 32 24 32 Q21 32 18 24 Q15 16 24 16" fill="none" stroke="url(#loginVoidGrad)" stroke-width="2" opacity="0.8"/>
-                        <path d="M21 20 L27 20 L27 22 L25 22 L25 32 L23 32 L23 22 L21 22 Z" fill="url(#loginVoidGrad)"/>
+                        <path d="M6 6 L16 28 L26 6" fill="none" stroke="url(#loginVoidGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </div>

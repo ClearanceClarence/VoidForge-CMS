@@ -1,6 +1,6 @@
 <?php
 /**
- * Thumbnail Manager - VoidForge CMS v1.0.10
+ * Thumbnail Manager - VoidForge CMS
  * Modern redesigned interface
  */
 
@@ -11,6 +11,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 
@@ -189,7 +190,7 @@ include __DIR__ . '/includes/header.php';
     margin-top: 0.25rem;
 }
 
-/* Diagnostic Card */
+/* Diagnostic Card - Compact Modern Design */
 .diag-card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -201,67 +202,87 @@ include __DIR__ . '/includes/header.php';
 .diag-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
+    gap: 0.875rem;
+    padding: 1rem 1.25rem;
     background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
     border-bottom: 1px solid #e2e8f0;
 }
 
 .diag-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
-    color: var(--forge-primary, #6366f1);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+    color: #10b981;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .diag-title {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #1e293b;
     margin: 0;
 }
 
 .diag-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
+}
+
+.diag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.diag-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.diag-row-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 100%;
+    margin-bottom: 0.25rem;
 }
 
 .diag-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
 }
 
 .diag-item {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
 }
 
 .diag-item-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.8125rem;
+    color: #64748b;
 }
 
 .diag-item-value {
-    font-size: 0.9375rem;
-    font-weight: 500;
+    font-size: 0.8125rem;
+    font-weight: 600;
     color: #1e293b;
 }
 
 .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.25rem 0.75rem;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
     border-radius: 9999px;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 500;
 }
 
@@ -816,84 +837,64 @@ include __DIR__ . '/includes/header.php';
     <div class="diag-card">
         <div class="diag-header">
             <div class="diag-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                 </svg>
             </div>
             <h3 class="diag-title">System Status</h3>
         </div>
         <div class="diag-body">
-            <div class="diag-grid" style="margin-bottom: 1.5rem;">
-                <div class="diag-item">
-                    <span class="diag-item-label">GD Library</span>
-                    <span class="status-badge <?= $diagnostics['gd_loaded'] ? 'success' : 'danger' ?>">
-                        <?= $diagnostics['gd_loaded'] ? '✓ Loaded' : '✗ Missing' ?>
-                    </span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">GD Version</span>
-                    <span class="diag-item-value"><?= esc($gdVersion ?: 'N/A') ?></span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">Uploads Writable</span>
-                    <span class="status-badge <?= $diagnostics['uploads_writable'] ? 'success' : 'danger' ?>">
-                        <?= $diagnostics['uploads_writable'] ? '✓ Yes' : '✗ No' ?>
-                    </span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">PHP Version</span>
-                    <span class="diag-item-value"><?= PHP_VERSION ?></span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">Memory Limit</span>
-                    <span class="diag-item-value"><?= esc($phpMemoryLimit) ?></span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">Max Execution</span>
-                    <span class="diag-item-value"><?= esc($maxExecutionTime) ?>s</span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">Upload Max Size</span>
-                    <span class="diag-item-value"><?= esc($uploadMaxFilesize) ?></span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">Uploads Path</span>
-                    <span class="diag-item-value" style="font-size: 0.75rem; word-break: break-all;"><?= esc(UPLOADS_PATH) ?></span>
+            <div class="diag-row">
+                <div class="diag-row-title">Environment</div>
+                <div class="diag-grid">
+                    <div class="diag-item">
+                        <span class="diag-item-label">GD:</span>
+                        <span class="status-badge <?= $diagnostics['gd_loaded'] ? 'success' : 'danger' ?>"><?= $diagnostics['gd_loaded'] ? '✓' : '✗' ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">Uploads:</span>
+                        <span class="status-badge <?= $diagnostics['uploads_writable'] ? 'success' : 'danger' ?>"><?= $diagnostics['uploads_writable'] ? '✓' : '✗' ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">PHP:</span>
+                        <span class="diag-item-value"><?= PHP_VERSION ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">Memory:</span>
+                        <span class="diag-item-value"><?= esc($phpMemoryLimit) ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">Max Upload:</span>
+                        <span class="diag-item-value"><?= esc($uploadMaxFilesize) ?></span>
+                    </div>
                 </div>
             </div>
             
-            <h4 style="font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem;">Format Support</h4>
-            <div class="diag-grid" style="margin-bottom: 1.5rem;">
-                <div class="diag-item">
-                    <span class="diag-item-label">JPEG</span>
-                    <span class="status-badge <?= !empty($diagnostics['supported_formats']['jpeg']) ? 'success' : 'danger' ?>">
-                        <?= !empty($diagnostics['supported_formats']['jpeg']) ? '✓ Supported' : '✗ No' ?>
-                    </span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">PNG</span>
-                    <span class="status-badge <?= !empty($diagnostics['supported_formats']['png']) ? 'success' : 'danger' ?>">
-                        <?= !empty($diagnostics['supported_formats']['png']) ? '✓ Supported' : '✗ No' ?>
-                    </span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">GIF</span>
-                    <span class="status-badge <?= !empty($diagnostics['supported_formats']['gif']) ? 'success' : 'warning' ?>">
-                        <?= !empty($diagnostics['supported_formats']['gif']) ? '✓ Supported' : '○ No' ?>
-                    </span>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-item-label">WebP</span>
-                    <span class="status-badge <?= !empty($diagnostics['supported_formats']['webp']) ? 'success' : 'warning' ?>">
-                        <?= !empty($diagnostics['supported_formats']['webp']) ? '✓ Supported' : '○ No' ?>
-                    </span>
+            <div class="diag-row">
+                <div class="diag-row-title">Format Support</div>
+                <div class="diag-grid">
+                    <div class="diag-item">
+                        <span class="diag-item-label">JPEG:</span>
+                        <span class="status-badge <?= !empty($diagnostics['supported_formats']['jpeg']) ? 'success' : 'danger' ?>"><?= !empty($diagnostics['supported_formats']['jpeg']) ? '✓' : '✗' ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">PNG:</span>
+                        <span class="status-badge <?= !empty($diagnostics['supported_formats']['png']) ? 'success' : 'danger' ?>"><?= !empty($diagnostics['supported_formats']['png']) ? '✓' : '✗' ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">GIF:</span>
+                        <span class="status-badge <?= !empty($diagnostics['supported_formats']['gif']) ? 'success' : 'warning' ?>"><?= !empty($diagnostics['supported_formats']['gif']) ? '✓' : '○' ?></span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-item-label">WebP:</span>
+                        <span class="status-badge <?= !empty($diagnostics['supported_formats']['webp']) ? 'success' : 'warning' ?>"><?= !empty($diagnostics['supported_formats']['webp']) ? '✓' : '○' ?></span>
+                    </div>
                 </div>
             </div>
             
-            <h4 style="font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem;">Thumbnail Sizes</h4>
-            <div class="sizes-list">
+            <div class="diag-row">
+                <div class="diag-row-title">Thumbnail Sizes</div>
+                <div class="sizes-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 <?php foreach ($sizes as $name => $config): ?>
                 <span class="size-tag">
                     <strong><?= esc($name) ?></strong>

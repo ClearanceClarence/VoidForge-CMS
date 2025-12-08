@@ -49,10 +49,29 @@ $path = trim($path, '/');
 if (preg_match('#^api/(.+)$#', $path, $apiMatches)) {
     $apiPath = $apiMatches[1];
     
-    // Fire API hook for plugins to handle
+    // Built-in: Security Salts API
+    if ($apiPath === 'salts' || $apiPath === 'salts/') {
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('X-VoidForge-CMS: Salt Generator v1.0');
+        echo generateSecuritySalts();
+        exit;
+    }
+    
+    if ($apiPath === 'salts/json' || $apiPath === 'salts/json/') {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        echo json_encode([
+            'generated' => date('c'),
+            'salts' => generateSecuritySaltsArray()
+        ], JSON_PRETTY_PRINT);
+        exit;
+    }
+    
+    // Fire API hook for plugins to handle additional endpoints
     do_action('api_request', $apiPath);
     
-    // If we get here, no plugin handled it
+    // If we get here, no handler found
     http_response_code(404);
     header('Content-Type: application/json');
     echo json_encode(['error' => 'API endpoint not found', 'path' => $apiPath]);
@@ -71,8 +90,28 @@ if (!empty($_GET['s'])) {
     $searchQuery = trim($_GET['s']);
     include THEMES_PATH . '/' . CURRENT_THEME . '/search.php';
 } elseif (empty($path)) {
-    // Homepage - show latest posts
-    include THEMES_PATH . '/' . CURRENT_THEME . '/index.php';
+    // Homepage - load selected page or show welcome
+    $homepageId = getOption('homepage_id', 0);
+    
+    if ($homepageId > 0) {
+        $post = Post::find($homepageId);
+        if ($post && $post['status'] === 'published') {
+            // Check for home.php template first, then page.php
+            $homeTemplate = THEMES_PATH . '/' . CURRENT_THEME . '/home.php';
+            if (file_exists($homeTemplate)) {
+                include $homeTemplate;
+            } else {
+                include THEMES_PATH . '/' . CURRENT_THEME . '/page.php';
+            }
+        } else {
+            // Homepage not found or not published - show 404
+            http_response_code(404);
+            include THEMES_PATH . '/' . CURRENT_THEME . '/404.php';
+        }
+    } else {
+        // No homepage set - show welcome/setup page
+        include THEMES_PATH . '/' . CURRENT_THEME . '/welcome.php';
+    }
 } elseif (preg_match('#^post/([^/]+)$#', $path, $matches)) {
     // Single post
     $slug = $matches[1];

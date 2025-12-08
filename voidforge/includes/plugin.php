@@ -19,6 +19,9 @@ class Plugin
     
     /** @var array Loaded plugins */
     private static array $plugins = [];
+    
+    /** @var array Registered admin pages */
+    private static array $adminPages = [];
 
     /**
      * Initialize plugin system and load active plugins
@@ -91,6 +94,63 @@ class Plugin
         foreach (self::$actions[$hook] as $action) {
             call_user_func_array($action['callback'], $args);
         }
+    }
+
+    /**
+     * Register an admin page
+     * 
+     * @param string $slug Unique page slug (used in URL)
+     * @param array $config Page configuration
+     *   - title: Page title
+     *   - menu_title: Menu label (optional, defaults to title)
+     *   - icon: Icon name (optional)
+     *   - parent: Parent menu slug (optional, for submenus)
+     *   - capability: Required capability (default: admin)
+     *   - callback: Function to render page content
+     *   - position: Menu position (optional)
+     */
+    public static function registerAdminPage(string $slug, array $config): void
+    {
+        self::$adminPages[$slug] = array_merge([
+            'title' => $slug,
+            'menu_title' => $config['title'] ?? $slug,
+            'icon' => 'puzzle',
+            'parent' => null,
+            'capability' => 'admin',
+            'callback' => null,
+            'position' => 99
+        ], $config);
+    }
+
+    /**
+     * Get all registered admin pages
+     */
+    public static function getAdminPages(): array
+    {
+        return self::$adminPages;
+    }
+
+    /**
+     * Get a specific admin page
+     */
+    public static function getAdminPage(string $slug): ?array
+    {
+        return self::$adminPages[$slug] ?? null;
+    }
+
+    /**
+     * Render an admin page
+     */
+    public static function renderAdminPage(string $slug): bool
+    {
+        $page = self::$adminPages[$slug] ?? null;
+        
+        if (!$page || !is_callable($page['callback'])) {
+            return false;
+        }
+        
+        call_user_func($page['callback']);
+        return true;
     }
 
     /**
@@ -506,4 +566,33 @@ function register_tag(string $name, callable $callback, array $options = []): vo
 function process_tags(string $content): string
 {
     return Plugin::processContent($content);
+}
+
+/**
+ * Register a plugin admin page
+ * 
+ * Example:
+ *   add_admin_page('my-plugin', [
+ *       'title' => 'My Plugin Settings',
+ *       'menu_title' => 'My Plugin',
+ *       'icon' => 'settings',
+ *       'callback' => function() {
+ *           echo '<h1>My Plugin Settings</h1>';
+ *           // ... render settings form
+ *       }
+ *   ]);
+ * 
+ * The page will be accessible at: /admin/plugin-page.php?page=my-plugin
+ */
+function add_admin_page(string $slug, array $config): void
+{
+    Plugin::registerAdminPage($slug, $config);
+}
+
+/**
+ * Get registered admin pages
+ */
+function get_admin_pages(): array
+{
+    return Plugin::getAdminPages();
 }

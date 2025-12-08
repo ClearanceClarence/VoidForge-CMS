@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Sidebar - VoidForge CMS v0.1.0-beta
+ * Admin Sidebar - VoidForge CMS
  * With submenu support and dynamic menu registration
  */
 
@@ -23,19 +23,17 @@ $postTypes = Post::getTypes();
                     <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
                         <defs>
                             <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#7c3aed"/>
-                                <stop offset="50%" style="stop-color:#4f46e5"/>
-                                <stop offset="100%" style="stop-color:#0ea5e9"/>
+                                <stop offset="0%" style="stop-color:#8b5cf6"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
                             </linearGradient>
-                            <linearGradient id="sidebarVoidDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#1e1b4b"/>
-                                <stop offset="100%" style="stop-color:#0f172a"/>
+                            <linearGradient id="sidebarInnerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+                                <stop offset="0%" style="stop-color:#c4b5fd"/>
+                                <stop offset="100%" style="stop-color:#8b5cf6"/>
                             </linearGradient>
                         </defs>
-                        <circle cx="16" cy="16" r="14" fill="none" stroke="url(#sidebarLogoGradient)" stroke-width="2"/>
-                        <circle cx="16" cy="16" r="9" fill="url(#sidebarVoidDark)"/>
-                        <path d="M16 7 Q22 11 20 16 Q18 21 16 21 Q14 21 12 16 Q10 11 16 11" fill="none" stroke="url(#sidebarLogoGradient)" stroke-width="1.5" opacity="0.8"/>
-                        <path d="M14 13 L18 13 L18 14.5 L16.5 14.5 L16.5 21 L15.5 21 L15.5 14.5 L14 14.5 Z" fill="url(#sidebarLogoGradient)"/>
+                        <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#sidebarLogoGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="14" r="3.5" fill="url(#sidebarInnerGlow)"/>
+                        <circle cx="16" cy="14" r="1.5" fill="#fff" opacity="0.9"/>
                     </svg>
                 </div>
                 <div class="logo-text">
@@ -104,6 +102,30 @@ $postTypes = Post::getTypes();
             </div>
 
             <?php if (User::isAdmin()): ?>
+            <!-- Structure Section -->
+            <div class="nav-section">
+                <div class="nav-section-header">
+                    <span class="nav-section-title">Structure</span>
+                    <div class="nav-section-line"></div>
+                </div>
+                
+                <a href="<?= ADMIN_URL ?>/post-types.php" class="nav-item <?= $currentPage === 'post-types' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('layers') ?>
+                    </div>
+                    <span class="nav-label">Post Types</span>
+                    <?php if ($currentPage === 'post-types'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
+                <a href="<?= ADMIN_URL ?>/custom-fields.php" class="nav-item <?= in_array($currentPage, ['custom-fields', 'custom-field-edit']) ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('grid') ?>
+                    </div>
+                    <span class="nav-label">Custom Fields</span>
+                    <?php if (in_array($currentPage, ['custom-fields', 'custom-field-edit'])): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+            </div>
+
             <!-- Design Section -->
             <div class="nav-section">
                 <div class="nav-section-header">
@@ -118,6 +140,14 @@ $postTypes = Post::getTypes();
                     <span class="nav-label">Customize</span>
                     <span class="nav-badge">Live</span>
                     <?php if ($currentPage === 'customize'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
+                <a href="<?= ADMIN_URL ?>/admin-theme.php" class="nav-item <?= $currentPage === 'admin-theme' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('sliders') ?>
+                    </div>
+                    <span class="nav-label">Admin Theme</span>
+                    <?php if ($currentPage === 'admin-theme'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
             </div>
 
@@ -135,57 +165,48 @@ $postTypes = Post::getTypes();
                     <span class="nav-label">Users</span>
                     <?php if ($currentPage === 'users'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
-
-                <!-- Settings with submenu -->
-                <?php 
-                $settingsExpanded = in_array($currentPage, ['settings', 'post-types', 'admin-theme']);
-                ?>
-                <div class="nav-item-group <?= $settingsExpanded ? 'expanded' : '' ?>">
-                    <button type="button" class="nav-item nav-item-parent <?= $settingsExpanded ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
-                        <div class="nav-icon">
-                            <?= getAdminMenuIcon('settings') ?>
-                        </div>
-                        <span class="nav-label">Settings</span>
-                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="<?= ADMIN_URL ?>/settings.php" class="nav-subitem <?= $currentPage === 'settings' ? 'active' : '' ?>">
-                            General
-                        </a>
-                        <a href="<?= ADMIN_URL ?>/post-types.php" class="nav-subitem <?= $currentPage === 'post-types' ? 'active' : '' ?>">
-                            Post Types
-                        </a>
-                        <a href="<?= ADMIN_URL ?>/admin-theme.php" class="nav-subitem <?= $currentPage === 'admin-theme' ? 'active' : '' ?>">
-                            Admin Theme
-                        </a>
+                
+                <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-item <?= $currentPage === 'plugins' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('puzzle') ?>
                     </div>
-                </div>
-
-                <!-- Tools with submenu -->
+                    <span class="nav-label">Plugins</span>
+                    <?php if ($currentPage === 'plugins'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
                 <?php 
-                $toolsExpanded = in_array($currentPage, ['update', 'plugins']);
+                // Show plugin-registered pages
+                $pluginPages = Plugin::getAdminPages();
+                foreach ($pluginPages as $slug => $page): 
+                    if (empty($page['parent'])): // Only show top-level pages
                 ?>
-                <div class="nav-item-group <?= $toolsExpanded ? 'expanded' : '' ?>">
-                    <button type="button" class="nav-item nav-item-parent <?= $toolsExpanded ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
-                        <div class="nav-icon">
-                            <?= getAdminMenuIcon('tool') ?>
-                        </div>
-                        <span class="nav-label">Tools</span>
-                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="<?= ADMIN_URL ?>/update.php" class="nav-subitem <?= $currentPage === 'update' ? 'active' : '' ?>">
-                            Update
-                        </a>
-                        <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-subitem <?= $currentPage === 'plugins' ? 'active' : '' ?>">
-                            Plugins
-                        </a>
+                <a href="<?= ADMIN_URL ?>/plugin-page.php?page=<?= esc($slug) ?>" class="nav-item <?= $currentPage === 'plugin-' . $slug ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon($page['icon'] ?? 'puzzle') ?>
                     </div>
-                </div>
+                    <span class="nav-label"><?= esc($page['menu_title']) ?></span>
+                    <?php if ($currentPage === 'plugin-' . $slug): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                <?php 
+                    endif;
+                endforeach; 
+                ?>
+
+                <a href="<?= ADMIN_URL ?>/settings.php" class="nav-item <?= $currentPage === 'settings' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('settings') ?>
+                    </div>
+                    <span class="nav-label">Settings</span>
+                    <?php if ($currentPage === 'settings'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
+                <a href="<?= ADMIN_URL ?>/update.php" class="nav-item <?= $currentPage === 'update' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('download') ?>
+                    </div>
+                    <span class="nav-label">Update</span>
+                    <?php if ($currentPage === 'update'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
             </div>
             <?php endif; ?>
         </nav>

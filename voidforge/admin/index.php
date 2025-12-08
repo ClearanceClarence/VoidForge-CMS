@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Dashboard - VoidForge CMS v1.0.10
+ * Admin Dashboard - VoidForge CMS
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -50,6 +50,7 @@ require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
+require_once CMS_ROOT . '/includes/plugin.php';
 
 Post::init();
 

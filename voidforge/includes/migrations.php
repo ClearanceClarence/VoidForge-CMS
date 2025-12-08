@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Migrations - VoidForge CMS v1.0.8
+ * Database Migrations - VoidForge CMS
  * Run automatically during update process
  */
 
@@ -81,5 +81,5 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '1.0.8');
+setOption('cms_version', '0.1.1-beta');
 setOption('last_update', date('Y-m-d H:i:s'));

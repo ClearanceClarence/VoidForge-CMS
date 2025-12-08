@@ -40,7 +40,7 @@ class Post
             'label' => 'Pages',
             'singular' => 'Page',
             'icon' => 'file',
-            'supports' => ['title', 'editor', 'featured_image', 'page_attributes'],
+            'supports' => ['title', 'editor', 'excerpt', 'featured_image', 'page_attributes'],
             'has_archive' => false,
             'hierarchical' => true,
         ]);
