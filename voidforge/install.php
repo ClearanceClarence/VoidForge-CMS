@@ -163,6 +163,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     UNIQUE KEY `slug` (`slug`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}post_revisions` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `post_id` INT UNSIGNED NOT NULL,
+                    `post_type` VARCHAR(50) NOT NULL,
+                    `title` VARCHAR(255) NOT NULL,
+                    `slug` VARCHAR(255) NOT NULL,
+                    `content` LONGTEXT,
+                    `excerpt` TEXT,
+                    `meta_data` LONGTEXT,
+                    `author_id` INT UNSIGNED NOT NULL,
+                    `revision_number` INT UNSIGNED NOT NULL DEFAULT 1,
+                    `created_at` DATETIME NOT NULL,
+                    INDEX `idx_post_id` (`post_id`),
+                    INDEX `idx_post_type` (`post_type`),
+                    INDEX `idx_created_at` (`created_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}menus` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `name` VARCHAR(255) NOT NULL,
+                    `slug` VARCHAR(255) NOT NULL,
+                    `location` VARCHAR(50) DEFAULT NULL,
+                    `created_at` DATETIME NOT NULL,
+                    INDEX `idx_slug` (`slug`),
+                    INDEX `idx_location` (`location`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}menu_items` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `menu_id` INT UNSIGNED NOT NULL,
+                    `parent_id` INT UNSIGNED NOT NULL DEFAULT 0,
+                    `title` VARCHAR(255) NOT NULL,
+                    `type` VARCHAR(50) NOT NULL DEFAULT 'custom',
+                    `object_id` INT UNSIGNED DEFAULT NULL,
+                    `url` VARCHAR(500) DEFAULT NULL,
+                    `target` VARCHAR(20) DEFAULT '_self',
+                    `css_class` VARCHAR(255) DEFAULT NULL,
+                    `position` INT UNSIGNED NOT NULL DEFAULT 0,
+                    `created_at` DATETIME NOT NULL,
+                    INDEX `idx_menu_id` (`menu_id`),
+                    INDEX `idx_parent_id` (`parent_id`),
+                    INDEX `idx_position` (`position`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
                 // Create admin user
                 $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}users` (username, email, password, display_name, role) VALUES (?, ?, ?, ?, 'admin')");

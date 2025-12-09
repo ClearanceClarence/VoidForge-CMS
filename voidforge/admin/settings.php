@@ -43,6 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     }
     setOption('time_format', $timeFormat);
     
+    // Save revision settings for built-in post types
+    $revisionSettings = [
+        'post' => max(0, min(100, (int)($_POST['revisions_post'] ?? 10))),
+        'page' => max(0, min(100, (int)($_POST['revisions_page'] ?? 10))),
+    ];
+    setOption('revision_settings', $revisionSettings);
+    
     setFlash('success', 'Settings saved successfully.');
     redirect(ADMIN_URL . '/settings.php');
 }
@@ -54,6 +61,7 @@ $postsPerPage = getOption('posts_per_page', 10);
 $excerptLength = getOption('excerpt_length', 55);
 $dateFormat = getOption('date_format', 'M j, Y');
 $timeFormat = getOption('time_format', 'H:i');
+$revisionSettings = getOption('revision_settings', ['post' => 10, 'page' => 10]);
 
 // Get all pages for homepage dropdown
 $allPages = Post::query([
@@ -969,6 +977,42 @@ function switchTab(tabId, evt) {
                                 <code>A</code> AM/PM
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <polyline points="23 20 23 14 17 14"></polyline>
+                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Revisions</h3>
+                        <p>Control how many revisions to keep for built-in post types</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Posts</label>
+                            <input type="number" name="revisions_post" class="form-input" 
+                                   value="<?= $revisionSettings['post'] ?? 10 ?>" min="0" max="100">
+                            <span class="form-hint">Max revisions for posts (0 = disabled)</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pages</label>
+                            <input type="number" name="revisions_page" class="form-input" 
+                                   value="<?= $revisionSettings['page'] ?? 10 ?>" min="0" max="100">
+                            <span class="form-hint">Max revisions for pages (0 = disabled)</span>
+                        </div>
+                    </div>
+                    <div class="form-hint" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--border-radius);">
+                        <strong>Note:</strong> Revisions are created automatically when you update a post or page. 
+                        Custom post type revision settings can be configured in Structure → Post Types.
                     </div>
                 </div>
             </div>

@@ -154,6 +154,14 @@ $postTypes = Post::getTypes();
                     </div>
                 </div>
                 
+                <a href="<?= ADMIN_URL ?>/menus.php" class="nav-item <?= $currentPage === 'menus' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('menu') ?>
+                    </div>
+                    <span class="nav-label">Menus</span>
+                    <?php if ($currentPage === 'menus'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
                 <a href="<?= ADMIN_URL ?>/customize.php" class="nav-item nav-item-featured <?= $currentPage === 'customize' ? 'active' : '' ?>">
                     <div class="nav-icon">
                         <?= getAdminMenuIcon('palette') ?>

@@ -7,6 +7,161 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.4] - 2025-12-09
+
+### 🧭 Menu Builder System
+
+A complete drag-and-drop navigation menu management system.
+
+#### Core Features
+- **Visual Menu Builder** — Drag-and-drop interface for creating and organizing navigation menus
+- **Nested Menu Items** — Full support for multi-level dropdown menus with unlimited depth
+- **Multiple Menu Locations** — Assign menus to different theme locations (Primary, Footer, etc.)
+- **Custom Links** — Add external URLs with custom link text
+- **Content Integration** — Easily add Pages, Posts, and Custom Post Type archives to menus
+
+#### Menu Item Options
+- **Navigation Label** — Customize the display text for each menu item
+- **Open in New Tab** — Option to open links in new tab/window
+- **CSS Classes** — Add custom CSS classes for styling individual items
+- **Real-time Saving** — Changes are saved automatically when reordering
+
+#### Admin Interface
+- **Two-Panel Layout** — Add items panel on left, menu structure on right
+- **Collapsible Sections** — Pages, Posts, Post Type Archives, and Custom Links in expandable panels
+- **Expandable Item Settings** — Click to expand each item and edit its properties
+- **Live Reordering** — Drag items to reorder or nest them under other items
+- **Toast Notifications** — Visual feedback for save, delete, and error actions
+
+#### Theme Integration
+- **Menu Class** — New `Menu` class for registering locations and displaying menus
+- **Template Function** — Use `Menu::display('location')` in themes to output menus
+- **Customizable Output** — Options for container, classes, depth limit, and more
+- **Theme Locations** — Themes can register custom menu locations
+
+#### Database
+- **New Tables** — `menus` and `menu_items` tables for storing menu data
+- **Efficient Structure** — Parent-child relationships with position ordering
+- **Cascade Delete** — Deleting a menu removes all its items
+
+### 🎨 UI Improvements
+- **Themes Page Redesign** — Completely new layout with hero section and active theme showcase
+- **Gradient Hero** — Purple gradient header with stats and action buttons
+- **Active Theme Card** — Large preview with features list and quick actions
+- **Hover Overlays** — Quick action buttons appear on theme card hover
+- **Animated Cards** — Smooth lift and shadow effects on interaction
+
+### 📁 New Files
+
+```
+includes/
+└── menu.php              # Menu management class
+
+admin/
+└── menus.php             # Menu builder admin page
+```
+
+### 📁 Modified Files
+
+```
+includes/
+├── config.php            — Version updated to 0.1.4
+├── migrations.php        — Added menus and menu_items tables
+└── functions.php         — Added 'menu' icon
+
+admin/
+├── themes.php            — Complete redesign with new layout
+├── update.php            — Added menu tables to migrations
+└── includes/sidebar.php  — Added Menus link in Design section
+
+install.php               — Added menus and menu_items table creation
+```
+
+### 🎯 Theme Usage Example
+
+```php
+// In theme's functions.php - register a menu location
+Menu::registerLocation('main-menu', 'Main Navigation');
+
+// In theme template - display the menu
+echo Menu::display('main-menu', [
+    'container' => 'nav',
+    'container_class' => 'main-navigation',
+    'menu_class' => 'nav-menu',
+    'submenu_class' => 'dropdown-menu',
+]);
+```
+
+---
+
+## [0.1.3] - 2025-12-09
+
+### 📜 Post Revisions System
+
+#### Core Features
+- **Automatic Revisions** — Revisions are created automatically when updating any post, page, or custom post type
+- **Configurable Limits** — Set maximum revisions per post type (0-100, or 0 to disable)
+- **Revision Restore** — One-click restore to any previous revision with automatic backup of current state
+- **Meta Data Preservation** — Custom field values are stored and restored with revisions
+
+#### Compare Revisions Page
+- **New Page: `compare-revisions.php`** — Dedicated page for comparing any two revisions
+- **Inline Diff View** — Word-by-word diff highlighting additions (green) and deletions (red)
+- **Side-by-Side View** — Toggle between inline and side-by-side comparison for content
+- **Revision Selector** — Dropdown menus to select any two revisions or compare with current version
+- **Visual Legend** — Clear indicators showing what additions and deletions look like
+- **Restore Actions** — Restore either revision directly from the compare page
+
+#### Settings Integration
+- **Built-in Post Types** — Configure revision limits for Posts and Pages in Settings → Reading
+- **Custom Post Types** — Each custom post type has its own max revisions setting in the post type editor
+- **Default Limit** — 10 revisions per post type by default
+
+#### Post Editor UI
+- **Revisions Sidebar Card** — Shows revision count and list in the post editor
+- **Revision List** — Displays up to 20 most recent revisions with timestamps and authors
+- **Latest Indicator** — Visual indicator for the most recent revision
+- **Restore Confirmation** — Confirmation dialog before restoring to prevent accidental changes
+- **Compare Link** — "Compare Revisions" button when 2+ revisions exist
+
+#### Database
+- **New Table** — `post_revisions` table stores all revision data
+- **Automatic Cleanup** — Old revisions beyond the limit are automatically deleted
+- **Cascade Delete** — Revisions are deleted when a post is permanently deleted
+- **Graceful Fallback** — System works even if revisions table doesn't exist yet
+
+### 🐛 Bug Fixes
+- **Publish Button** — Fixed issue where clicking "Publish" on new posts kept them in draft status
+- **Status Buttons** — Replaced confusing status dropdown with clear "Save Draft" and "Publish" buttons
+- **Field Key Prefix** — Custom field keys now auto-prefix with post type slug (e.g., `product_price`)
+- **Missing Table Handling** — Post editor gracefully handles missing revisions table with helpful message
+
+### 📁 New Files
+
+```
+admin/
+└── compare-revisions.php    # Revision comparison page with diff view
+```
+
+### 📁 Modified Files
+
+```
+includes/
+├── config.php          — Version updated to 0.1.3
+├── migrations.php      — Added post_revisions table creation
+└── post.php            — Added revision methods (createRevision, getRevisions, restoreRevision, etc.)
+
+admin/
+├── post-edit.php       — Added revision creation, revisions sidebar, restore functionality, compare link
+├── post-type-edit.php  — Added max_revisions field, fixed field key auto-prefix
+├── settings.php        — Added revision settings for Posts and Pages
+├── update.php          — Added post_revisions table to migrations
+
+install.php             — Added post_revisions table creation
+```
+
+---
+
 ## [0.1.2] - 2025-12-09
 
 ### 🎨 Theme System
@@ -248,6 +403,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.1.4 | 2025-12-09 | Menu builder system, themes page redesign |
+| 0.1.3 | 2025-12-09 | Post revisions system, publish button fix, field key prefix |
 | 0.1.2 | 2025-12-09 | Theme system, Media/Thumbnails modal redesign, Plugin docs |
 | 0.1.1 | 2025-12-08 | VoidForge rebrand, Custom fields, 80+ icons |
 | 0.1.0 | 2025-12-08 | Initial release |

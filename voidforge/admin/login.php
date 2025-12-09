@@ -195,17 +195,15 @@ try {
         .logo {
             width: 72px;
             height: 72px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
         }
         
         .logo svg {
-            width: 36px;
-            height: 36px;
+            width: 64px;
+            height: 64px;
         }
         
         .login-header {
@@ -443,14 +441,20 @@ try {
         <div class="login-card">
             <div class="logo-wrapper">
                 <div class="logo">
-                    <svg viewBox="0 0 32 32" fill="none">
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
                         <defs>
-                            <linearGradient id="loginVoidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#7c3aed"/>
-                                <stop offset="100%" style="stop-color:#06b6d4"/>
+                            <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#8b5cf6"></stop>
+                                <stop offset="100%" style="stop-color:#06b6d4"></stop>
+                            </linearGradient>
+                            <linearGradient id="sidebarInnerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+                                <stop offset="0%" style="stop-color:#c4b5fd"></stop>
+                                <stop offset="100%" style="stop-color:#8b5cf6"></stop>
                             </linearGradient>
                         </defs>
-                        <path d="M6 6 L16 28 L26 6" fill="none" stroke="url(#loginVoidGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#sidebarLogoGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <circle cx="16" cy="14" r="3.5" fill="url(#sidebarInnerGlow)"></circle>
+                        <circle cx="16" cy="14" r="1.5" fill="#fff" opacity="0.9"></circle>
                     </svg>
                 </div>
             </div>

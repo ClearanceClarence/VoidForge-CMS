@@ -96,6 +96,65 @@ function runMigrations(): array {
         ");
         $log[] = '  → Checked custom_post_types table';
         
+        // Ensure post_revisions table exists
+        $postRevisions = Database::table('post_revisions');
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS {$postRevisions} (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                post_id INT UNSIGNED NOT NULL,
+                post_type VARCHAR(50) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                slug VARCHAR(255) NOT NULL,
+                content LONGTEXT,
+                excerpt TEXT,
+                meta_data LONGTEXT,
+                author_id INT UNSIGNED NOT NULL,
+                revision_number INT UNSIGNED NOT NULL DEFAULT 1,
+                created_at DATETIME NOT NULL,
+                INDEX idx_post_id (post_id),
+                INDEX idx_post_type (post_type),
+                INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked post_revisions table';
+        
+        // Ensure menus table exists
+        $menus = Database::table('menus');
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS {$menus} (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                slug VARCHAR(255) NOT NULL,
+                location VARCHAR(50) DEFAULT NULL,
+                created_at DATETIME NOT NULL,
+                INDEX idx_slug (slug),
+                INDEX idx_location (location)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked menus table';
+        
+        // Ensure menu_items table exists
+        $menuItems = Database::table('menu_items');
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS {$menuItems} (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                menu_id INT UNSIGNED NOT NULL,
+                parent_id INT UNSIGNED NOT NULL DEFAULT 0,
+                title VARCHAR(255) NOT NULL,
+                type VARCHAR(50) NOT NULL DEFAULT 'custom',
+                object_id INT UNSIGNED DEFAULT NULL,
+                url VARCHAR(500) DEFAULT NULL,
+                target VARCHAR(20) DEFAULT '_self',
+                css_class VARCHAR(255) DEFAULT NULL,
+                position INT UNSIGNED NOT NULL DEFAULT 0,
+                created_at DATETIME NOT NULL,
+                INDEX idx_menu_id (menu_id),
+                INDEX idx_parent_id (parent_id),
+                INDEX idx_position (position)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $log[] = '  → Checked menu_items table';
+        
     } catch (Exception $e) {
         $log[] = '  ⚠ Migration warning: ' . $e->getMessage();
     }

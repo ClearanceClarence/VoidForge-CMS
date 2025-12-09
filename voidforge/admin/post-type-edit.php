@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $supports = $_POST['supports'] ?? [];
         $fieldsJson = $_POST['fields_json'] ?? '[]';
         $fields = json_decode($fieldsJson, true) ?: [];
+        $maxRevisions = max(0, min(100, (int)($_POST['max_revisions'] ?? 10)));
         
         // Validation
         if (empty($slug)) {
@@ -77,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'has_archive' => $hasArchive,
                 'supports' => $supports,
                 'fields' => $fields,
+                'max_revisions' => $maxRevisions,
                 'created_at' => $isEdit ? ($customPostTypes[$editSlug]['created_at'] ?? date('Y-m-d H:i:s')) : date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
@@ -693,6 +695,21 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
         </div>
         
+        <!-- Revisions -->
+        <div class="pte-card">
+            <div class="pte-card-header">
+                <h2>Revisions</h2>
+                <p>Control how many revisions to keep for this content type</p>
+            </div>
+            <div class="pte-card-body">
+                <div class="form-group">
+                    <label class="form-label">Maximum Revisions</label>
+                    <input type="number" name="max_revisions" class="form-input" value="<?= esc($data['max_revisions'] ?? 10) ?>" min="0" max="100" style="max-width: 150px;">
+                    <div class="form-hint">Set to 0 to disable revisions. Recommended: 5-20 revisions.</div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Custom Fields -->
         <div class="pte-card">
             <div class="pte-card-header">
@@ -742,8 +759,8 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
             <div class="form-group">
                 <label class="form-label">Field Key <span class="required">*</span></label>
-                <input type="text" id="fieldKey" class="form-input" placeholder="e.g. price">
-                <div class="form-hint">Unique identifier. Use lowercase and underscores.</div>
+                <input type="text" id="fieldKey" class="form-input" placeholder="e.g. product_price">
+                <div class="form-hint">Auto-prefixed with post type slug. Use lowercase and underscores.</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Field Type</label>
@@ -981,11 +998,13 @@ include ADMIN_PATH . '/includes/header.php';
         document.getElementById('selectOptionsGroup').style.display = this.value === 'select' ? 'block' : 'none';
     });
     
-    // Auto-generate key from label
+    // Auto-generate key from label (with post type slug prefix)
     document.getElementById('fieldLabel').addEventListener('input', function() {
         const keyInput = document.getElementById('fieldKey');
         if (!keyInput.value || keyInput.dataset.auto === 'true') {
-            keyInput.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            const slug = slugInput.value.trim();
+            const fieldKey = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            keyInput.value = (slug && fieldKey) ? slug + '_' + fieldKey : fieldKey;
             keyInput.dataset.auto = 'true';
         }
     });

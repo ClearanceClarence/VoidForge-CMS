@@ -397,6 +397,8 @@ class Post
         if ($permanent) {
             // Delete meta first
             Database::delete(Database::table('postmeta'), 'post_id = ?', [$id]);
+            // Delete revisions
+            self::deleteRevisions($id);
             return Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
         }
 
@@ -530,5 +532,233 @@ class Post
             return SITE_URL . '/' . $post['slug'];
         }
         return SITE_URL . '/' . $post['post_type'] . '/' . $post['slug'];
+    }
+
+    // =====================================================
+    // REVISION SYSTEM
+    // =====================================================
+
+    /**
+     * Get max revisions for a post type
+     */
+    public static function getMaxRevisions(string $postType): int
+    {
+        // Check custom post type settings
+        $customTypes = getOption('custom_post_types', []);
+        if (isset($customTypes[$postType]['max_revisions'])) {
+            return (int) $customTypes[$postType]['max_revisions'];
+        }
+        
+        // Check built-in post type settings
+        $builtInSettings = getOption('revision_settings', []);
+        if (isset($builtInSettings[$postType])) {
+            return (int) $builtInSettings[$postType];
+        }
+        
+        // Default: 10 revisions
+        return 10;
+    }
+
+    /**
+     * Create a revision of a post (call BEFORE updating)
+     */
+    public static function createRevision(int $postId): ?int
+    {
+        $post = self::find($postId);
+        if (!$post) {
+            return null;
+        }
+        
+        $maxRevisions = self::getMaxRevisions($post['post_type']);
+        
+        // If max_revisions is 0, revisions are disabled
+        if ($maxRevisions === 0) {
+            return null;
+        }
+        
+        // Get the next revision number
+        $table = Database::table('post_revisions');
+        $lastRevision = Database::queryValue(
+            "SELECT MAX(revision_number) FROM {$table} WHERE post_id = ?",
+            [$postId]
+        );
+        $revisionNumber = ($lastRevision ?? 0) + 1;
+        
+        // Get current meta data
+        $meta = self::getMeta($postId);
+        
+        // Create the revision
+        $revisionId = Database::insert($table, [
+            'post_id' => $postId,
+            'post_type' => $post['post_type'],
+            'title' => $post['title'],
+            'slug' => $post['slug'],
+            'content' => $post['content'],
+            'excerpt' => $post['excerpt'] ?? '',
+            'meta_data' => json_encode($meta),
+            'author_id' => User::current()['id'] ?? $post['author_id'],
+            'revision_number' => $revisionNumber,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        
+        // Cleanup old revisions if over limit
+        self::cleanupRevisions($postId, $maxRevisions);
+        
+        return $revisionId;
+    }
+
+    /**
+     * Get all revisions for a post
+     */
+    public static function getRevisions(int $postId, int $limit = 50): array
+    {
+        $table = Database::table('post_revisions');
+        $usersTable = Database::table('users');
+        
+        return Database::query(
+            "SELECT r.*, u.display_name as author_name 
+             FROM {$table} r 
+             LEFT JOIN {$usersTable} u ON r.author_id = u.id 
+             WHERE r.post_id = ? 
+             ORDER BY r.revision_number DESC 
+             LIMIT ?",
+            [$postId, $limit]
+        );
+    }
+
+    /**
+     * Get a specific revision
+     */
+    public static function getRevision(int $revisionId): ?array
+    {
+        $table = Database::table('post_revisions');
+        return Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$revisionId]);
+    }
+
+    /**
+     * Get revision count for a post
+     */
+    public static function getRevisionCount(int $postId): int
+    {
+        $table = Database::table('post_revisions');
+        return (int) Database::queryValue(
+            "SELECT COUNT(*) FROM {$table} WHERE post_id = ?",
+            [$postId]
+        );
+    }
+
+    /**
+     * Restore a revision to the current post
+     */
+    public static function restoreRevision(int $revisionId): bool
+    {
+        $revision = self::getRevision($revisionId);
+        if (!$revision) {
+            return false;
+        }
+        
+        $postId = $revision['post_id'];
+        $post = self::find($postId);
+        if (!$post) {
+            return false;
+        }
+        
+        // Create a revision of current state before restoring
+        self::createRevision($postId);
+        
+        // Restore the post content
+        $updateData = [
+            'title' => $revision['title'],
+            'content' => $revision['content'],
+            'excerpt' => $revision['excerpt'],
+        ];
+        
+        Database::update(Database::table('posts'), $updateData, 'id = ?', [$postId]);
+        
+        // Restore meta data
+        $metaData = json_decode($revision['meta_data'], true);
+        if (is_array($metaData)) {
+            foreach ($metaData as $key => $value) {
+                self::setMeta($postId, $key, $value);
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Delete old revisions beyond the max limit
+     */
+    public static function cleanupRevisions(int $postId, int $maxRevisions): void
+    {
+        if ($maxRevisions <= 0) {
+            return;
+        }
+        
+        $table = Database::table('post_revisions');
+        
+        // Get count of revisions
+        $count = Database::queryValue(
+            "SELECT COUNT(*) FROM {$table} WHERE post_id = ?",
+            [$postId]
+        );
+        
+        if ($count > $maxRevisions) {
+            // Delete oldest revisions beyond the limit
+            $toDelete = $count - $maxRevisions;
+            Database::execute(
+                "DELETE FROM {$table} WHERE post_id = ? ORDER BY revision_number ASC LIMIT ?",
+                [$postId, $toDelete]
+            );
+        }
+    }
+
+    /**
+     * Delete all revisions for a post
+     */
+    public static function deleteRevisions(int $postId): int
+    {
+        $table = Database::table('post_revisions');
+        return Database::delete($table, 'post_id = ?', [$postId]);
+    }
+
+    /**
+     * Compare two revisions or revision with current post
+     */
+    public static function compareRevisions(int $revisionId, ?int $compareToId = null): array
+    {
+        $revision = self::getRevision($revisionId);
+        if (!$revision) {
+            return [];
+        }
+        
+        if ($compareToId) {
+            $compareTo = self::getRevision($compareToId);
+        } else {
+            // Compare to current post
+            $compareTo = self::find($revision['post_id']);
+        }
+        
+        if (!$compareTo) {
+            return [];
+        }
+        
+        return [
+            'title' => [
+                'from' => $revision['title'],
+                'to' => $compareTo['title'],
+                'changed' => $revision['title'] !== $compareTo['title'],
+            ],
+            'content' => [
+                'from' => $revision['content'],
+                'to' => $compareTo['content'],
+                'changed' => $revision['content'] !== $compareTo['content'],
+            ],
+            'excerpt' => [
+                'from' => $revision['excerpt'],
+                'to' => $compareTo['excerpt'] ?? '',
+                'changed' => $revision['excerpt'] !== ($compareTo['excerpt'] ?? ''),
+            ],
+        ];
     }
 }

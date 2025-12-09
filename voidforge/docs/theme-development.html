@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Development Guide — VoidForge CMS</title>
+    <meta name="description" content="Complete guide to developing themes for VoidForge CMS. Learn theme structure, templates, settings, menus, and best practices.">
+    <link rel="icon" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-code: #1e1e2e;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #27272a;
+        }
+        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+        
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        
+        .logo svg { width: 36px; height: 36px; }
+        
+        .header-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .header-nav a {
+            padding: 0.5rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .header-nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        
+        .btn-back {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+            color: #fff !important;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem 4rem;
+            gap: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+        
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        
+        .sidebar-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .sidebar-link {
+            display: block;
+            padding: 0.625rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            border-radius: 8px;
+            border-left: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        
+        .sidebar-link:hover {
+            color: var(--text);
+            background: rgba(255,255,255,0.03);
+        }
+        
+        .sidebar-link.active {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            border-left-color: var(--primary);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+        
+        .content {
+            min-width: 0;
+        }
+        
+        .doc-hero {
+            margin-bottom: 4rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .doc-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .doc-hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .doc-hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+        }
+        
+        .doc-section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 100px;
+        }
+        
+        .doc-section h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .doc-section h2 .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .doc-section h2 .icon svg { width: 18px; height: 18px; color: #fff; }
+        
+        .doc-section h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text);
+        }
+        
+        .doc-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+        
+        .doc-section p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-section ul, .doc-section ol {
+            color: var(--text-muted);
+            margin: 1rem 0 1.5rem 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .doc-section a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .doc-section a:hover {
+            text-decoration: underline;
+        }
+        
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            overflow-x: auto;
+            margin: 1rem 0 1.5rem;
+            position: relative;
+        }
+        
+        pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875em;
+            background: rgba(255,255,255,0.05);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+        
+        pre code { background: none; padding: 0; }
+        
+        .token-keyword { color: #c792ea; }
+        .token-function { color: #82aaff; }
+        .token-string { color: #c3e88d; }
+        .token-comment { color: #676e95; font-style: italic; }
+        .token-variable { color: #f78c6c; }
+        .token-number { color: #f78c6c; }
+        .token-operator { color: #89ddff; }
+        .token-class { color: #ffcb6b; }
+        .token-tag { color: #f07178; }
+        .token-attr { color: #c792ea; }
+        .token-punct { color: #89ddff; }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.625rem 1rem;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border);
+            margin: -1.25rem -1.5rem 1rem;
+            border-radius: 11px 11px 0 0;
+        }
+        
+        .code-lang {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+        
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+        
+        .info-box.warning {
+            background: rgba(234, 179, 8, 0.1);
+            border-color: rgba(234, 179, 8, 0.3);
+        }
+        
+        .info-box.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .info-box p {
+            margin: 0;
+            font-size: 0.9375rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        
+        th, td {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        td {
+            color: var(--text-muted);
+        }
+        
+        td code {
+            font-size: 0.8125rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .footer a { color: var(--primary); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                padding-top: 5rem;
+            }
+            .sidebar {
+                position: relative;
+                top: 0;
+                max-height: none;
+                padding-right: 0;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="../landing.html" class="logo">
+                <svg viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#logo-grad)"/>
+                    <path d="M12 10L20 30L28 10" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40">
+                            <stop stop-color="#6366f1"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                VoidForge
+            </a>
+            <nav class="header-nav">
+                <a href="plugin-development.html">Plugins</a>
+                <a href="../admin/" class="btn-back">Admin Panel</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Getting Started</div>
+                <nav class="sidebar-nav">
+                    <a href="#introduction" class="sidebar-link">Introduction</a>
+                    <a href="#structure" class="sidebar-link">Theme Structure</a>
+                    <a href="#theme-json" class="sidebar-link">theme.json</a>
+                </nav>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Templates</div>
+                <nav class="sidebar-nav">
+                    <a href="#template-hierarchy" class="sidebar-link">Template Hierarchy</a>
+                    <a href="#header-footer" class="sidebar-link">Header & Footer</a>
+                    <a href="#template-tags" class="sidebar-link">Template Tags</a>
+                </nav>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Features</div>
+                <nav class="sidebar-nav">
+                    <a href="#theme-settings" class="sidebar-link">Theme Settings</a>
+                    <a href="#menus" class="sidebar-link">Navigation Menus</a>
+                    <a href="#custom-fields" class="sidebar-link">Custom Fields</a>
+                    <a href="#assets" class="sidebar-link">Scripts & Styles</a>
+                </nav>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Advanced</div>
+                <nav class="sidebar-nav">
+                    <a href="#hooks" class="sidebar-link">Actions & Filters</a>
+                    <a href="#custom-post-types" class="sidebar-link">Custom Post Types</a>
+                    <a href="#best-practices" class="sidebar-link">Best Practices</a>
+                </nav>
+            </div>
+        </aside>
+        
+        <main class="content">
+            <div class="doc-hero">
+                <div class="doc-hero-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                        <path d="M2 2l7.586 7.586"/>
+                    </svg>
+                    Theme Development
+                </div>
+                <h1>Theme Development Guide</h1>
+                <p>Learn how to create beautiful, customizable themes for VoidForge CMS with templates, settings, menus, and more.</p>
+            </div>
+            
+            <!-- Introduction -->
+            <section id="introduction" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </span>
+                    Introduction
+                </h2>
+                
+                <p>VoidForge themes are collections of PHP templates, CSS styles, and JavaScript files that control how your website looks and behaves. Themes are easy to create and customize without modifying core CMS files.</p>
+                
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Creating theme directory structure</li>
+                    <li>Building template files for different content types</li>
+                    <li>Adding customizable theme settings</li>
+                    <li>Integrating navigation menus</li>
+                    <li>Working with custom fields and post types</li>
+                    <li>Best practices for theme development</li>
+                </ul>
+                
+                <div class="info-box">
+                    <div class="info-box-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        Prerequisites
+                    </div>
+                    <p>Basic knowledge of PHP, HTML, and CSS is required. Familiarity with template-based systems is helpful but not required.</p>
+                </div>
+            </section>
+            
+            <!-- Structure -->
+            <section id="structure" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </span>
+                    Theme Structure
+                </h2>
+                
+                <p>Every theme lives in its own directory inside <code>/themes/</code>. Here's the recommended structure:</p>
+                
+<pre><code>themes/
+└── mytheme/
+    ├── theme.json          <span class="token-comment"># Theme metadata (required)</span>
+    ├── index.php           <span class="token-comment"># Main template (required)</span>
+    ├── functions.php       <span class="token-comment"># Theme functions</span>
+    ├── header.php          <span class="token-comment"># Header template</span>
+    ├── footer.php          <span class="token-comment"># Footer template</span>
+    ├── single.php          <span class="token-comment"># Single post template</span>
+    ├── page.php            <span class="token-comment"># Page template</span>
+    ├── home.php            <span class="token-comment"># Homepage template</span>
+    ├── archive.php         <span class="token-comment"># Archive/listing template</span>
+    ├── search.php          <span class="token-comment"># Search results template</span>
+    ├── 404.php             <span class="token-comment"># Not found template</span>
+    ├── welcome.php         <span class="token-comment"># Landing page (optional)</span>
+    └── assets/
+        ├── css/
+        │   └── theme.css
+        ├── js/
+        │   └── theme.js
+        └── img/
+            └── logo.svg</code></pre>
+                
+                <h3>Required Files</h3>
+                <p>At minimum, a theme needs:</p>
+                <ul>
+                    <li><strong>theme.json</strong> — Theme metadata and configuration</li>
+                    <li><strong>index.php</strong> — Fallback template for all content</li>
+                </ul>
+            </section>
+            
+            <!-- theme.json -->
+            <section id="theme-json" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </span>
+                    theme.json
+                </h2>
+                
+                <p>The <code>theme.json</code> file contains metadata about your theme:</p>
+                
+<pre><code><span class="token-punct">{</span>
+    <span class="token-string">"name"</span><span class="token-punct">:</span> <span class="token-string">"My Theme"</span><span class="token-punct">,</span>
+    <span class="token-string">"description"</span><span class="token-punct">:</span> <span class="token-string">"A beautiful custom theme"</span><span class="token-punct">,</span>
+    <span class="token-string">"version"</span><span class="token-punct">:</span> <span class="token-string">"1.0.0"</span><span class="token-punct">,</span>
+    <span class="token-string">"author"</span><span class="token-punct">:</span> <span class="token-string">"Your Name"</span><span class="token-punct">,</span>
+    <span class="token-string">"author_url"</span><span class="token-punct">:</span> <span class="token-string">"https://yoursite.com"</span><span class="token-punct">,</span>
+    <span class="token-string">"screenshot"</span><span class="token-punct">:</span> <span class="token-string">"screenshot.png"</span><span class="token-punct">,</span>
+    <span class="token-string">"requires_cms"</span><span class="token-punct">:</span> <span class="token-string">"0.1.4"</span><span class="token-punct">,</span>
+    <span class="token-string">"requires_php"</span><span class="token-punct">:</span> <span class="token-string">"8.0"</span>
+<span class="token-punct">}</span></code></pre>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td>Yes</td>
+                            <td>Display name of the theme</td>
+                        </tr>
+                        <tr>
+                            <td><code>description</code></td>
+                            <td>No</td>
+                            <td>Brief description of the theme</td>
+                        </tr>
+                        <tr>
+                            <td><code>version</code></td>
+                            <td>Yes</td>
+                            <td>Theme version number</td>
+                        </tr>
+                        <tr>
+                            <td><code>author</code></td>
+                            <td>No</td>
+                            <td>Theme author name</td>
+                        </tr>
+                        <tr>
+                            <td><code>screenshot</code></td>
+                            <td>No</td>
+                            <td>Preview image filename</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <!-- Template Hierarchy -->
+            <section id="template-hierarchy" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </span>
+                    Template Hierarchy
+                </h2>
+                
+                <p>VoidForge uses a template hierarchy to determine which file to load. It looks for the most specific template first, then falls back to more general ones:</p>
+                
+                <h3>Single Posts</h3>
+<pre><code>single-{post_type}.php → single.php → index.php</code></pre>
+                <p>For a "product" post type: <code>single-product.php</code> → <code>single.php</code> → <code>index.php</code></p>
+                
+                <h3>Pages</h3>
+<pre><code>page-{slug}.php → page.php → single.php → index.php</code></pre>
+                <p>For an "about" page: <code>page-about.php</code> → <code>page.php</code> → <code>index.php</code></p>
+                
+                <h3>Archives</h3>
+<pre><code>archive-{post_type}.php → archive.php → index.php</code></pre>
+                
+                <h3>Homepage</h3>
+<pre><code>home.php → index.php</code></pre>
+                
+                <h3>Search Results</h3>
+<pre><code>search.php → archive.php → index.php</code></pre>
+                
+                <h3>404 Error</h3>
+<pre><code>404.php → index.php</code></pre>
+            </section>
+            
+            <!-- Header & Footer -->
+            <section id="header-footer" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="3" y1="15" x2="21" y2="15"/>
+                        </svg>
+                    </span>
+                    Header & Footer
+                </h2>
+                
+                <h3>header.php</h3>
+<pre><code><span class="token-tag">&lt;!DOCTYPE html&gt;</span>
+<span class="token-tag">&lt;html</span> <span class="token-attr">lang</span>=<span class="token-string">"en"</span><span class="token-tag">&gt;</span>
+<span class="token-tag">&lt;head&gt;</span>
+    <span class="token-tag">&lt;meta</span> <span class="token-attr">charset</span>=<span class="token-string">"UTF-8"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;meta</span> <span class="token-attr">name</span>=<span class="token-string">"viewport"</span> <span class="token-attr">content</span>=<span class="token-string">"width=device-width, initial-scale=1.0"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;title&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$pageTitle</span> <span class="token-operator">??</span> <span class="token-function">getOption</span>(<span class="token-string">'site_name'</span>)) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/title&gt;</span>
+    <span class="token-tag">&lt;link</span> <span class="token-attr">rel</span>=<span class="token-string">"stylesheet"</span> <span class="token-attr">href</span>=<span class="token-string">"&lt;?= themeUrl('assets/css/theme.css') ?&gt;"</span><span class="token-tag">&gt;</span>
+    <span class="token-keyword">&lt;?php</span> <span class="token-function">do_action</span>(<span class="token-string">'head'</span>); <span class="token-keyword">?&gt;</span>
+<span class="token-tag">&lt;/head&gt;</span>
+<span class="token-tag">&lt;body&gt;</span>
+    <span class="token-tag">&lt;header</span> <span class="token-attr">class</span>=<span class="token-string">"site-header"</span><span class="token-tag">&gt;</span>
+        <span class="token-tag">&lt;nav&gt;</span>
+            <span class="token-keyword">&lt;?php</span> <span class="token-keyword">echo</span> <span class="token-class">Menu</span>::<span class="token-function">display</span>(<span class="token-string">'primary'</span>); <span class="token-keyword">?&gt;</span>
+        <span class="token-tag">&lt;/nav&gt;</span>
+    <span class="token-tag">&lt;/header&gt;</span></code></pre>
+                
+                <h3>footer.php</h3>
+<pre><code>    <span class="token-tag">&lt;footer</span> <span class="token-attr">class</span>=<span class="token-string">"site-footer"</span><span class="token-tag">&gt;</span>
+        <span class="token-tag">&lt;p&gt;</span>&amp;copy; <span class="token-keyword">&lt;?=</span> <span class="token-function">date</span>(<span class="token-string">'Y'</span>) <span class="token-keyword">?&gt;</span> <span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-function">getOption</span>(<span class="token-string">'site_name'</span>)) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/p&gt;</span>
+        <span class="token-keyword">&lt;?php</span> <span class="token-keyword">echo</span> <span class="token-class">Menu</span>::<span class="token-function">display</span>(<span class="token-string">'footer'</span>); <span class="token-keyword">?&gt;</span>
+    <span class="token-tag">&lt;/footer&gt;</span>
+    <span class="token-keyword">&lt;?php</span> <span class="token-function">do_action</span>(<span class="token-string">'footer'</span>); <span class="token-keyword">?&gt;</span>
+<span class="token-tag">&lt;/body&gt;</span>
+<span class="token-tag">&lt;/html&gt;</span></code></pre>
+                
+                <h3>Including Header & Footer</h3>
+<pre><code><span class="token-keyword">&lt;?php</span>
+<span class="token-function">get_header</span>();  <span class="token-comment">// Includes header.php</span>
+<span class="token-keyword">?&gt;</span>
+
+<span class="token-tag">&lt;main&gt;</span>
+    <span class="token-comment">&lt;!-- Your content here --&gt;</span>
+<span class="token-tag">&lt;/main&gt;</span>
+
+<span class="token-keyword">&lt;?php</span>
+<span class="token-function">get_footer</span>();  <span class="token-comment">// Includes footer.php</span>
+<span class="token-keyword">?&gt;</span></code></pre>
+            </section>
+            
+            <!-- Template Tags -->
+            <section id="template-tags" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                    </span>
+                    Template Tags
+                </h2>
+                
+                <p>VoidForge provides helper functions for common template tasks:</p>
+                
+                <h3>Site Information</h3>
+<pre><code><span class="token-function">getOption</span>(<span class="token-string">'site_name'</span>)      <span class="token-comment">// Site name</span>
+<span class="token-function">getOption</span>(<span class="token-string">'site_tagline'</span>)   <span class="token-comment">// Site tagline</span>
+<span class="token-function">siteUrl</span>()                   <span class="token-comment">// Full site URL</span>
+<span class="token-function">themeUrl</span>(<span class="token-string">'path/to/file'</span>)   <span class="token-comment">// Theme asset URL</span></code></pre>
+                
+                <h3>Post Data</h3>
+<pre><code><span class="token-variable">$post</span>[<span class="token-string">'title'</span>]      <span class="token-comment">// Post title</span>
+<span class="token-variable">$post</span>[<span class="token-string">'content'</span>]    <span class="token-comment">// Post content (HTML)</span>
+<span class="token-variable">$post</span>[<span class="token-string">'excerpt'</span>]    <span class="token-comment">// Post excerpt</span>
+<span class="token-variable">$post</span>[<span class="token-string">'slug'</span>]       <span class="token-comment">// URL slug</span>
+<span class="token-variable">$post</span>[<span class="token-string">'created_at'</span>] <span class="token-comment">// Creation date</span>
+<span class="token-variable">$post</span>[<span class="token-string">'post_type'</span>]  <span class="token-comment">// Post type slug</span>
+
+<span class="token-comment">// Get post URL</span>
+<span class="token-function">getPostUrl</span>(<span class="token-variable">$post</span>)
+
+<span class="token-comment">// Get featured image</span>
+<span class="token-function">get_featured_image</span>(<span class="token-variable">$post</span>[<span class="token-string">'id'</span>])</code></pre>
+                
+                <h3>Querying Posts</h3>
+<pre><code><span class="token-comment">// Get recent posts</span>
+<span class="token-variable">$posts</span> = <span class="token-class">Post</span>::<span class="token-function">query</span>([
+    <span class="token-string">'post_type'</span> => <span class="token-string">'post'</span>,
+    <span class="token-string">'status'</span> => <span class="token-string">'published'</span>,
+    <span class="token-string">'limit'</span> => <span class="token-number">10</span>,
+    <span class="token-string">'orderby'</span> => <span class="token-string">'created_at'</span>,
+    <span class="token-string">'order'</span> => <span class="token-string">'DESC'</span>
+]);
+
+<span class="token-comment">// Loop through posts</span>
+<span class="token-keyword">foreach</span> (<span class="token-variable">$posts</span> <span class="token-keyword">as</span> <span class="token-variable">$post</span>):
+<span class="token-keyword">?&gt;</span>
+    <span class="token-tag">&lt;article&gt;</span>
+        <span class="token-tag">&lt;h2&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$post</span>[<span class="token-string">'title'</span>]) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/h2&gt;</span>
+        <span class="token-tag">&lt;div&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-variable">$post</span>[<span class="token-string">'content'</span>] <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/div&gt;</span>
+    <span class="token-tag">&lt;/article&gt;</span>
+<span class="token-keyword">&lt;?php</span> <span class="token-keyword">endforeach</span>;</code></pre>
+                
+                <h3>Escaping Output</h3>
+<pre><code><span class="token-function">esc</span>(<span class="token-variable">$text</span>)        <span class="token-comment">// Escape for HTML output</span>
+<span class="token-function">esc_attr</span>(<span class="token-variable">$text</span>)   <span class="token-comment">// Escape for HTML attributes</span>
+<span class="token-function">esc_url</span>(<span class="token-variable">$url</span>)     <span class="token-comment">// Escape URL</span></code></pre>
+            </section>
+            
+            <!-- Theme Settings -->
+            <section id="theme-settings" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </span>
+                    Theme Settings
+                </h2>
+                
+                <p>Theme settings allow users to customize your theme through the admin panel without editing code.</p>
+                
+                <h3>Getting Settings</h3>
+<pre><code><span class="token-keyword">&lt;?php</span>
+<span class="token-comment">// Get all settings for current theme</span>
+<span class="token-variable">$settings</span> = <span class="token-function">getThemeSettings</span>(<span class="token-string">'mytheme'</span>);
+
+<span class="token-comment">// Use settings with defaults</span>
+<span class="token-variable">$primaryColor</span> = <span class="token-variable">$settings</span>[<span class="token-string">'primary_color'</span>] <span class="token-operator">??</span> <span class="token-string">'#6366f1'</span>;
+<span class="token-variable">$showHero</span> = <span class="token-variable">$settings</span>[<span class="token-string">'show_hero'</span>] <span class="token-operator">??</span> <span class="token-keyword">true</span>;
+<span class="token-variable">$heroTitle</span> = <span class="token-variable">$settings</span>[<span class="token-string">'hero_title'</span>] <span class="token-operator">??</span> <span class="token-string">'Welcome'</span>;
+<span class="token-keyword">?&gt;</span>
+
+<span class="token-keyword">&lt;?php</span> <span class="token-keyword">if</span> (<span class="token-variable">$showHero</span>): <span class="token-keyword">?&gt;</span>
+<span class="token-tag">&lt;section</span> <span class="token-attr">class</span>=<span class="token-string">"hero"</span> <span class="token-attr">style</span>=<span class="token-string">"background: &lt;?= esc($primaryColor) ?&gt;"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;h1&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$heroTitle</span>) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/h1&gt;</span>
+<span class="token-tag">&lt;/section&gt;</span>
+<span class="token-keyword">&lt;?php</span> <span class="token-keyword">endif</span>; <span class="token-keyword">?&gt;</span></code></pre>
+                
+                <h3>Available Settings</h3>
+                <p>The admin Theme Settings page supports these customization options:</p>
+                <ul>
+                    <li><strong>Colors</strong> — Primary color, secondary color, accent color</li>
+                    <li><strong>Hero Section</strong> — Toggle, title, subtitle, buttons</li>
+                    <li><strong>Features</strong> — Up to 6 feature cards with icons</li>
+                    <li><strong>Stats</strong> — Statistical highlights</li>
+                    <li><strong>CTA</strong> — Call-to-action section</li>
+                    <li><strong>Custom CSS</strong> — Additional CSS without file editing</li>
+                </ul>
+            </section>
+            
+            <!-- Menus -->
+            <section id="menus" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </span>
+                    Navigation Menus
+                </h2>
+                
+                <p>VoidForge includes a powerful menu system. Themes can register menu locations and display menus with full customization.</p>
+                
+                <h3>Registering Menu Locations</h3>
+                <p>In your theme's <code>functions.php</code>:</p>
+                
+<pre><code><span class="token-keyword">&lt;?php</span>
+<span class="token-comment">// Register menu locations</span>
+<span class="token-class">Menu</span>::<span class="token-function">registerLocation</span>(<span class="token-string">'primary'</span>, <span class="token-string">'Primary Navigation'</span>);
+<span class="token-class">Menu</span>::<span class="token-function">registerLocation</span>(<span class="token-string">'footer'</span>, <span class="token-string">'Footer Navigation'</span>);
+<span class="token-class">Menu</span>::<span class="token-function">registerLocation</span>(<span class="token-string">'mobile'</span>, <span class="token-string">'Mobile Menu'</span>);</code></pre>
+                
+                <h3>Displaying Menus</h3>
+<pre><code><span class="token-comment">// Simple usage</span>
+<span class="token-keyword">echo</span> <span class="token-class">Menu</span>::<span class="token-function">display</span>(<span class="token-string">'primary'</span>);
+
+<span class="token-comment">// With options</span>
+<span class="token-keyword">echo</span> <span class="token-class">Menu</span>::<span class="token-function">display</span>(<span class="token-string">'primary'</span>, [
+    <span class="token-string">'container'</span>       => <span class="token-string">'nav'</span>,
+    <span class="token-string">'container_class'</span> => <span class="token-string">'main-navigation'</span>,
+    <span class="token-string">'container_id'</span>    => <span class="token-string">'site-nav'</span>,
+    <span class="token-string">'menu_class'</span>      => <span class="token-string">'nav-menu'</span>,
+    <span class="token-string">'menu_id'</span>         => <span class="token-string">'primary-menu'</span>,
+    <span class="token-string">'item_class'</span>      => <span class="token-string">'menu-item'</span>,
+    <span class="token-string">'link_class'</span>      => <span class="token-string">'menu-link'</span>,
+    <span class="token-string">'submenu_class'</span>   => <span class="token-string">'dropdown-menu'</span>,
+    <span class="token-string">'depth'</span>           => <span class="token-number">3</span>,  <span class="token-comment">// 0 = unlimited</span>
+]);</code></pre>
+                
+                <h3>Menu Display Options</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>container</code></td>
+                            <td><code>'div'</code></td>
+                            <td>Wrapper element (nav, div, false)</td>
+                        </tr>
+                        <tr>
+                            <td><code>container_class</code></td>
+                            <td><code>''</code></td>
+                            <td>CSS class for container</td>
+                        </tr>
+                        <tr>
+                            <td><code>menu_class</code></td>
+                            <td><code>'menu'</code></td>
+                            <td>CSS class for ul element</td>
+                        </tr>
+                        <tr>
+                            <td><code>item_class</code></td>
+                            <td><code>''</code></td>
+                            <td>CSS class for each li</td>
+                        </tr>
+                        <tr>
+                            <td><code>link_class</code></td>
+                            <td><code>''</code></td>
+                            <td>CSS class for each a tag</td>
+                        </tr>
+                        <tr>
+                            <td><code>submenu_class</code></td>
+                            <td><code>'sub-menu'</code></td>
+                            <td>CSS class for nested ul</td>
+                        </tr>
+                        <tr>
+                            <td><code>depth</code></td>
+                            <td><code>0</code></td>
+                            <td>Max nesting depth (0 = unlimited)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Example HTML Output</h3>
+<pre><code><span class="token-tag">&lt;nav</span> <span class="token-attr">class</span>=<span class="token-string">"main-navigation"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;ul</span> <span class="token-attr">class</span>=<span class="token-string">"nav-menu"</span><span class="token-tag">&gt;</span>
+        <span class="token-tag">&lt;li</span> <span class="token-attr">class</span>=<span class="token-string">"menu-item"</span><span class="token-tag">&gt;</span>
+            <span class="token-tag">&lt;a</span> <span class="token-attr">href</span>=<span class="token-string">"/"</span> <span class="token-attr">class</span>=<span class="token-string">"menu-link"</span><span class="token-tag">&gt;</span>Home<span class="token-tag">&lt;/a&gt;</span>
+        <span class="token-tag">&lt;/li&gt;</span>
+        <span class="token-tag">&lt;li</span> <span class="token-attr">class</span>=<span class="token-string">"menu-item has-children"</span><span class="token-tag">&gt;</span>
+            <span class="token-tag">&lt;a</span> <span class="token-attr">href</span>=<span class="token-string">"/about"</span> <span class="token-attr">class</span>=<span class="token-string">"menu-link"</span><span class="token-tag">&gt;</span>About<span class="token-tag">&lt;/a&gt;</span>
+            <span class="token-tag">&lt;ul</span> <span class="token-attr">class</span>=<span class="token-string">"dropdown-menu"</span><span class="token-tag">&gt;</span>
+                <span class="token-tag">&lt;li</span> <span class="token-attr">class</span>=<span class="token-string">"menu-item"</span><span class="token-tag">&gt;</span>
+                    <span class="token-tag">&lt;a</span> <span class="token-attr">href</span>=<span class="token-string">"/team"</span> <span class="token-attr">class</span>=<span class="token-string">"menu-link"</span><span class="token-tag">&gt;</span>Team<span class="token-tag">&lt;/a&gt;</span>
+                <span class="token-tag">&lt;/li&gt;</span>
+            <span class="token-tag">&lt;/ul&gt;</span>
+        <span class="token-tag">&lt;/li&gt;</span>
+    <span class="token-tag">&lt;/ul&gt;</span>
+<span class="token-tag">&lt;/nav&gt;</span></code></pre>
+            </section>
+            
+            <!-- Custom Fields -->
+            <section id="custom-fields" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </span>
+                    Custom Fields
+                </h2>
+                
+                <p>Access custom field values in your templates:</p>
+                
+<pre><code><span class="token-comment">// Get a single field</span>
+<span class="token-variable">$price</span> = <span class="token-function">get_custom_field</span>(<span class="token-string">'price'</span>, <span class="token-variable">$post</span>[<span class="token-string">'id'</span>]);
+
+<span class="token-comment">// Get all fields for a post</span>
+<span class="token-variable">$fields</span> = <span class="token-function">get_all_custom_fields</span>(<span class="token-variable">$post</span>[<span class="token-string">'id'</span>]);
+
+<span class="token-comment">// Display in template</span>
+<span class="token-keyword">if</span> (<span class="token-variable">$price</span>): <span class="token-keyword">?&gt;</span>
+    <span class="token-tag">&lt;p</span> <span class="token-attr">class</span>=<span class="token-string">"price"</span><span class="token-tag">&gt;</span>$<span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$price</span>) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/p&gt;</span>
+<span class="token-keyword">&lt;?php</span> <span class="token-keyword">endif</span>;</code></pre>
+                
+                <h3>Field Types</h3>
+                <p>VoidForge supports 14+ custom field types:</p>
+                <ul>
+                    <li><strong>Text</strong> — Single line text input</li>
+                    <li><strong>Textarea</strong> — Multi-line text</li>
+                    <li><strong>WYSIWYG</strong> — Rich text editor</li>
+                    <li><strong>Number</strong> — Numeric input</li>
+                    <li><strong>Email</strong> — Email address</li>
+                    <li><strong>URL</strong> — Website URL</li>
+                    <li><strong>Date</strong> — Date picker</li>
+                    <li><strong>Color</strong> — Color picker</li>
+                    <li><strong>Image</strong> — Image upload/select</li>
+                    <li><strong>File</strong> — File upload</li>
+                    <li><strong>Select</strong> — Dropdown selection</li>
+                    <li><strong>Checkbox</strong> — Boolean toggle</li>
+                    <li><strong>Radio</strong> — Radio button group</li>
+                    <li><strong>Repeater</strong> — Repeatable field groups</li>
+                </ul>
+            </section>
+            
+            <!-- Assets -->
+            <section id="assets" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                    </span>
+                    Scripts & Styles
+                </h2>
+                
+                <h3>Theme Asset URLs</h3>
+<pre><code><span class="token-comment">// Get URL to theme file</span>
+<span class="token-variable">$cssUrl</span> = <span class="token-function">themeUrl</span>(<span class="token-string">'assets/css/theme.css'</span>);
+<span class="token-variable">$jsUrl</span> = <span class="token-function">themeUrl</span>(<span class="token-string">'assets/js/theme.js'</span>);
+<span class="token-variable">$imgUrl</span> = <span class="token-function">themeUrl</span>(<span class="token-string">'assets/img/logo.svg'</span>);</code></pre>
+                
+                <h3>Enqueuing with Hooks</h3>
+<pre><code><span class="token-comment">// In functions.php</span>
+<span class="token-function">add_action</span>(<span class="token-string">'head'</span>, <span class="token-keyword">function</span>() {
+    <span class="token-keyword">echo</span> <span class="token-string">'&lt;link rel="stylesheet" href="'</span> . <span class="token-function">themeUrl</span>(<span class="token-string">'assets/css/theme.css'</span>) . <span class="token-string">'"&gt;'</span>;
+});
+
+<span class="token-function">add_action</span>(<span class="token-string">'footer'</span>, <span class="token-keyword">function</span>() {
+    <span class="token-keyword">echo</span> <span class="token-string">'&lt;script src="'</span> . <span class="token-function">themeUrl</span>(<span class="token-string">'assets/js/theme.js'</span>) . <span class="token-string">'"&gt;&lt;/script&gt;'</span>;
+});</code></pre>
+            </section>
+            
+            <!-- Hooks -->
+            <section id="hooks" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                    </span>
+                    Actions & Filters
+                </h2>
+                
+                <p>Use WordPress-style hooks to modify content and add functionality:</p>
+                
+                <h3>Actions</h3>
+<pre><code><span class="token-comment">// Add code at specific points</span>
+<span class="token-function">add_action</span>(<span class="token-string">'head'</span>, <span class="token-keyword">function</span>() {
+    <span class="token-keyword">echo</span> <span class="token-string">'&lt;meta name="theme" content="mytheme"&gt;'</span>;
+});
+
+<span class="token-function">add_action</span>(<span class="token-string">'footer'</span>, <span class="token-keyword">function</span>() {
+    <span class="token-keyword">echo</span> <span class="token-string">'&lt;!-- Custom footer content --&gt;'</span>;
+});
+
+<span class="token-comment">// Trigger action in template</span>
+<span class="token-function">do_action</span>(<span class="token-string">'my_custom_hook'</span>);</code></pre>
+                
+                <h3>Filters</h3>
+<pre><code><span class="token-comment">// Modify content</span>
+<span class="token-function">add_filter</span>(<span class="token-string">'the_content'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$content</span>) {
+    <span class="token-keyword">return</span> <span class="token-variable">$content</span> . <span class="token-string">'&lt;p&gt;Thanks for reading!&lt;/p&gt;'</span>;
+});
+
+<span class="token-comment">// Modify title</span>
+<span class="token-function">add_filter</span>(<span class="token-string">'the_title'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$title</span>) {
+    <span class="token-keyword">return</span> <span class="token-function">strtoupper</span>(<span class="token-variable">$title</span>);
+});
+
+<span class="token-comment">// Apply filter in template</span>
+<span class="token-variable">$content</span> = <span class="token-function">apply_filters</span>(<span class="token-string">'the_content'</span>, <span class="token-variable">$post</span>[<span class="token-string">'content'</span>]);</code></pre>
+            </section>
+            
+            <!-- Custom Post Types -->
+            <section id="custom-post-types" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                    </span>
+                    Custom Post Types
+                </h2>
+                
+                <p>Create templates for custom post types:</p>
+                
+                <h3>Single Template</h3>
+                <p>Create <code>single-{post_type}.php</code> for custom post types:</p>
+                
+<pre><code><span class="token-comment">&lt;!-- single-product.php --&gt;</span>
+<span class="token-keyword">&lt;?php</span>
+<span class="token-function">get_header</span>();
+<span class="token-variable">$price</span> = <span class="token-function">get_custom_field</span>(<span class="token-string">'price'</span>, <span class="token-variable">$post</span>[<span class="token-string">'id'</span>]);
+<span class="token-variable">$sku</span> = <span class="token-function">get_custom_field</span>(<span class="token-string">'sku'</span>, <span class="token-variable">$post</span>[<span class="token-string">'id'</span>]);
+<span class="token-keyword">?&gt;</span>
+
+<span class="token-tag">&lt;article</span> <span class="token-attr">class</span>=<span class="token-string">"product"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;h1&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$post</span>[<span class="token-string">'title'</span>]) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/h1&gt;</span>
+    
+    <span class="token-keyword">&lt;?php</span> <span class="token-keyword">if</span> (<span class="token-variable">$image</span> = <span class="token-function">get_featured_image</span>(<span class="token-variable">$post</span>[<span class="token-string">'id'</span>])): <span class="token-keyword">?&gt;</span>
+        <span class="token-tag">&lt;img</span> <span class="token-attr">src</span>=<span class="token-string">"&lt;?= esc($image['url']) ?&gt;"</span> <span class="token-attr">alt</span>=<span class="token-string">"&lt;?= esc($post['title']) ?&gt;"</span><span class="token-tag">&gt;</span>
+    <span class="token-keyword">&lt;?php</span> <span class="token-keyword">endif</span>; <span class="token-keyword">?&gt;</span>
+    
+    <span class="token-tag">&lt;div</span> <span class="token-attr">class</span>=<span class="token-string">"product-meta"</span><span class="token-tag">&gt;</span>
+        <span class="token-keyword">&lt;?php</span> <span class="token-keyword">if</span> (<span class="token-variable">$price</span>): <span class="token-keyword">?&gt;</span>
+            <span class="token-tag">&lt;p</span> <span class="token-attr">class</span>=<span class="token-string">"price"</span><span class="token-tag">&gt;</span>$<span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$price</span>) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/p&gt;</span>
+        <span class="token-keyword">&lt;?php</span> <span class="token-keyword">endif</span>; <span class="token-keyword">?&gt;</span>
+        <span class="token-keyword">&lt;?php</span> <span class="token-keyword">if</span> (<span class="token-variable">$sku</span>): <span class="token-keyword">?&gt;</span>
+            <span class="token-tag">&lt;p</span> <span class="token-attr">class</span>=<span class="token-string">"sku"</span><span class="token-tag">&gt;</span>SKU: <span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$sku</span>) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/p&gt;</span>
+        <span class="token-keyword">&lt;?php</span> <span class="token-keyword">endif</span>; <span class="token-keyword">?&gt;</span>
+    <span class="token-tag">&lt;/div&gt;</span>
+    
+    <span class="token-tag">&lt;div</span> <span class="token-attr">class</span>=<span class="token-string">"content"</span><span class="token-tag">&gt;</span>
+        <span class="token-keyword">&lt;?=</span> <span class="token-variable">$post</span>[<span class="token-string">'content'</span>] <span class="token-keyword">?&gt;</span>
+    <span class="token-tag">&lt;/div&gt;</span>
+<span class="token-tag">&lt;/article&gt;</span>
+
+<span class="token-keyword">&lt;?php</span> <span class="token-function">get_footer</span>();</code></pre>
+                
+                <h3>Archive Template</h3>
+<pre><code><span class="token-comment">&lt;!-- archive-product.php --&gt;</span>
+<span class="token-keyword">&lt;?php</span>
+<span class="token-function">get_header</span>();
+<span class="token-variable">$products</span> = <span class="token-class">Post</span>::<span class="token-function">query</span>([
+    <span class="token-string">'post_type'</span> => <span class="token-string">'product'</span>,
+    <span class="token-string">'status'</span> => <span class="token-string">'published'</span>,
+    <span class="token-string">'limit'</span> => <span class="token-number">12</span>
+]);
+<span class="token-keyword">?&gt;</span>
+
+<span class="token-tag">&lt;div</span> <span class="token-attr">class</span>=<span class="token-string">"products-grid"</span><span class="token-tag">&gt;</span>
+    <span class="token-keyword">&lt;?php</span> <span class="token-keyword">foreach</span> (<span class="token-variable">$products</span> <span class="token-keyword">as</span> <span class="token-variable">$product</span>): <span class="token-keyword">?&gt;</span>
+        <span class="token-tag">&lt;div</span> <span class="token-attr">class</span>=<span class="token-string">"product-card"</span><span class="token-tag">&gt;</span>
+            <span class="token-tag">&lt;h3&gt;</span><span class="token-keyword">&lt;?=</span> <span class="token-function">esc</span>(<span class="token-variable">$product</span>[<span class="token-string">'title'</span>]) <span class="token-keyword">?&gt;</span><span class="token-tag">&lt;/h3&gt;</span>
+            <span class="token-tag">&lt;a</span> <span class="token-attr">href</span>=<span class="token-string">"&lt;?= getPostUrl($product) ?&gt;"</span><span class="token-tag">&gt;</span>View Product<span class="token-tag">&lt;/a&gt;</span>
+        <span class="token-tag">&lt;/div&gt;</span>
+    <span class="token-keyword">&lt;?php</span> <span class="token-keyword">endforeach</span>; <span class="token-keyword">?&gt;</span>
+<span class="token-tag">&lt;/div&gt;</span>
+
+<span class="token-keyword">&lt;?php</span> <span class="token-function">get_footer</span>();</code></pre>
+            </section>
+            
+            <!-- Best Practices -->
+            <section id="best-practices" class="doc-section">
+                <h2>
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </span>
+                    Best Practices
+                </h2>
+                
+                <h3>Security</h3>
+                <ul>
+                    <li><strong>Always escape output</strong> — Use <code>esc()</code> for all dynamic content</li>
+                    <li><strong>Sanitize input</strong> — Never trust user data</li>
+                    <li><strong>Use CSRF tokens</strong> — Protect forms with <code>csrfToken()</code></li>
+                </ul>
+                
+                <h3>Performance</h3>
+                <ul>
+                    <li><strong>Minimize queries</strong> — Cache expensive database calls</li>
+                    <li><strong>Optimize images</strong> — Use appropriate thumbnail sizes</li>
+                    <li><strong>Minify assets</strong> — Compress CSS and JavaScript</li>
+                </ul>
+                
+                <h3>Code Organization</h3>
+                <ul>
+                    <li><strong>Use functions.php</strong> — Keep logic separate from templates</li>
+                    <li><strong>Comment your code</strong> — Document complex sections</li>
+                    <li><strong>Follow naming conventions</strong> — Use consistent file and variable names</li>
+                </ul>
+                
+                <h3>Accessibility</h3>
+                <ul>
+                    <li><strong>Semantic HTML</strong> — Use proper heading hierarchy</li>
+                    <li><strong>Alt text</strong> — Always provide image descriptions</li>
+                    <li><strong>Keyboard navigation</strong> — Ensure all interactive elements are accessible</li>
+                </ul>
+                
+                <div class="info-box success">
+                    <div class="info-box-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Ready to Build?
+                    </div>
+                    <p>Start with the default theme as a reference. Copy it, rename the folder, update theme.json, and customize!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <footer class="footer">
+        <p>VoidForge CMS v0.1.4 — <a href="plugin-development.html">Plugin Development</a> — <a href="../admin/">Admin Panel</a></p>
+    </footer>
+</body>
+</html>

@@ -38,6 +38,21 @@ if (!$typeConfig) {
 $pageTitle = $post ? 'Edit ' . $typeConfig['singular'] : 'New ' . $typeConfig['singular'];
 $errors = [];
 
+// Handle restore revision action
+if (isset($_GET['restore_revision']) && $post && verifyCsrf($_GET['csrf'] ?? '')) {
+    $revisionId = (int)$_GET['restore_revision'];
+    try {
+        if (Post::restoreRevision($revisionId)) {
+            setFlash('success', 'Revision restored successfully.');
+            redirect(ADMIN_URL . '/post-edit.php?id=' . $post['id']);
+        } else {
+            setFlash('error', 'Failed to restore revision.');
+        }
+    } catch (Exception $e) {
+        setFlash('error', 'Revisions feature not available. Please run system update.');
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     $data = [
@@ -46,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
         'slug' => trim($_POST['slug'] ?? ''),
         'content' => $_POST['content'] ?? '',
         'excerpt' => trim($_POST['excerpt'] ?? ''),
-        'status' => $_POST['status'] ?? 'draft',
+        'status' => ($_POST['save_action'] ?? 'draft') === 'publish' ? 'published' : 'draft',
         'featured_image_id' => !empty($_POST['featured_image_id']) ? (int)$_POST['featured_image_id'] : null,
     ];
 
@@ -67,6 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
 
     if (empty($errors)) {
         if ($post) {
+            // Create a revision before updating (only for existing posts)
+            try {
+                Post::createRevision($post['id']);
+            } catch (Exception $e) {
+                // Revisions table may not exist yet, continue without revision
+            }
+            
             if ($data['slug'] !== $post['slug']) {
                 $data['slug'] = uniqueSlug($data['slug'], $postType, $post['id']);
             }
@@ -489,12 +511,11 @@ include ADMIN_PATH . '/includes/header.php';
             <div class="sidebar-card">
                 <div class="sidebar-card-header">Publish</div>
                 <div class="sidebar-card-body">
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label" style="font-size: 0.8125rem; margin-bottom: 0.375rem; display: block;">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="draft" <?= ($post['status'] ?? 'draft') === 'draft' ? 'selected' : '' ?>>Draft</option>
-                            <option value="published" <?= ($post['status'] ?? '') === 'published' ? 'selected' : '' ?>>Published</option>
-                        </select>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        <strong>Status:</strong> 
+                        <span style="color: <?= ($post['status'] ?? 'draft') === 'published' ? '#22c55e' : '#f59e0b' ?>;">
+                            <?= ($post['status'] ?? 'draft') === 'published' ? 'Published' : 'Draft' ?>
+                        </span>
                     </div>
                     
                     <?php if ($post): ?>
@@ -510,15 +531,113 @@ include ADMIN_PATH . '/includes/header.php';
                     <?php endif; ?>
                     
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn btn-primary" style="flex: 1;">
-                            <?= $post ? 'Update' : 'Publish' ?>
+                        <?php if (!$post || $post['status'] !== 'published'): ?>
+                        <button type="submit" name="save_action" value="draft" class="btn btn-secondary" style="flex: 1;">
+                            Save Draft
                         </button>
-                        <?php if ($post && $post['status'] === 'published'): ?>
-                        <a href="<?= esc(Post::permalink($post)) ?>" target="_blank" class="btn btn-secondary">View</a>
                         <?php endif; ?>
+                        <button type="submit" name="save_action" value="publish" class="btn btn-primary" style="flex: 1;">
+                            <?= ($post && $post['status'] === 'published') ? 'Update' : 'Publish' ?>
+                        </button>
                     </div>
+                    <?php if ($post && $post['status'] === 'published'): ?>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <button type="submit" name="save_action" value="draft" class="btn btn-secondary" style="flex: 1; font-size: 0.75rem;">
+                            Revert to Draft
+                        </button>
+                        <a href="<?= esc(Post::permalink($post)) ?>" target="_blank" class="btn btn-secondary" style="flex: 1; font-size: 0.75rem; text-align: center;">View <?= esc($typeConfig['singular']) ?></a>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
+            
+            <?php 
+            // Revisions card - only show for existing posts
+            if ($post):
+                // Wrap in try-catch in case revisions table doesn't exist yet
+                try {
+                    $revisions = Post::getRevisions($post['id'], 20);
+                    $revisionCount = Post::getRevisionCount($post['id']);
+                    $maxRevisions = Post::getMaxRevisions($postType);
+                    $revisionsEnabled = true;
+                } catch (Exception $e) {
+                    $revisions = [];
+                    $revisionCount = 0;
+                    $maxRevisions = 10;
+                    $revisionsEnabled = false;
+                }
+            ?>
+            <div class="sidebar-card">
+                <div class="sidebar-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Revisions</span>
+                    <?php if ($revisionCount > 0): ?>
+                    <span style="background: var(--primary-color); color: white; font-size: 0.6875rem; padding: 0.125rem 0.5rem; border-radius: 9999px;"><?= $revisionCount ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="sidebar-card-body">
+                    <?php if (!$revisionsEnabled): ?>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted);">
+                        Revisions table not found. Please run <a href="update.php" style="color: var(--primary-color);">system update</a> to enable revisions.
+                    </div>
+                    <?php elseif ($maxRevisions === 0): ?>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted);">
+                        Revisions are disabled for this post type.
+                    </div>
+                    <?php elseif (empty($revisions)): ?>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted);">
+                        No revisions yet. Revisions are created when you update the <?= strtolower($typeConfig['singular']) ?>.
+                    </div>
+                    <?php else: ?>
+                    <div style="max-height: 250px; overflow-y: auto; margin: -0.5rem; padding: 0.5rem;">
+                        <?php foreach ($revisions as $i => $rev): ?>
+                        <div class="revision-item" style="padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem; background: var(--bg-tertiary); <?= $i === 0 ? 'border-left: 3px solid var(--primary-color);' : '' ?>">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-color);">
+                                        #<?= $rev['revision_number'] ?><?= $i === 0 ? ' (Latest)' : '' ?>
+                                    </div>
+                                    <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.125rem;">
+                                        <?= formatDate($rev['created_at'], 'M j, Y g:i a') ?>
+                                    </div>
+                                    <div style="font-size: 0.6875rem; color: var(--text-muted);">
+                                        by <?= esc($rev['author_name'] ?? 'Unknown') ?>
+                                    </div>
+                                </div>
+                                <div style="flex-shrink: 0;">
+                                    <button type="button" 
+                                            onclick="restoreRevision(<?= $rev['id'] ?>, <?= $rev['revision_number'] ?>)" 
+                                            class="btn btn-secondary" 
+                                            style="font-size: 0.6875rem; padding: 0.25rem 0.5rem;">
+                                        Restore
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if ($revisionCount > 20): ?>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem;">
+                        Showing latest 20 of <?= $revisionCount ?> revisions
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($revisionCount >= 2): ?>
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                        <a href="<?= ADMIN_URL ?>/compare-revisions.php?post_id=<?= $post['id'] ?>" 
+                           class="btn btn-secondary" 
+                           style="width: 100%; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            Compare Revisions
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
             
             <?php if ($typeConfig['hierarchical']): ?>
             <div class="sidebar-card">
@@ -948,6 +1067,14 @@ function selectMedia() {
         document.getElementById('setFeaturedBtn').style.display = 'none';
     }
     closeMediaModal();
+}
+
+// Restore revision function
+function restoreRevision(revisionId, revisionNumber) {
+    if (confirm('Restore revision #' + revisionNumber + '?\n\nThis will create a backup of the current version and restore the selected revision.')) {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        window.location.href = 'post-edit.php?id=<?= $post['id'] ?? 0 ?>&restore_revision=' + revisionId + '&csrf=' + encodeURIComponent(csrfToken);
+    }
 }
 </script>
 

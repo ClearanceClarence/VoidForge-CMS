@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.2-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.4-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -23,6 +23,8 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
 - **Custom Fields** — 14+ field types including text, WYSIWYG, images, files, colors, dates, and more
 - **Field Groups** — Create reusable field groups and assign them to any post type or users
+- **Menu Builder** — Visual drag-and-drop menu management with nested items and multiple locations
+- **Post Revisions** — Automatic revision history with compare and restore functionality
 - **Media Library** — Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads
 - **Thumbnail Manager** — View, regenerate, and manage all image sizes with modal preview
 - **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
@@ -62,6 +64,7 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Clean Architecture** — No framework magic, just readable PHP code
 - **Auto Updates** — One-click updates with automatic backups
 - **Plugin Documentation** — Comprehensive 72KB HTML development guide
+- **Theme Documentation** — Complete theme creation guide with examples
 
 ### Security
 - **CSRF Protection** — Token-based form protection
@@ -121,6 +124,7 @@ voidforge-cms/
 │   ├── includes/          # Admin includes (header, footer, sidebar)
 │   ├── index.php          # Admin dashboard
 │   ├── posts.php          # Post management
+│   ├── menus.php          # Menu builder
 │   ├── media.php          # Media library with modal editing
 │   ├── thumbnails.php     # Thumbnail manager
 │   ├── themes.php         # Theme management
@@ -128,7 +132,8 @@ voidforge-cms/
 │   ├── plugins.php        # Plugin management
 │   └── ...
 ├── docs/                  # Documentation
-│   └── plugin-development.html  # Plugin dev guide
+│   ├── plugin-development.html  # Plugin dev guide
+│   └── theme-development.html   # Theme dev guide
 ├── includes/              # Core PHP files
 │   ├── config.php         # Configuration (generated)
 │   ├── database.php       # Database class
@@ -136,6 +141,7 @@ voidforge-cms/
 │   ├── user.php           # User class
 │   ├── post.php           # Post class
 │   ├── media.php          # Media class
+│   ├── menu.php           # Menu class
 │   ├── plugin.php         # Plugin system
 │   └── theme.php          # Theme system
 ├── plugins/               # Plugin directory
@@ -195,6 +201,25 @@ Themes can define customizable settings that appear in the admin:
 - Call-to-action areas
 - Custom CSS
 
+### Menu Integration
+
+Display navigation menus in your theme:
+
+```php
+// Register a menu location in functions.php
+Menu::registerLocation('main-menu', 'Main Navigation');
+
+// Display the menu in your template
+echo Menu::display('main-menu', [
+    'container' => 'nav',
+    'container_class' => 'main-navigation',
+    'menu_class' => 'nav-menu',
+    'submenu_class' => 'dropdown-menu',
+]);
+```
+
+See `/docs/theme-development.html` for comprehensive documentation.
+
 ---
 
 ## 🔌 Plugin Development
@@ -209,7 +234,7 @@ Create plugins using WordPress-style hooks:
  * Version: 1.0.0
  * Author: Your Name
  * Requires PHP: 8.0
- * Requires CMS: 0.1.2
+ * Requires CMS: 0.1.4
  */
 
 // Hook into initialization
@@ -273,7 +298,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.2');
+define('CMS_VERSION', '0.1.4');
 define('CMS_NAME', 'VoidForge');
 ```
 
@@ -363,6 +388,28 @@ setOption('option_name', $value);
 ```php
 $settings = getThemeSettings('theme-slug');
 saveThemeSettings('theme-slug', $settings);
+```
+
+### Menus
+
+```php
+// Register a menu location
+Menu::registerLocation('main-nav', 'Main Navigation');
+
+// Display a menu
+echo Menu::display('main-nav', [
+    'container' => 'nav',
+    'menu_class' => 'nav-menu',
+    'submenu_class' => 'dropdown',
+]);
+
+// Create menu programmatically
+$menuId = Menu::create(['name' => 'My Menu']);
+Menu::addItem($menuId, [
+    'title' => 'Home',
+    'type' => 'custom',
+    'url' => '/'
+]);
 ```
 
 ---
