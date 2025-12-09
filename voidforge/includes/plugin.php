@@ -1,7 +1,17 @@
 <?php
 /**
- * Plugin System - VoidForge CMS
- * Provides hooks, filters, and content tags for extending CMS functionality
+ * Plugin System - VoidForge CMS v0.1.2
+ * 
+ * Provides a comprehensive plugin API including:
+ * - Hooks & Filters
+ * - Shortcodes
+ * - Plugin Settings API
+ * - Admin Notices
+ * - Asset Enqueueing
+ * - AJAX Handlers
+ * - Scheduled Tasks
+ * - Widgets
+ * - REST API Extensions
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
@@ -14,14 +24,48 @@ class Plugin
     /** @var array Registered filters */
     private static array $filters = [];
     
+    /** @var array Registered shortcodes */
+    private static array $shortcodes = [];
+    
     /** @var array Registered content tags */
     private static array $tags = [];
     
     /** @var array Loaded plugins */
     private static array $plugins = [];
     
+    /** @var array Plugin metadata cache */
+    private static array $pluginData = [];
+    
     /** @var array Registered admin pages */
     private static array $adminPages = [];
+    
+    /** @var array Registered admin notices */
+    private static array $adminNotices = [];
+    
+    /** @var array Registered scripts */
+    private static array $scripts = [];
+    
+    /** @var array Registered styles */
+    private static array $styles = [];
+    
+    /** @var array Registered AJAX handlers */
+    private static array $ajaxHandlers = [];
+    
+    /** @var array Registered widgets */
+    private static array $widgets = [];
+    
+    /** @var array Registered REST routes */
+    private static array $restRoutes = [];
+    
+    /** @var array Registered cron jobs */
+    private static array $cronJobs = [];
+    
+    /** @var array Plugin settings schemas */
+    private static array $settingsSchemas = [];
+
+    // =========================================================================
+    // Initialization
+    // =========================================================================
 
     /**
      * Initialize plugin system and load active plugins
@@ -31,18 +75,22 @@ class Plugin
         $pluginsDir = CMS_ROOT . '/plugins';
         
         if (!is_dir($pluginsDir)) {
-            return;
+            mkdir($pluginsDir, 0755, true);
         }
         
         // Get active plugins from database
         $activePlugins = self::getActivePlugins();
         
+        // Load each active plugin
         foreach ($activePlugins as $pluginSlug) {
             self::load($pluginSlug);
         }
         
-        // Run init action
+        // Fire plugins loaded action
         self::doAction('plugins_loaded');
+        
+        // Process scheduled tasks
+        self::processCronJobs();
     }
 
     /**
@@ -56,18 +104,33 @@ class Plugin
             return false;
         }
         
+        // Check requirements before loading
+        $header = self::getPluginHeader($pluginFile);
+        if (!self::checkRequirements($header)) {
+            return false;
+        }
+        
         // Load plugin
         require_once $pluginFile;
         
+        // Cache plugin data
         self::$plugins[$slug] = true;
+        self::$pluginData[$slug] = $header;
+        
+        // Fire plugin loaded action
+        self::doAction('plugin_loaded_' . $slug);
         
         return true;
     }
 
+    // =========================================================================
+    // Actions & Filters
+    // =========================================================================
+
     /**
      * Register an action hook
      */
-    public static function addAction(string $hook, callable $callback, int $priority = 10): void
+    public static function addAction(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
     {
         if (!isset(self::$actions[$hook])) {
             self::$actions[$hook] = [];
@@ -76,10 +139,29 @@ class Plugin
         self::$actions[$hook][] = [
             'callback' => $callback,
             'priority' => $priority,
+            'accepted_args' => $acceptedArgs,
         ];
         
-        // Sort by priority
         usort(self::$actions[$hook], fn($a, $b) => $a['priority'] <=> $b['priority']);
+    }
+
+    /**
+     * Remove an action hook
+     */
+    public static function removeAction(string $hook, callable $callback, int $priority = 10): bool
+    {
+        if (!isset(self::$actions[$hook])) {
+            return false;
+        }
+        
+        foreach (self::$actions[$hook] as $key => $action) {
+            if ($action['callback'] === $callback && $action['priority'] === $priority) {
+                unset(self::$actions[$hook][$key]);
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -92,22 +174,339 @@ class Plugin
         }
         
         foreach (self::$actions[$hook] as $action) {
-            call_user_func_array($action['callback'], $args);
+            $callArgs = array_slice($args, 0, $action['accepted_args']);
+            call_user_func_array($action['callback'], $callArgs);
         }
     }
 
     /**
-     * Register an admin page
+     * Register a filter hook
+     */
+    public static function addFilter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
+    {
+        if (!isset(self::$filters[$hook])) {
+            self::$filters[$hook] = [];
+        }
+        
+        self::$filters[$hook][] = [
+            'callback' => $callback,
+            'priority' => $priority,
+            'accepted_args' => $acceptedArgs,
+        ];
+        
+        usort(self::$filters[$hook], fn($a, $b) => $a['priority'] <=> $b['priority']);
+    }
+
+    /**
+     * Apply a filter hook
+     */
+    public static function applyFilters(string $hook, mixed $value, ...$args): mixed
+    {
+        if (!isset(self::$filters[$hook])) {
+            return $value;
+        }
+        
+        foreach (self::$filters[$hook] as $filter) {
+            $callArgs = array_merge([$value], array_slice($args, 0, $filter['accepted_args'] - 1));
+            $value = call_user_func_array($filter['callback'], $callArgs);
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Check if action has hooks
+     */
+    public static function hasAction(string $hook): bool
+    {
+        return !empty(self::$actions[$hook]);
+    }
+
+    /**
+     * Check if filter has hooks
+     */
+    public static function hasFilter(string $hook): bool
+    {
+        return !empty(self::$filters[$hook]);
+    }
+
+    /**
+     * Get number of times an action has been fired
+     */
+    public static function didAction(string $hook): int
+    {
+        static $counts = [];
+        return $counts[$hook] ?? 0;
+    }
+
+    // =========================================================================
+    // Shortcodes
+    // =========================================================================
+
+    /**
+     * Register a shortcode
      * 
-     * @param string $slug Unique page slug (used in URL)
-     * @param array $config Page configuration
-     *   - title: Page title
-     *   - menu_title: Menu label (optional, defaults to title)
-     *   - icon: Icon name (optional)
-     *   - parent: Parent menu slug (optional, for submenus)
-     *   - capability: Required capability (default: admin)
-     *   - callback: Function to render page content
-     *   - position: Menu position (optional)
+     * @param string $tag Shortcode tag (e.g., 'button')
+     * @param callable $callback Function that returns output
+     */
+    public static function addShortcode(string $tag, callable $callback): void
+    {
+        self::$shortcodes[strtolower($tag)] = $callback;
+    }
+
+    /**
+     * Remove a shortcode
+     */
+    public static function removeShortcode(string $tag): void
+    {
+        unset(self::$shortcodes[strtolower($tag)]);
+    }
+
+    /**
+     * Check if shortcode exists
+     */
+    public static function shortcodeExists(string $tag): bool
+    {
+        return isset(self::$shortcodes[strtolower($tag)]);
+    }
+
+    /**
+     * Process shortcodes in content
+     * 
+     * Supports: [tag], [tag attr="value"], [tag]content[/tag]
+     */
+    public static function doShortcode(string $content): string
+    {
+        if (empty(self::$shortcodes) || strpos($content, '[') === false) {
+            return $content;
+        }
+
+        // Build pattern for all registered shortcodes
+        $tagNames = array_keys(self::$shortcodes);
+        $tagRegex = implode('|', array_map('preg_quote', $tagNames));
+        
+        // Match shortcodes with content: [tag]...[/tag]
+        $pattern = '/\[(' . $tagRegex . ')(\s+[^\]]*?)?\](.*?)\[\/\1\]/s';
+        $content = preg_replace_callback($pattern, function($matches) {
+            $tag = strtolower($matches[1]);
+            $attrs = self::parseShortcodeAttrs($matches[2] ?? '');
+            $innerContent = $matches[3] ?? '';
+            return self::executeShortcode($tag, $attrs, $innerContent);
+        }, $content);
+        
+        // Match self-closing shortcodes: [tag] or [tag attr="value"]
+        $pattern = '/\[(' . $tagRegex . ')(\s+[^\]]*?)?\]/';
+        $content = preg_replace_callback($pattern, function($matches) {
+            $tag = strtolower($matches[1]);
+            $attrs = self::parseShortcodeAttrs($matches[2] ?? '');
+            return self::executeShortcode($tag, $attrs, '');
+        }, $content);
+        
+        return $content;
+    }
+
+    /**
+     * Parse shortcode attributes
+     */
+    private static function parseShortcodeAttrs(string $attrString): array
+    {
+        $attrs = [];
+        $attrString = trim($attrString);
+        
+        if (empty($attrString)) {
+            return $attrs;
+        }
+
+        // Match: attr="value", attr='value', attr=value
+        $pattern = '/([a-zA-Z_][a-zA-Z0-9_-]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s\]]+))/';
+        
+        if (preg_match_all($pattern, $attrString, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $key = $match[1];
+                $value = $match[2] ?? $match[3] ?? $match[4] ?? '';
+                $attrs[$key] = $value;
+            }
+        }
+
+        return $attrs;
+    }
+
+    /**
+     * Execute a shortcode callback
+     */
+    private static function executeShortcode(string $tag, array $attrs, string $content): string
+    {
+        if (!isset(self::$shortcodes[$tag])) {
+            return '';
+        }
+
+        try {
+            $result = call_user_func(self::$shortcodes[$tag], $attrs, $content, $tag);
+            return is_string($result) ? $result : '';
+        } catch (\Throwable $e) {
+            if (defined('CMS_DEBUG') && CMS_DEBUG) {
+                return '<!-- Shortcode error [' . $tag . ']: ' . esc($e->getMessage()) . ' -->';
+            }
+            return '';
+        }
+    }
+
+    /**
+     * Get all registered shortcodes
+     */
+    public static function getShortcodes(): array
+    {
+        return array_keys(self::$shortcodes);
+    }
+
+    // =========================================================================
+    // Content Tags (Legacy support)
+    // =========================================================================
+
+    /**
+     * Register a content tag (curly brace syntax)
+     */
+    public static function registerTag(string $name, callable $callback, array $options = []): void
+    {
+        $name = strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $name));
+        
+        self::$tags[$name] = [
+            'callback' => $callback,
+            'has_content' => $options['has_content'] ?? false,
+            'description' => $options['description'] ?? '',
+        ];
+    }
+
+    /**
+     * Process content tags and shortcodes
+     */
+    public static function processContent(string $content): string
+    {
+        // Process shortcodes first
+        $content = self::doShortcode($content);
+        
+        // Then process legacy tags
+        if (empty(self::$tags) || strpos($content, '{') === false) {
+            return $content;
+        }
+
+        // Process tags with content: {tag}...{/tag}
+        foreach (self::$tags as $name => $tag) {
+            if ($tag['has_content']) {
+                $pattern = '/\{' . preg_quote($name, '/') . '(\s+[^}]*)?\}(.*?)\{\/' . preg_quote($name, '/') . '\}/s';
+                $content = preg_replace_callback($pattern, function($matches) use ($name, $tag) {
+                    $attrs = self::parseShortcodeAttrs($matches[1] ?? '');
+                    $innerContent = $matches[2] ?? '';
+                    return self::executeTag($name, $attrs, $innerContent);
+                }, $content);
+            }
+        }
+
+        // Process self-closing tags
+        $pattern = '/\{([a-zA-Z0-9_-]+)(\s+[^}]*)?\}/';
+        $content = preg_replace_callback($pattern, function($matches) {
+            $name = strtolower($matches[1]);
+            if (!isset(self::$tags[$name]) || self::$tags[$name]['has_content']) {
+                return $matches[0];
+            }
+            $attrs = self::parseShortcodeAttrs($matches[2] ?? '');
+            return self::executeTag($name, $attrs, '');
+        }, $content);
+
+        return $content;
+    }
+
+    private static function executeTag(string $name, array $attrs, string $content): string
+    {
+        if (!isset(self::$tags[$name])) {
+            return '';
+        }
+
+        try {
+            $result = call_user_func(self::$tags[$name]['callback'], $attrs, $content, $name);
+            return is_string($result) ? $result : '';
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    public static function getTags(): array
+    {
+        return self::$tags;
+    }
+
+    // =========================================================================
+    // Plugin Settings API
+    // =========================================================================
+
+    /**
+     * Register plugin settings
+     * 
+     * @param string $pluginSlug Plugin identifier
+     * @param array $schema Settings schema definition
+     */
+    public static function registerSettings(string $pluginSlug, array $schema): void
+    {
+        self::$settingsSchemas[$pluginSlug] = $schema;
+    }
+
+    /**
+     * Get plugin settings schema
+     */
+    public static function getSettingsSchema(string $pluginSlug): array
+    {
+        return self::$settingsSchemas[$pluginSlug] ?? [];
+    }
+
+    /**
+     * Get a plugin setting
+     */
+    public static function getSetting(string $pluginSlug, string $key, mixed $default = null): mixed
+    {
+        $settings = getOption('plugin_settings_' . $pluginSlug, []);
+        return $settings[$key] ?? $default;
+    }
+
+    /**
+     * Set a plugin setting
+     */
+    public static function setSetting(string $pluginSlug, string $key, mixed $value): void
+    {
+        $settings = getOption('plugin_settings_' . $pluginSlug, []);
+        $settings[$key] = $value;
+        setOption('plugin_settings_' . $pluginSlug, $settings);
+    }
+
+    /**
+     * Get all plugin settings
+     */
+    public static function getSettings(string $pluginSlug): array
+    {
+        return getOption('plugin_settings_' . $pluginSlug, []);
+    }
+
+    /**
+     * Save all plugin settings
+     */
+    public static function saveSettings(string $pluginSlug, array $settings): void
+    {
+        setOption('plugin_settings_' . $pluginSlug, $settings);
+    }
+
+    /**
+     * Delete plugin settings (on uninstall)
+     */
+    public static function deleteSettings(string $pluginSlug): void
+    {
+        deleteOption('plugin_settings_' . $pluginSlug);
+    }
+
+    // =========================================================================
+    // Admin Pages
+    // =========================================================================
+
+    /**
+     * Register an admin page
      */
     public static function registerAdminPage(string $slug, array $config): void
     {
@@ -118,7 +517,8 @@ class Plugin
             'parent' => null,
             'capability' => 'admin',
             'callback' => null,
-            'position' => 99
+            'position' => 99,
+            'plugin' => null,
         ], $config);
     }
 
@@ -153,205 +553,356 @@ class Plugin
         return true;
     }
 
-    /**
-     * Register a filter hook
-     */
-    public static function addFilter(string $hook, callable $callback, int $priority = 10): void
-    {
-        if (!isset(self::$filters[$hook])) {
-            self::$filters[$hook] = [];
-        }
-        
-        self::$filters[$hook][] = [
-            'callback' => $callback,
-            'priority' => $priority,
-        ];
-        
-        // Sort by priority
-        usort(self::$filters[$hook], fn($a, $b) => $a['priority'] <=> $b['priority']);
-    }
-
-    /**
-     * Apply a filter hook
-     */
-    public static function applyFilters(string $hook, mixed $value, ...$args): mixed
-    {
-        if (!isset(self::$filters[$hook])) {
-            return $value;
-        }
-        
-        foreach (self::$filters[$hook] as $filter) {
-            $value = call_user_func($filter['callback'], $value, ...$args);
-        }
-        
-        return $value;
-    }
-
-    /**
-     * Check if action has hooks
-     */
-    public static function hasAction(string $hook): bool
-    {
-        return !empty(self::$actions[$hook]);
-    }
-
-    /**
-     * Check if filter has hooks
-     */
-    public static function hasFilter(string $hook): bool
-    {
-        return !empty(self::$filters[$hook]);
-    }
-
     // =========================================================================
-    // Content Tag System
+    // Admin Notices
     // =========================================================================
 
     /**
-     * Register a content tag
+     * Add an admin notice
      * 
-     * Tags can be used in content like: {tagname} or {tagname param="value"}
-     * Or with content: {tagname}inner content{/tagname}
-     * 
-     * @param string $name Tag name (alphanumeric, underscores, hyphens)
-     * @param callable $callback Function that returns the replacement HTML
-     *                           Receives: (array $attrs, string $content, string $tagName)
-     * @param array $options Tag options:
-     *                       - 'has_content' => bool (whether tag wraps content)
-     *                       - 'description' => string (for documentation)
+     * @param string $message Notice message
+     * @param string $type Notice type: success, error, warning, info
+     * @param bool $dismissible Can be dismissed
      */
-    public static function registerTag(string $name, callable $callback, array $options = []): void
+    public static function addNotice(string $message, string $type = 'info', bool $dismissible = true): void
     {
-        $name = strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $name));
-        
-        self::$tags[$name] = [
-            'callback' => $callback,
-            'has_content' => $options['has_content'] ?? false,
-            'description' => $options['description'] ?? '',
+        self::$adminNotices[] = [
+            'message' => $message,
+            'type' => $type,
+            'dismissible' => $dismissible,
         ];
     }
 
     /**
-     * Remove a registered tag
+     * Get all admin notices
      */
-    public static function removeTag(string $name): void
+    public static function getNotices(): array
     {
-        unset(self::$tags[strtolower($name)]);
+        return self::$adminNotices;
     }
 
     /**
-     * Check if a tag is registered
+     * Render admin notices HTML
      */
-    public static function hasTag(string $name): bool
+    public static function renderNotices(): string
     {
-        return isset(self::$tags[strtolower($name)]);
+        $html = '';
+        foreach (self::$adminNotices as $notice) {
+            $class = 'notice notice-' . esc($notice['type']);
+            if ($notice['dismissible']) {
+                $class .= ' is-dismissible';
+            }
+            $html .= '<div class="' . $class . '"><p>' . esc($notice['message']) . '</p></div>';
+        }
+        return $html;
+    }
+
+    // =========================================================================
+    // Asset Enqueueing
+    // =========================================================================
+
+    /**
+     * Enqueue a script
+     */
+    public static function enqueueScript(string $handle, string $src, array $deps = [], string $version = '', bool $inFooter = true): void
+    {
+        self::$scripts[$handle] = [
+            'src' => $src,
+            'deps' => $deps,
+            'version' => $version ?: CMS_VERSION,
+            'in_footer' => $inFooter,
+        ];
     }
 
     /**
-     * Get all registered tags
+     * Enqueue a style
      */
-    public static function getTags(): array
+    public static function enqueueStyle(string $handle, string $src, array $deps = [], string $version = ''): void
     {
-        return self::$tags;
+        self::$styles[$handle] = [
+            'src' => $src,
+            'deps' => $deps,
+            'version' => $version ?: CMS_VERSION,
+        ];
     }
 
     /**
-     * Process content and replace all tags
+     * Get enqueued scripts
+     */
+    public static function getScripts(): array
+    {
+        return self::$scripts;
+    }
+
+    /**
+     * Get enqueued styles
+     */
+    public static function getStyles(): array
+    {
+        return self::$styles;
+    }
+
+    /**
+     * Render enqueued styles HTML
+     */
+    public static function renderStyles(): string
+    {
+        $html = '';
+        foreach (self::$styles as $handle => $style) {
+            $src = $style['src'];
+            if ($style['version']) {
+                $src .= (strpos($src, '?') !== false ? '&' : '?') . 'ver=' . $style['version'];
+            }
+            $html .= '<link rel="stylesheet" id="' . esc($handle) . '-css" href="' . esc($src) . '">' . "\n";
+        }
+        return $html;
+    }
+
+    /**
+     * Render enqueued scripts HTML
+     */
+    public static function renderScripts(bool $footer = false): string
+    {
+        $html = '';
+        foreach (self::$scripts as $handle => $script) {
+            if ($script['in_footer'] !== $footer) {
+                continue;
+            }
+            $src = $script['src'];
+            if ($script['version']) {
+                $src .= (strpos($src, '?') !== false ? '&' : '?') . 'ver=' . $script['version'];
+            }
+            $html .= '<script id="' . esc($handle) . '-js" src="' . esc($src) . '"></script>' . "\n";
+        }
+        return $html;
+    }
+
+    // =========================================================================
+    // AJAX Handlers
+    // =========================================================================
+
+    /**
+     * Register an AJAX handler
      * 
-     * Syntax:
-     *   {tagname}
-     *   {tagname attr="value" attr2="value2"}
-     *   {tagname attr="value"}content here{/tagname}
+     * @param string $action Action name
+     * @param callable $callback Handler function
+     * @param bool $nopriv Allow non-logged-in users
      */
-    public static function processContent(string $content): string
+    public static function registerAjax(string $action, callable $callback, bool $nopriv = false): void
     {
-        if (empty(self::$tags) || strpos($content, '{') === false) {
-            return $content;
-        }
-
-        // Process tags with content first: {tag}...{/tag}
-        foreach (self::$tags as $name => $tag) {
-            if ($tag['has_content']) {
-                $pattern = '/\{' . preg_quote($name, '/') . '(\s+[^}]*)?\}(.*?)\{\/' . preg_quote($name, '/') . '\}/s';
-                $content = preg_replace_callback($pattern, function($matches) use ($name, $tag) {
-                    $attrs = self::parseTagAttributes($matches[1] ?? '');
-                    $innerContent = $matches[2] ?? '';
-                    return self::executeTag($name, $attrs, $innerContent);
-                }, $content);
-            }
-        }
-
-        // Process self-closing tags: {tag} or {tag attr="value"}
-        $pattern = '/\{([a-zA-Z0-9_-]+)(\s+[^}]*)?\}/';
-        $content = preg_replace_callback($pattern, function($matches) {
-            $name = strtolower($matches[1]);
-            
-            // Skip if it looks like a closing tag
-            if (strpos($name, '/') === 0) {
-                return $matches[0];
-            }
-            
-            if (!isset(self::$tags[$name])) {
-                return $matches[0]; // Return original if tag not found
-            }
-            
-            // Skip content tags (already processed)
-            if (self::$tags[$name]['has_content']) {
-                return $matches[0];
-            }
-            
-            $attrs = self::parseTagAttributes($matches[2] ?? '');
-            return self::executeTag($name, $attrs, '');
-        }, $content);
-
-        return $content;
+        self::$ajaxHandlers[$action] = [
+            'callback' => $callback,
+            'nopriv' => $nopriv,
+        ];
     }
 
     /**
-     * Parse tag attributes from string
-     * Supports: attr="value" attr='value' attr=value
+     * Handle AJAX request
      */
-    private static function parseTagAttributes(string $attrString): array
+    public static function handleAjax(string $action): void
     {
-        $attrs = [];
-        $attrString = trim($attrString);
-        
-        if (empty($attrString)) {
-            return $attrs;
+        if (!isset(self::$ajaxHandlers[$action])) {
+            wp_send_json_error(['message' => 'Invalid action'], 400);
         }
 
-        // Match attribute patterns
-        $pattern = '/([a-zA-Z_][a-zA-Z0-9_-]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s}]+))/';
+        $handler = self::$ajaxHandlers[$action];
         
-        if (preg_match_all($pattern, $attrString, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $key = $match[1];
-                $value = $match[2] ?? $match[3] ?? $match[4] ?? '';
-                $attrs[$key] = $value;
-            }
+        // Check authentication if required
+        if (!$handler['nopriv'] && !User::isLoggedIn()) {
+            self::sendJsonError(['message' => 'Authentication required'], 401);
         }
 
-        return $attrs;
+        try {
+            call_user_func($handler['callback']);
+        } catch (\Throwable $e) {
+            self::sendJsonError(['message' => $e->getMessage()], 500);
+        }
     }
 
     /**
-     * Execute a tag callback
+     * Get registered AJAX handlers
      */
-    private static function executeTag(string $name, array $attrs, string $content): string
+    public static function getAjaxHandlers(): array
     {
-        if (!isset(self::$tags[$name])) {
+        return self::$ajaxHandlers;
+    }
+
+    /**
+     * Send JSON success response
+     */
+    public static function sendJsonSuccess(mixed $data = null, int $code = 200): void
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $data]);
+        exit;
+    }
+
+    /**
+     * Send JSON error response
+     */
+    public static function sendJsonError(mixed $data = null, int $code = 400): void
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'data' => $data]);
+        exit;
+    }
+
+    // =========================================================================
+    // Widgets
+    // =========================================================================
+
+    /**
+     * Register a widget
+     */
+    public static function registerWidget(string $id, array $config): void
+    {
+        self::$widgets[$id] = array_merge([
+            'title' => $id,
+            'description' => '',
+            'callback' => null,
+            'settings' => [],
+        ], $config);
+    }
+
+    /**
+     * Get registered widgets
+     */
+    public static function getWidgets(): array
+    {
+        return self::$widgets;
+    }
+
+    /**
+     * Render a widget
+     */
+    public static function renderWidget(string $id, array $args = []): string
+    {
+        if (!isset(self::$widgets[$id]) || !is_callable(self::$widgets[$id]['callback'])) {
             return '';
         }
 
         try {
-            $result = call_user_func(self::$tags[$name]['callback'], $attrs, $content, $name);
-            return is_string($result) ? $result : '';
+            ob_start();
+            call_user_func(self::$widgets[$id]['callback'], $args);
+            return ob_get_clean();
         } catch (\Throwable $e) {
-            // Log error in development, return empty in production
-            if (defined('CMS_DEBUG') && CMS_DEBUG) {
-                return '<!-- Tag error: ' . htmlspecialchars($e->getMessage()) . ' -->';
-            }
             return '';
+        }
+    }
+
+    // =========================================================================
+    // REST API
+    // =========================================================================
+
+    /**
+     * Register a REST API route
+     */
+    public static function registerRestRoute(string $namespace, string $route, array $config): void
+    {
+        $key = $namespace . '/' . ltrim($route, '/');
+        self::$restRoutes[$key] = array_merge([
+            'methods' => ['GET'],
+            'callback' => null,
+            'permission_callback' => null,
+        ], $config);
+    }
+
+    /**
+     * Get REST routes
+     */
+    public static function getRestRoutes(): array
+    {
+        return self::$restRoutes;
+    }
+
+    /**
+     * Handle REST request - returns true if handled, false if not
+     */
+    public static function handleRestRequest(string $path): bool
+    {
+        if (empty(self::$restRoutes)) {
+            return false;
+        }
+        
+        foreach (self::$restRoutes as $route => $config) {
+            $pattern = preg_replace('/\{([^}]+)\}/', '(?P<$1>[^/]+)', $route);
+            if (preg_match('#^' . $pattern . '$#', $path, $matches)) {
+                $method = $_SERVER['REQUEST_METHOD'];
+                
+                if (!in_array($method, (array)$config['methods'])) {
+                    self::sendJsonError(['message' => 'Method not allowed'], 405);
+                }
+
+                // Check permission
+                if ($config['permission_callback'] && !call_user_func($config['permission_callback'])) {
+                    self::sendJsonError(['message' => 'Forbidden'], 403);
+                }
+
+                // Extract params
+                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                
+                try {
+                    $result = call_user_func($config['callback'], $params);
+                    self::sendJsonSuccess($result);
+                } catch (\Throwable $e) {
+                    self::sendJsonError(['message' => $e->getMessage()], 500);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // =========================================================================
+    // Cron / Scheduled Tasks
+    // =========================================================================
+
+    /**
+     * Schedule a recurring task
+     */
+    public static function scheduleCron(string $hook, string $interval, callable $callback): void
+    {
+        self::$cronJobs[$hook] = [
+            'interval' => $interval,
+            'callback' => $callback,
+        ];
+    }
+
+    /**
+     * Unschedule a cron job
+     */
+    public static function unscheduleCron(string $hook): void
+    {
+        unset(self::$cronJobs[$hook]);
+        deleteOption('cron_last_run_' . $hook);
+    }
+
+    /**
+     * Process due cron jobs
+     */
+    public static function processCronJobs(): void
+    {
+        $intervals = [
+            'hourly' => 3600,
+            'twicedaily' => 43200,
+            'daily' => 86400,
+            'weekly' => 604800,
+        ];
+
+        foreach (self::$cronJobs as $hook => $job) {
+            $lastRun = (int)getOption('cron_last_run_' . $hook, 0);
+            $interval = $intervals[$job['interval']] ?? 86400;
+            
+            if (time() - $lastRun >= $interval) {
+                try {
+                    call_user_func($job['callback']);
+                    setOption('cron_last_run_' . $hook, time());
+                } catch (\Throwable $e) {
+                    // Log error silently
+                }
+            }
         }
     }
 
@@ -360,7 +911,7 @@ class Plugin
     // =========================================================================
 
     /**
-     * Get list of active plugins from database
+     * Get list of active plugins
      */
     public static function getActivePlugins(): array
     {
@@ -384,6 +935,13 @@ class Plugin
             return ['success' => false, 'error' => 'Plugin not found'];
         }
         
+        // Check requirements
+        $header = self::getPluginHeader($pluginFile);
+        $reqCheck = self::checkRequirements($header, true);
+        if ($reqCheck !== true) {
+            return ['success' => false, 'error' => $reqCheck];
+        }
+        
         $activePlugins = self::getActivePlugins();
         
         if (in_array($slug, $activePlugins)) {
@@ -395,6 +953,7 @@ class Plugin
         
         // Run activation hook
         self::doAction('plugin_activate_' . $slug);
+        self::doAction('plugin_activated', $slug);
         
         $activePlugins[] = $slug;
         setOption('active_plugins', json_encode($activePlugins));
@@ -415,11 +974,53 @@ class Plugin
         
         // Run deactivation hook
         self::doAction('plugin_deactivate_' . $slug);
+        self::doAction('plugin_deactivated', $slug);
         
         $activePlugins = array_filter($activePlugins, fn($p) => $p !== $slug);
         setOption('active_plugins', json_encode(array_values($activePlugins)));
         
         return ['success' => true];
+    }
+
+    /**
+     * Uninstall a plugin (delete settings and files)
+     */
+    public static function uninstall(string $slug): array
+    {
+        // Deactivate first
+        self::deactivate($slug);
+        
+        // Run uninstall hook
+        self::doAction('plugin_uninstall_' . $slug);
+        
+        // Delete plugin settings
+        self::deleteSettings($slug);
+        
+        // Delete plugin folder
+        $pluginDir = CMS_ROOT . '/plugins/' . $slug;
+        if (is_dir($pluginDir)) {
+            self::deleteDirectory($pluginDir);
+        }
+        
+        return ['success' => true];
+    }
+
+    /**
+     * Delete a directory recursively
+     */
+    private static function deleteDirectory(string $dir): bool
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+        
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . '/' . $file;
+            is_dir($path) ? self::deleteDirectory($path) : unlink($path);
+        }
+        
+        return rmdir($dir);
     }
 
     /**
@@ -448,8 +1049,9 @@ class Plugin
                 continue;
             }
             
-            // Read plugin header
             $header = self::getPluginHeader($pluginFile);
+            $hasSettings = isset(self::$settingsSchemas[$dir]) || 
+                          (isset(self::$adminPages[$dir . '-settings']));
             
             $plugins[] = [
                 'slug' => $dir,
@@ -457,7 +1059,13 @@ class Plugin
                 'description' => $header['description'] ?? '',
                 'version' => $header['version'] ?? '1.0.0',
                 'author' => $header['author'] ?? '',
+                'author_uri' => $header['author_uri'] ?? '',
+                'plugin_uri' => $header['plugin_uri'] ?? '',
+                'requires_php' => $header['requires_php'] ?? '',
+                'requires_cms' => $header['requires_cms'] ?? '',
                 'active' => in_array($dir, $activePlugins),
+                'has_settings' => $hasSettings,
+                'file' => $pluginFile,
             ];
         }
         
@@ -469,25 +1077,58 @@ class Plugin
      */
     public static function getPluginHeader(string $file): array
     {
-        $content = file_get_contents($file, false, null, 0, 2048);
+        if (!file_exists($file)) {
+            return [];
+        }
+        
+        $content = file_get_contents($file, false, null, 0, 4096);
         
         $headers = [
             'name' => 'Plugin Name',
             'description' => 'Description',
             'version' => 'Version',
             'author' => 'Author',
-            'requires' => 'Requires',
+            'author_uri' => 'Author URI',
+            'plugin_uri' => 'Plugin URI',
+            'requires_php' => 'Requires PHP',
+            'requires_cms' => 'Requires CMS',
+            'license' => 'License',
+            'text_domain' => 'Text Domain',
         ];
         
         $result = [];
         
         foreach ($headers as $key => $label) {
-            if (preg_match('/^[\s\*]*' . preg_quote($label) . ':\s*(.+)$/mi', $content, $matches)) {
+            if (preg_match('/^[\s\*]*' . preg_quote($label, '/') . ':\s*(.+)$/mi', $content, $matches)) {
                 $result[$key] = trim($matches[1]);
             }
         }
         
         return $result;
+    }
+
+    /**
+     * Check plugin requirements
+     */
+    public static function checkRequirements(array $header, bool $returnError = false): bool|string
+    {
+        // Check PHP version
+        if (!empty($header['requires_php'])) {
+            if (version_compare(PHP_VERSION, $header['requires_php'], '<')) {
+                $error = 'Requires PHP ' . $header['requires_php'] . ' or higher';
+                return $returnError ? $error : false;
+            }
+        }
+        
+        // Check CMS version
+        if (!empty($header['requires_cms'])) {
+            if (version_compare(CMS_VERSION, $header['requires_cms'], '<')) {
+                $error = 'Requires VoidForge CMS ' . $header['requires_cms'] . ' or higher';
+                return $returnError ? $error : false;
+            }
+        }
+        
+        return true;
     }
 
     /**
@@ -505,94 +1146,217 @@ class Plugin
     {
         return array_keys(self::$plugins);
     }
+
+    /**
+     * Get plugin data
+     */
+    public static function getPluginData(string $slug): array
+    {
+        return self::$pluginData[$slug] ?? [];
+    }
+
+    // =========================================================================
+    // Database Helpers
+    // =========================================================================
+
+    /**
+     * Create a database table for a plugin
+     */
+    public static function createTable(string $tableName, string $sql): bool
+    {
+        $fullTableName = Database::table($tableName);
+        $createSql = "CREATE TABLE IF NOT EXISTS `{$fullTableName}` ({$sql}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+        
+        try {
+            Database::query($createSql);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Drop a database table
+     */
+    public static function dropTable(string $tableName): bool
+    {
+        $fullTableName = Database::table($tableName);
+        
+        try {
+            Database::query("DROP TABLE IF EXISTS `{$fullTableName}`");
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }
 
 // =========================================================================
 // Helper Functions
 // =========================================================================
 
-/**
- * Add an action hook
- */
-function add_action(string $hook, callable $callback, int $priority = 10): void
+function add_action(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
 {
-    Plugin::addAction($hook, $callback, $priority);
+    Plugin::addAction($hook, $callback, $priority, $acceptedArgs);
 }
 
-/**
- * Execute an action
- */
+function remove_action(string $hook, callable $callback, int $priority = 10): bool
+{
+    return Plugin::removeAction($hook, $callback, $priority);
+}
+
 function do_action(string $hook, ...$args): void
 {
     Plugin::doAction($hook, ...$args);
 }
 
-/**
- * Add a filter hook
- */
-function add_filter(string $hook, callable $callback, int $priority = 10): void
+function has_action(string $hook): bool
 {
-    Plugin::addFilter($hook, $callback, $priority);
+    return Plugin::hasAction($hook);
 }
 
-/**
- * Apply filters
- */
+function add_filter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
+{
+    Plugin::addFilter($hook, $callback, $priority, $acceptedArgs);
+}
+
 function apply_filters(string $hook, mixed $value, ...$args): mixed
 {
     return Plugin::applyFilters($hook, $value, ...$args);
 }
 
-/**
- * Register a content tag
- * 
- * Example:
- *   register_tag('button', function($attrs, $content) {
- *       $class = $attrs['class'] ?? 'btn';
- *       $href = $attrs['href'] ?? '#';
- *       return '<a href="' . esc($href) . '" class="' . esc($class) . '">' . $content . '</a>';
- *   }, ['has_content' => true]);
- * 
- * Usage in content: {button href="/contact" class="btn-primary"}Click Me{/button}
- */
+function has_filter(string $hook): bool
+{
+    return Plugin::hasFilter($hook);
+}
+
+// Shortcodes
+function add_shortcode(string $tag, callable $callback): void
+{
+    Plugin::addShortcode($tag, $callback);
+}
+
+function remove_shortcode(string $tag): void
+{
+    Plugin::removeShortcode($tag);
+}
+
+function shortcode_exists(string $tag): bool
+{
+    return Plugin::shortcodeExists($tag);
+}
+
+function do_shortcode(string $content): string
+{
+    return Plugin::doShortcode($content);
+}
+
+// Legacy tags
 function register_tag(string $name, callable $callback, array $options = []): void
 {
     Plugin::registerTag($name, $callback, $options);
 }
 
-/**
- * Process content tags
- */
 function process_tags(string $content): string
 {
     return Plugin::processContent($content);
 }
 
-/**
- * Register a plugin admin page
- * 
- * Example:
- *   add_admin_page('my-plugin', [
- *       'title' => 'My Plugin Settings',
- *       'menu_title' => 'My Plugin',
- *       'icon' => 'settings',
- *       'callback' => function() {
- *           echo '<h1>My Plugin Settings</h1>';
- *           // ... render settings form
- *       }
- *   ]);
- * 
- * The page will be accessible at: /admin/plugin-page.php?page=my-plugin
- */
+// Admin pages
 function add_admin_page(string $slug, array $config): void
 {
+    // Default parent to 'plugins' if not specified
+    // Set parent to null or '' to make it a top-level menu
+    if (!array_key_exists('parent', $config)) {
+        $config['parent'] = 'plugins';
+    }
     Plugin::registerAdminPage($slug, $config);
 }
 
-/**
- * Get registered admin pages
- */
 function get_admin_pages(): array
 {
     return Plugin::getAdminPages();
+}
+
+// Admin notices
+function add_admin_notice(string $message, string $type = 'info', bool $dismissible = true): void
+{
+    Plugin::addNotice($message, $type, $dismissible);
+}
+
+// Assets
+function enqueue_script(string $handle, string $src, array $deps = [], string $version = '', bool $inFooter = true): void
+{
+    Plugin::enqueueScript($handle, $src, $deps, $version, $inFooter);
+}
+
+function enqueue_style(string $handle, string $src, array $deps = [], string $version = ''): void
+{
+    Plugin::enqueueStyle($handle, $src, $deps, $version);
+}
+
+// Settings
+function register_plugin_settings(string $pluginSlug, array $schema): void
+{
+    Plugin::registerSettings($pluginSlug, $schema);
+}
+
+function get_plugin_setting(string $pluginSlug, string $key, mixed $default = null): mixed
+{
+    return Plugin::getSetting($pluginSlug, $key, $default);
+}
+
+function set_plugin_setting(string $pluginSlug, string $key, mixed $value): void
+{
+    Plugin::setSetting($pluginSlug, $key, $value);
+}
+
+// AJAX
+function register_ajax_handler(string $action, callable $callback, bool $nopriv = false): void
+{
+    Plugin::registerAjax($action, $callback, $nopriv);
+}
+
+function wp_send_json_success(mixed $data = null, int $code = 200): void
+{
+    Plugin::sendJsonSuccess($data, $code);
+}
+
+function wp_send_json_error(mixed $data = null, int $code = 400): void
+{
+    Plugin::sendJsonError($data, $code);
+}
+
+// Widgets
+function register_widget(string $id, array $config): void
+{
+    Plugin::registerWidget($id, $config);
+}
+
+// REST API
+function register_rest_route(string $namespace, string $route, array $config): void
+{
+    Plugin::registerRestRoute($namespace, $route, $config);
+}
+
+// Cron
+function schedule_event(string $hook, string $interval, callable $callback): void
+{
+    Plugin::scheduleCron($hook, $interval, $callback);
+}
+
+function unschedule_event(string $hook): void
+{
+    Plugin::unscheduleCron($hook);
+}
+
+// Database
+function create_plugin_table(string $tableName, string $sql): bool
+{
+    return Plugin::createTable($tableName, $sql);
+}
+
+function drop_plugin_table(string $tableName): bool
+{
+    return Plugin::dropTable($tableName);
 }

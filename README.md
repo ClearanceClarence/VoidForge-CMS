@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.1--beta-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.2-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -11,7 +11,7 @@
 
 No frameworks. No bloat. Just powerful features and elegant code.
 
-[Features](#features) • [Installation](#installation) • [Documentation](#documentation) • [Contributing](#contributing)
+[Features](#-features) • [Installation](#-installation) • [Documentation](#-api-reference) • [Contributing](#-contributing)
 
 </div>
 
@@ -23,12 +23,20 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
 - **Custom Fields** — 14+ field types including text, WYSIWYG, images, files, colors, dates, and more
 - **Field Groups** — Create reusable field groups and assign them to any post type or users
-- **Media Library** — Organize uploads with folders, automatic thumbnails, and drag-and-drop support
+- **Media Library** — Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads
+- **Thumbnail Manager** — View, regenerate, and manage all image sizes with modal preview
 - **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
+
+### Theme System
+- **Multiple Themes** — Ships with Default (dark gradient) and Flavor (light minimal) themes
+- **Theme Settings** — Per-theme customization with colors, sections, features, stats, and CTAs
+- **Unique Landing Pages** — Each theme has its own distinctive landing page design
+- **Custom CSS** — Add custom CSS per theme without editing files
+- **Live Preview** — Real-time preview of theme changes
 
 ### Administration
 - **Modern Admin Interface** — Beautiful dark sidebar with customizable color schemes
-- **Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
+- **Admin Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
 - **Live CSS Editor** — Real-time styling with instant preview for admin and frontend
 - **Granular Font Sizes** — Separate font size controls for sidebar, header, and content areas
 - **80+ Admin Icons** — Extensive icon library for post types and navigation
@@ -38,12 +46,22 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **User Profiles** — Gravatar support and customizable profile fields
 - **Secure Authentication** — Password hashing, CSRF protection, secure sessions
 
+### Plugin System
+- **WordPress-Style Hooks** — Actions and filters for extending functionality
+- **Shortcodes** — `[tag]` syntax for dynamic content
+- **Settings API** — Persistent plugin settings storage
+- **AJAX Handlers** — Easy AJAX endpoint registration
+- **Asset Enqueueing** — Script and style management
+- **Admin Pages** — Add custom admin menu items
+- **REST API Extensions** — Custom REST routes
+- **Scheduled Tasks** — Cron-like task scheduling
+- **Included Plugins** — Starter Shortcodes and Social Share examples
+
 ### Developer Features
-- **Plugin System** — WordPress-style hooks and filters for extending functionality
 - **Theme Support** — Simple PHP templates with full access to all data
-- **REST API** — Built-in API endpoints for security salts and more
-- **Auto Updates** — One-click updates with automatic backups
 - **Clean Architecture** — No framework magic, just readable PHP code
+- **Auto Updates** — One-click updates with automatic backups
+- **Plugin Documentation** — Comprehensive 72KB HTML development guide
 
 ### Security
 - **CSRF Protection** — Token-based form protection
@@ -100,39 +118,32 @@ No frameworks. No bloat. Just powerful features and elegant code.
 voidforge-cms/
 ├── admin/                  # Admin panel files
 │   ├── assets/            # Admin CSS, JS, images
-│   │   ├── css/
-│   │   │   └── admin.css  # Main admin stylesheet
-│   │   └── js/
-│   │       └── admin.js   # Admin JavaScript
 │   ├── includes/          # Admin includes (header, footer, sidebar)
 │   ├── index.php          # Admin dashboard
 │   ├── posts.php          # Post management
-│   ├── post-edit.php      # Post editor
-│   ├── post-types.php     # Custom post types
-│   ├── custom-fields.php  # Custom field groups
-│   ├── media.php          # Media library
-│   ├── users.php          # User management
-│   ├── settings.php       # Site settings
-│   ├── admin-theme.php    # Admin theme settings
+│   ├── media.php          # Media library with modal editing
+│   ├── thumbnails.php     # Thumbnail manager
+│   ├── themes.php         # Theme management
+│   ├── theme-settings.php # Per-theme customization
+│   ├── plugins.php        # Plugin management
 │   └── ...
+├── docs/                  # Documentation
+│   └── plugin-development.html  # Plugin dev guide
 ├── includes/              # Core PHP files
-│   ├── config.php         # Database configuration (generated)
+│   ├── config.php         # Configuration (generated)
 │   ├── database.php       # Database class
 │   ├── functions.php      # Helper functions
 │   ├── user.php           # User class
 │   ├── post.php           # Post class
 │   ├── media.php          # Media class
-│   └── plugin.php         # Plugin system
+│   ├── plugin.php         # Plugin system
+│   └── theme.php          # Theme system
 ├── plugins/               # Plugin directory
+│   ├── starter-shortcodes/# Example shortcodes
+│   └── social-share/      # Example social plugin
 ├── themes/                # Theme directory
-│   └── default/           # Default theme
-│       ├── header.php
-│       ├── footer.php
-│       ├── home.php
-│       ├── single.php
-│       ├── page.php
-│       ├── welcome.php    # Landing page
-│       └── 404.php
+│   ├── default/           # Default dark theme
+│   └── flavor/            # Light minimal theme
 ├── uploads/               # Media uploads
 ├── backups/               # Auto-update backups
 ├── index.php              # Front-end router
@@ -142,45 +153,47 @@ voidforge-cms/
 
 ---
 
-## 🎨 Custom Post Types
+## 🎨 Theme Development
 
-Create custom post types from the admin panel or programmatically:
+Create custom themes in the `/themes` directory:
 
 ```php
-// Register via admin: Structure → Post Types → New Post Type
+<!-- themes/mytheme/index.php -->
+<?php
+/**
+ * Theme Name: My Theme
+ * Description: A custom theme
+ * Version: 1.0.0
+ * Author: Your Name
+ */
 
-// Or use the API:
-$customTypes = getOption('custom_post_types', []);
-$customTypes['portfolio'] = [
-    'label_singular' => 'Project',
-    'label_plural' => 'Portfolio',
-    'icon' => 'briefcase',
-    'public' => true,
-    'fields' => [
-        ['label' => 'Client', 'key' => 'client', 'type' => 'text'],
-        ['label' => 'URL', 'key' => 'project_url', 'type' => 'url'],
-    ]
-];
-setOption('custom_post_types', $customTypes);
+$settings = getThemeSettings('mytheme');
+get_header();
+?>
+
+<main>
+    <?php if ($settings['show_hero'] ?? true): ?>
+        <section class="hero" style="background: <?= esc($settings['primary_color'] ?? '#6366f1') ?>">
+            <h1><?= esc($settings['hero_title'] ?? 'Welcome') ?></h1>
+        </section>
+    <?php endif; ?>
+    
+    <!-- Your theme content -->
+</main>
+
+<?php get_footer(); ?>
 ```
 
-### Available Field Types
+### Theme Settings
 
-| Type | Description |
-|------|-------------|
-| `text` | Single-line text input |
-| `textarea` | Multi-line text area |
-| `number` | Numeric input |
-| `email` | Email address |
-| `url` | URL/link |
-| `date` | Date picker |
-| `datetime` | Date and time picker |
-| `color` | Color picker |
-| `select` | Dropdown selection |
-| `checkbox` | Boolean checkbox |
-| `image` | Image upload/select |
-| `file` | File upload/select |
-| `wysiwyg` | Rich text editor |
+Themes can define customizable settings that appear in the admin:
+
+- Hero section toggle and content
+- Color customization
+- Feature sections
+- Stats display
+- Call-to-action areas
+- Custom CSS
 
 ---
 
@@ -191,10 +204,12 @@ Create plugins using WordPress-style hooks:
 ```php
 <?php
 /**
- * Plugin Name: My Custom Plugin
+ * Plugin Name: My Plugin
  * Description: Adds custom functionality
  * Version: 1.0.0
  * Author: Your Name
+ * Requires PHP: 8.0
+ * Requires CMS: 0.1.2
  */
 
 // Hook into initialization
@@ -207,58 +222,36 @@ add_filter('the_content', function($content) {
     return $content . '<p>Added by plugin!</p>';
 });
 
-// Add admin menu item
-add_action('admin_menu', function() {
-    // Register menu items
+// Register a shortcode
+add_shortcode('hello', function($atts) {
+    $name = $atts['name'] ?? 'World';
+    return "<p>Hello, {$name}!</p>";
 });
+
+// Add settings page
+add_admin_page('my-settings', [
+    'title' => 'My Plugin',
+    'icon' => 'settings',
+    'callback' => function() {
+        // Render settings
+    }
+]);
 ```
 
-### Available Hooks
-
-**Actions:**
-- `init` — After core loads
-- `admin_init` — Admin initialization
-- `admin_menu` — Register admin menus
-- `save_post` — After post is saved
-- `delete_post` — Before post deletion
-- `api_request` — Handle API endpoints
-
-**Filters:**
-- `the_content` — Modify post content
-- `the_title` — Modify post title
-- `post_query` — Modify post queries
+See `/docs/plugin-development.html` for comprehensive documentation.
 
 ---
 
-## 🎭 Theming
+## 🖼️ Media Library
 
-Create custom themes in the `/themes` directory:
+The media library features a modern interface with:
 
-```php
-<!-- themes/mytheme/single.php -->
-<?php get_header(); ?>
-
-<article class="post">
-    <h1><?= esc($post['title']) ?></h1>
-    
-    <?php if ($featuredImage = get_featured_image($post['id'])): ?>
-        <img src="<?= esc($featuredImage['url']) ?>" alt="">
-    <?php endif; ?>
-    
-    <div class="content">
-        <?= $post['content'] ?>
-    </div>
-    
-    <?php 
-    // Get custom field
-    $client = get_custom_field('client', $post['id']);
-    if ($client): ?>
-        <p>Client: <?= esc($client) ?></p>
-    <?php endif; ?>
-</article>
-
-<?php get_footer(); ?>
-```
+- **Grid/List Views** — Toggle between visual grid and detailed list
+- **Full-Screen Modal** — Large preview with editing sidebar
+- **Keyboard Navigation** — Arrow keys to browse, Escape to close
+- **Quick Actions** — Edit title/alt text, copy URL, delete
+- **Drag & Drop Upload** — Drop files anywhere to upload
+- **Folder Organization** — Organize media into folders
 
 ---
 
@@ -280,7 +273,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.1-beta');
+define('CMS_VERSION', '0.1.2');
 define('CMS_NAME', 'VoidForge');
 ```
 
@@ -325,82 +318,51 @@ define('CMS_NAME', 'VoidForge');
 ### Posts
 
 ```php
-// Get all posts
-$posts = Post::all();
-
 // Query posts
 $posts = Post::query([
     'post_type' => 'post',
     'status' => 'published',
-    'limit' => 10,
-    'orderBy' => 'created_at',
-    'order' => 'DESC'
+    'limit' => 10
 ]);
 
-// Find by ID
+// Find by ID or slug
 $post = Post::find($id);
-
-// Find by slug
 $post = Post::findBySlug('hello-world', 'post');
 
-// Create post
-$id = Post::create([
-    'title' => 'My Post',
-    'content' => 'Content here',
-    'post_type' => 'post',
-    'status' => 'published'
-]);
-
-// Update post
-Post::update($id, ['title' => 'Updated Title']);
-
-// Delete post
+// Create/Update/Delete
+$id = Post::create(['title' => 'My Post', ...]);
+Post::update($id, ['title' => 'Updated']);
 Post::delete($id);
 ```
 
 ### Custom Fields
 
 ```php
-// Get single field
 $value = get_custom_field('field_key', $post_id);
-
-// Get all fields
-$fields = get_all_custom_fields($post_id);
-
-// Set field
 set_custom_field('field_key', 'value', $post_id);
-
-// Delete field
-delete_custom_field('field_key', $post_id);
+$fields = get_all_custom_fields($post_id);
 ```
 
 ### Media
 
 ```php
-// Get media item
 $media = Media::find($id);
-
-// Upload file
-$result = Media::upload($_FILES['file'], $folder_id);
-
-// Get featured image
+$result = Media::upload($_FILES['file']);
 $image = get_featured_image($post_id);
-
-// Get thumbnails
-$thumbs = Media::getThumbnails($media_id);
 ```
 
 ### Options
 
 ```php
-// Get option
 $value = getOption('option_name', 'default');
-
-// Set option
 setOption('option_name', $value);
+```
 
-// Delete option
-deleteOption('option_name');
+### Theme Settings
+
+```php
+$settings = getThemeSettings('theme-slug');
+saveThemeSettings('theme-slug', $settings);
 ```
 
 ---

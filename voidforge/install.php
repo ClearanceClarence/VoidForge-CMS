@@ -6,7 +6,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('CMS_VERSION', '0.1.1-beta');
+define('CMS_VERSION', '0.1.2');
 define('CMS_NAME', 'VoidForge CMS');
 define('CMS_ROOT', __DIR__);
 
@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('DB_CHARSET', 'utf8mb4');";
                 $configLines[] = "";
                 $configLines[] = "define('SITE_URL', " . var_export($siteUrl, true) . ");";
-                $configLines[] = "define('CMS_VERSION', '0.1.1-beta');";
+                $configLines[] = "define('CMS_VERSION', '0.1.2');";
                 $configLines[] = "define('CMS_NAME', 'VoidForge');";
                 $configLines[] = "";
                 $configLines[] = "define('ADMIN_PATH', CMS_ROOT . '/admin');";

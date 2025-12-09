@@ -240,6 +240,25 @@ function setOption(string $name, $value): void
 }
 
 /**
+ * Delete option from database
+ */
+function deleteOption(string $name): bool
+{
+    $table = Database::table('options');
+    $existing = Database::queryOne(
+        "SELECT id FROM {$table} WHERE option_name = ?",
+        [$name]
+    );
+    
+    if ($existing) {
+        Database::query("DELETE FROM {$table} WHERE option_name = ?", [$name]);
+        return true;
+    }
+    
+    return false;
+}
+
+/**
  * Pagination helper
  */
 function paginate(int $total, int $perPage, int $currentPage): array

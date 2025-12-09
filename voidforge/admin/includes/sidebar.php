@@ -133,6 +133,27 @@ $postTypes = Post::getTypes();
                     <div class="nav-section-line"></div>
                 </div>
                 
+                <!-- Themes with submenu -->
+                <div class="nav-item-group <?= in_array($currentPage, ['themes', 'theme-settings']) ? 'expanded' : '' ?>">
+                    <a href="#" class="nav-item nav-item-parent" onclick="event.preventDefault(); this.parentElement.classList.toggle('expanded');">
+                        <div class="nav-icon">
+                            <?= getAdminMenuIcon('layers') ?>
+                        </div>
+                        <span class="nav-label">Themes</span>
+                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="<?= ADMIN_URL ?>/themes.php" class="nav-item <?= $currentPage === 'themes' ? 'active' : '' ?>">
+                            <span class="nav-label">Manage Themes</span>
+                            <?php if ($currentPage === 'themes'): ?><div class="nav-indicator"></div><?php endif; ?>
+                        </a>
+                        <a href="<?= ADMIN_URL ?>/theme-settings.php" class="nav-item <?= $currentPage === 'theme-settings' ? 'active' : '' ?>">
+                            <span class="nav-label">Theme Settings</span>
+                            <?php if ($currentPage === 'theme-settings'): ?><div class="nav-indicator"></div><?php endif; ?>
+                        </a>
+                    </div>
+                </div>
+                
                 <a href="<?= ADMIN_URL ?>/customize.php" class="nav-item nav-item-featured <?= $currentPage === 'customize' ? 'active' : '' ?>">
                     <div class="nav-icon">
                         <?= getAdminMenuIcon('palette') ?>
@@ -166,19 +187,44 @@ $postTypes = Post::getTypes();
                     <?php if ($currentPage === 'users'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
                 
-                <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-item <?= $currentPage === 'plugins' ? 'active' : '' ?>">
-                    <div class="nav-icon">
-                        <?= getAdminMenuIcon('puzzle') ?>
+                <?php 
+                // Get plugin pages that are children of 'plugins'
+                $pluginPages = Plugin::getAdminPages();
+                $pluginSubpages = array_filter($pluginPages, fn($p) => ($p['parent'] ?? '') === 'plugins');
+                $pluginsExpanded = $currentPage === 'plugins' || str_starts_with($currentPage, 'plugin-');
+                ?>
+                
+                <!-- Plugins with submenu -->
+                <div class="nav-item-group <?= $pluginsExpanded ? 'expanded' : '' ?>">
+                    <button type="button" class="nav-item nav-item-parent <?= $currentPage === 'plugins' ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
+                        <div class="nav-icon">
+                            <?= getAdminMenuIcon('puzzle') ?>
+                        </div>
+                        <span class="nav-label">Plugins</span>
+                        <?php if (!empty($pluginSubpages)): ?>
+                        <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        <?php endif; ?>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="<?= ADMIN_URL ?>/plugins.php" class="nav-subitem <?= $currentPage === 'plugins' ? 'active' : '' ?>">
+                            Manage Plugins
+                        </a>
+                        <?php foreach ($pluginSubpages as $slug => $page): ?>
+                        <a href="<?= ADMIN_URL ?>/plugin-page.php?page=<?= esc($slug) ?>" class="nav-subitem <?= $currentPage === 'plugin-' . $slug ? 'active' : '' ?>">
+                            <?= esc($page['menu_title']) ?>
+                        </a>
+                        <?php endforeach; ?>
                     </div>
-                    <span class="nav-label">Plugins</span>
-                    <?php if ($currentPage === 'plugins'): ?><div class="nav-indicator"></div><?php endif; ?>
-                </a>
+                </div>
                 
                 <?php 
-                // Show plugin-registered pages
-                $pluginPages = Plugin::getAdminPages();
+                // Show plugin-registered pages that want top-level placement
+                // Authors must explicitly set parent=null or parent='' to appear here
                 foreach ($pluginPages as $slug => $page): 
-                    if (empty($page['parent'])): // Only show top-level pages
+                    $parent = $page['parent'] ?? 'plugins';
+                    if ($parent === '' || $parent === null): // Only show explicitly top-level pages
                 ?>
                 <a href="<?= ADMIN_URL ?>/plugin-page.php?page=<?= esc($slug) ?>" class="nav-item <?= $currentPage === 'plugin-' . $slug ? 'active' : '' ?>">
                     <div class="nav-icon">

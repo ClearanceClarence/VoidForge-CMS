@@ -1,0 +1,12 @@
+{
+    "name": "Flavor",
+    "description": "The default VoidForge theme. Clean, modern, and fully customizable.",
+    "version": "1.0.0",
+    "author": "VoidForge",
+    "author_uri": "https://voidforge.dev",
+    "theme_uri": "https://voidforge.dev/themes/flavor",
+    "requires_php": "8.0",
+    "requires_cms": "0.1.2",
+    "license": "MIT",
+    "tags": ["minimal", "blog", "modern", "responsive", "dark-mode"]
+}

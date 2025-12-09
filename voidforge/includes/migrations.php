@@ -81,5 +81,5 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '0.1.1-beta');
+setOption('cms_version', '0.1.2');
 setOption('last_update', date('Y-m-d H:i:s'));

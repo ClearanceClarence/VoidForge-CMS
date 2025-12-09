@@ -469,147 +469,221 @@ include __DIR__ . '/includes/header.php';
     .thumb-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
 }
 
-/* Detail Panel */
-.panel-overlay {
+/* Detail Modal */
+.thumb-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.3);
-    backdrop-filter: blur(4px);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     z-index: 1000;
-}
-
-.panel-overlay.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.thumb-detail-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 480px;
-    max-width: 95vw;
-    height: 100vh;
-    background: #fff;
-    box-shadow: -8px 0 30px rgba(0,0,0,0.15);
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1001;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.thumb-detail-panel.open {
-    transform: translateX(0);
-}
-
-.panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
-}
-
-.panel-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-}
-
-.panel-close {
-    width: 36px;
-    height: 36px;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    border: none;
-    background: #f1f5f9;
-    border-radius: 10px;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    flex-shrink: 0;
+    padding: 2rem;
 }
+.thumb-modal-backdrop.active { display: flex; }
 
-.panel-close:hover {
-    background: #e2e8f0;
-    color: #1e293b;
-}
-
-.panel-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.5rem;
-}
-
-.panel-preview {
+.thumb-modal {
+    display: grid;
+    grid-template-columns: 1fr 460px;
     width: 100%;
-    aspect-ratio: 16/10;
-    background: #e2e8f0;
-    border-radius: 12px;
+    max-width: 1320px;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 1.5rem;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+.thumb-modal-preview {
+    background: #0f172a;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    min-height: 400px;
 }
-
-.panel-preview img {
+.thumb-modal-preview img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 70vh;
     object-fit: contain;
 }
 
-.panel-meta {
+/* Modal Navigation */
+.modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+.modal-nav:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.1); }
+.modal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+.modal-nav:disabled:hover { transform: translateY(-50%); background: rgba(255,255,255,0.1); }
+.modal-nav.prev { left: 1rem; }
+.modal-nav.next { right: 1rem; }
+.modal-nav svg { width: 24px; height: 24px; }
+
+.modal-counter {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.375rem 0.875rem;
+    background: rgba(0,0,0,0.6);
+    border-radius: 100px;
+    font-size: 0.8125rem;
+    color: rgba(255,255,255,0.8);
+    backdrop-filter: blur(4px);
+}
+
+/* Modal Sidebar - Light Accessible Design */
+.thumb-modal-sidebar {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    width: 460px;
+    max-height: 90vh;
+}
+
+.modal-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.75rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-sidebar-title {
+    font-weight: 700;
+    font-size: 1.0625rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+    margin: 0;
+}
+
+.modal-sidebar-title::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.modal-close-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 10px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.modal-close-btn:hover { 
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.modal-sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.75rem;
+}
+
+/* Meta Card */
+.modal-meta {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+    gap: 0.75rem;
 }
 
 .meta-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    padding: 0.75rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
 }
 
 .meta-label {
     font-size: 0.6875rem;
-    font-weight: 600;
-    color: #94a3b8;
+    font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
 }
 
 .meta-value {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.9375rem;
+    font-weight: 600;
     color: #1e293b;
+    word-break: break-all;
+}
+
+/* Thumbnail Sizes Section */
+.thumb-sizes-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.25rem;
 }
 
 .thumb-sizes-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.75rem;
     margin-bottom: 1rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 1px solid #e2e8f0;
 }
+
+.thumb-sizes-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border-radius: 10px;
+    color: var(--forge-primary, #6366f1);
+}
+.thumb-sizes-icon svg { width: 18px; height: 18px; }
 
 .thumb-sizes-title {
     font-size: 0.9375rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #1e293b;
     margin: 0;
 }
@@ -617,19 +691,21 @@ include __DIR__ . '/includes/header.php';
 .thumb-size-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.625rem;
+    max-height: 450px;
+    overflow-y: auto;
 }
 
 .thumb-size-item {
-    background: #f8fafc;
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 1rem;
-    transition: all 0.15s ease;
+    transition: all 0.2s;
 }
-
 .thumb-size-item:hover {
     border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .thumb-size-item.missing {
@@ -641,29 +717,33 @@ include __DIR__ . '/includes/header.php';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
 }
 
 .thumb-size-name {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #1e293b;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
+.thumb-size-name svg { color: var(--forge-primary, #6366f1); }
 
 .thumb-size-dims {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: #64748b;
     font-weight: 500;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
 .thumb-size-status {
     font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: 700;
     padding: 0.25rem 0.625rem;
     border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .thumb-size-status.ok {
@@ -679,17 +759,17 @@ include __DIR__ . '/includes/header.php';
 .thumb-url-wrapper {
     display: flex;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
 }
 
 .thumb-url-input {
     flex: 1;
-    padding: 0.5rem 0.75rem;
-    background: #fff;
+    padding: 0.625rem 0.75rem;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 0.6875rem;
+    border-radius: 8px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 0.75rem;
     color: #475569;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -697,32 +777,27 @@ include __DIR__ . '/includes/header.php';
 }
 
 .btn-copy {
-    padding: 0.5rem 0.75rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    padding: 0.625rem 0.875rem;
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
+    border: none;
+    border-radius: 8px;
     font-family: inherit;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #475569;
+    color: #fff;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 0.375rem;
     white-space: nowrap;
 }
-
 .btn-copy:hover {
-    background: var(--forge-primary, #6366f1);
-    border-color: var(--forge-primary, #6366f1);
-    color: #fff;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
-
 .btn-copy.copied {
-    background: #10b981;
-    border-color: #10b981;
-    color: #fff;
+    background: linear-gradient(135deg, #10b981, #059669);
 }
 
 .image-item.clickable {
@@ -736,6 +811,14 @@ include __DIR__ . '/includes/header.php';
 .image-item.selected {
     border-color: var(--forge-primary, #6366f1);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+@media (max-width: 1024px) {
+    .thumb-modal { grid-template-columns: 1fr; max-height: 95vh; max-width: 600px; }
+    .thumb-modal-preview { min-height: 280px; }
+    .thumb-modal-preview img { max-height: 40vh; }
+    .modal-nav { width: 44px; height: 44px; }
+    .thumb-modal-sidebar { max-height: 50vh; width: 100%; }
 }
 </style>
 
@@ -936,8 +1019,7 @@ include __DIR__ . '/includes/header.php';
                  data-filename="<?= esc($item['filename']) ?>"
                  data-url="<?= esc($item['original_url']) ?>"
                  data-dimensions="<?= esc($item['dimensions']) ?>"
-                 data-thumbs='<?= json_encode($item['thumbnails']) ?>'
-                 onclick="openDetailPanel(this)">
+                 data-thumbs='<?= json_encode($item['thumbnails']) ?>'>
                 <div class="image-preview">
                     <img src="<?= esc($item['original_url']) ?>" alt="<?= esc($item['filename']) ?>">
                 </div>
@@ -980,172 +1062,223 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Detail Panel -->
-<div class="panel-overlay" onclick="closeDetailPanel()"></div>
-<div class="thumb-detail-panel" id="detailPanel">
-    <div class="panel-header">
-        <h3 class="panel-title" id="panelTitle">Image Details</h3>
-        <button type="button" class="panel-close" onclick="closeDetailPanel()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
-    </div>
-    <div class="panel-content">
-        <div class="panel-preview">
-            <img id="panelImage" src="" alt="">
+<!-- Detail Modal -->
+<div class="thumb-modal-backdrop" id="thumbModal">
+    <div class="thumb-modal">
+        <div class="thumb-modal-preview">
+            <button type="button" class="modal-nav prev" onclick="navigateThumb(-1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <img id="modalImage" src="" alt="">
+            <button type="button" class="modal-nav next" onclick="navigateThumb(1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <div class="modal-counter"><span id="modalCurrent">1</span> / <span id="modalTotal"><?= $totalImages ?></span></div>
         </div>
-        
-        <div class="panel-meta">
-            <div class="meta-item">
-                <span class="meta-label">Filename</span>
-                <span class="meta-value" id="panelFilename">-</span>
+        <div class="thumb-modal-sidebar">
+            <div class="modal-sidebar-header">
+                <h3 class="modal-sidebar-title" id="modalTitle">Image Details</h3>
+                <button type="button" class="modal-close-btn" onclick="closeThumbModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
-            <div class="meta-item">
-                <span class="meta-label">Dimensions</span>
-                <span class="meta-value" id="panelDimensions">-</span>
-            </div>
-        </div>
-        
-        <div class="thumb-sizes-section">
-            <div class="thumb-sizes-header">
-                <h4 class="thumb-sizes-title">Thumbnail Sizes</h4>
-            </div>
-            <div class="thumb-size-list" id="thumbSizeList">
-                <!-- Populated by JavaScript -->
+            <div class="modal-sidebar-body">
+                <div class="modal-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Filename</span>
+                        <span class="meta-value" id="modalFilename">-</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Dimensions</span>
+                        <span class="meta-value" id="modalDimensions">-</span>
+                    </div>
+                </div>
+                
+                <div class="thumb-sizes-section">
+                    <div class="thumb-sizes-header">
+                        <div class="thumb-sizes-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        </div>
+                        <h4 class="thumb-sizes-title">Thumbnail Sizes</h4>
+                    </div>
+                    <div class="thumb-size-list" id="thumbSizeList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-const detailPanel = document.getElementById('detailPanel');
-const overlay = document.querySelector('.panel-overlay');
-let selectedImageItem = null;
+// Store all image items for navigation
+var imageItems = [];
+var currentThumbIndex = 0;
 
 // Thumbnail size definitions from PHP
-const thumbnailSizes = <?= json_encode($sizes) ?>;
+var thumbnailSizes = <?= json_encode($sizes) ?>;
 
-function openDetailPanel(element) {
-    // Deselect previous
-    if (selectedImageItem) {
-        selectedImageItem.classList.remove('selected');
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Collect all image items
+    var items = document.querySelectorAll('.image-item.clickable');
+    for (var i = 0; i < items.length; i++) {
+        imageItems.push({
+            id: items[i].dataset.id,
+            filename: items[i].dataset.filename,
+            url: items[i].dataset.url,
+            dimensions: items[i].dataset.dimensions,
+            thumbs: JSON.parse(items[i].dataset.thumbs)
+        });
+        
+        // Attach click handler
+        (function(idx) {
+            items[idx].addEventListener('click', function(e) {
+                // Don't open modal if clicking on buttons
+                if (e.target.closest('.image-actions')) return;
+                e.preventDefault();
+                openThumbModal(idx);
+            });
+        })(i);
     }
     
-    // Select current
-    element.classList.add('selected');
-    selectedImageItem = element;
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        var modal = document.getElementById('thumbModal');
+        if (!modal || !modal.classList.contains('active')) return;
+        if (e.key === 'Escape') closeThumbModal();
+        if (e.key === 'ArrowLeft') navigateThumb(-1);
+        if (e.key === 'ArrowRight') navigateThumb(1);
+    });
     
-    const data = element.dataset;
+    // Close on backdrop click
+    document.getElementById('thumbModal').addEventListener('click', function(e) {
+        if (e.target === this) closeThumbModal();
+    });
+});
+
+function openThumbModal(index) {
+    currentThumbIndex = index;
+    updateThumbModal();
+    document.getElementById('thumbModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeThumbModal() {
+    document.getElementById('thumbModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function navigateThumb(direction) {
+    var newIndex = currentThumbIndex + direction;
+    if (newIndex >= 0 && newIndex < imageItems.length) {
+        currentThumbIndex = newIndex;
+        updateThumbModal();
+    }
+}
+
+function updateThumbModal() {
+    var item = imageItems[currentThumbIndex];
+    if (!item) return;
     
-    // Populate panel
-    document.getElementById('panelTitle').textContent = data.filename;
-    document.getElementById('panelImage').src = data.url;
-    document.getElementById('panelFilename').textContent = data.filename;
-    document.getElementById('panelDimensions').textContent = data.dimensions;
+    // Update preview
+    document.getElementById('modalImage').src = item.url;
+    document.getElementById('modalTitle').textContent = item.filename;
+    document.getElementById('modalFilename').textContent = item.filename;
+    document.getElementById('modalDimensions').textContent = item.dimensions;
     
-    // Parse thumbnails data
-    const thumbs = JSON.parse(data.thumbs);
+    // Update counter
+    document.getElementById('modalCurrent').textContent = currentThumbIndex + 1;
+    document.getElementById('modalTotal').textContent = imageItems.length;
+    
+    // Update nav buttons
+    document.querySelector('.modal-nav.prev').disabled = currentThumbIndex === 0;
+    document.querySelector('.modal-nav.next').disabled = currentThumbIndex === imageItems.length - 1;
     
     // Build thumbnail sizes list
-    const listHtml = [];
+    var listHtml = [];
+    var thumbs = item.thumbs;
     
     // Add original first
-    listHtml.push(`
-        <div class="thumb-size-item">
-            <div class="thumb-size-header">
-                <span class="thumb-size-name">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
-                    Original
-                </span>
-                <span class="thumb-size-dims">${data.dimensions}</span>
-            </div>
-            <div class="thumb-url-wrapper">
-                <input type="text" class="thumb-url-input" value="${data.url}" readonly>
-                <button type="button" class="btn-copy" onclick="copyUrl(this, '${data.url}')">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    Copy
-                </button>
-            </div>
-        </div>
-    `);
+    listHtml.push(
+        '<div class="thumb-size-item">' +
+            '<div class="thumb-size-header">' +
+                '<span class="thumb-size-name">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                        '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' +
+                        '<circle cx="8.5" cy="8.5" r="1.5"></circle>' +
+                        '<polyline points="21 15 16 10 5 21"></polyline>' +
+                    '</svg>' +
+                    'Original' +
+                '</span>' +
+                '<span class="thumb-size-dims">' + escapeHtml(item.dimensions) + '</span>' +
+            '</div>' +
+            '<div class="thumb-url-wrapper">' +
+                '<input type="text" class="thumb-url-input" value="' + escapeHtml(item.url) + '" readonly>' +
+                '<button type="button" class="btn-copy" onclick="copyUrl(this, \'' + escapeHtml(item.url) + '\')">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                        '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                        '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                    '</svg>' +
+                    'Copy' +
+                '</button>' +
+            '</div>' +
+        '</div>'
+    );
     
     // Add each thumbnail size
-    for (const [name, config] of Object.entries(thumbnailSizes)) {
-        const thumb = thumbs[name];
-        const exists = thumb && thumb.exists;
-        const dims = config[0] + '×' + config[1] + (config[2] ? ' crop' : '');
+    for (var name in thumbnailSizes) {
+        var config = thumbnailSizes[name];
+        var thumb = thumbs[name];
+        var exists = thumb && thumb.exists;
+        var dims = config[0] + '×' + config[1] + (config[2] ? ' crop' : '');
         
         if (exists && thumb.url) {
-            listHtml.push(`
-                <div class="thumb-size-item">
-                    <div class="thumb-size-header">
-                        <span class="thumb-size-name">${escapeHtml(name)}</span>
-                        <span class="thumb-size-status ok">✓ Generated</span>
-                    </div>
-                    <div class="thumb-size-dims">${dims}${thumb.actual_dims ? ' → ' + thumb.actual_dims : ''}</div>
-                    <div class="thumb-url-wrapper">
-                        <input type="text" class="thumb-url-input" value="${thumb.url}" readonly>
-                        <button type="button" class="btn-copy" onclick="copyUrl(this, '${thumb.url}')">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                            Copy
-                        </button>
-                    </div>
-                </div>
-            `);
+            listHtml.push(
+                '<div class="thumb-size-item">' +
+                    '<div class="thumb-size-header">' +
+                        '<span class="thumb-size-name">' + escapeHtml(name) + '</span>' +
+                        '<span class="thumb-size-status ok">✓ Generated</span>' +
+                    '</div>' +
+                    '<div class="thumb-size-dims">' + dims + (thumb.actual_dims ? ' → ' + thumb.actual_dims : '') + '</div>' +
+                    '<div class="thumb-url-wrapper">' +
+                        '<input type="text" class="thumb-url-input" value="' + escapeHtml(thumb.url) + '" readonly>' +
+                        '<button type="button" class="btn-copy" onclick="copyUrl(this, \'' + escapeHtml(thumb.url) + '\')">' +
+                            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                                '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                                '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                            '</svg>' +
+                            'Copy' +
+                        '</button>' +
+                    '</div>' +
+                '</div>'
+            );
         } else {
-            listHtml.push(`
-                <div class="thumb-size-item missing">
-                    <div class="thumb-size-header">
-                        <span class="thumb-size-name">${escapeHtml(name)}</span>
-                        <span class="thumb-size-status missing">Missing</span>
-                    </div>
-                    <div class="thumb-size-dims">${dims}</div>
-                </div>
-            `);
+            listHtml.push(
+                '<div class="thumb-size-item missing">' +
+                    '<div class="thumb-size-header">' +
+                        '<span class="thumb-size-name">' + escapeHtml(name) + '</span>' +
+                        '<span class="thumb-size-status missing">Missing</span>' +
+                    '</div>' +
+                    '<div class="thumb-size-dims">' + dims + '</div>' +
+                '</div>'
+            );
         }
     }
     
     document.getElementById('thumbSizeList').innerHTML = listHtml.join('');
-    
-    // Open panel
-    detailPanel.classList.add('open');
-    overlay.classList.add('open');
-}
-
-function closeDetailPanel() {
-    detailPanel.classList.remove('open');
-    overlay.classList.remove('open');
-    
-    if (selectedImageItem) {
-        selectedImageItem.classList.remove('selected');
-        selectedImageItem = null;
-    }
 }
 
 function copyUrl(btn, url) {
-    navigator.clipboard.writeText(url).then(() => {
-        const originalText = btn.innerHTML;
+    navigator.clipboard.writeText(url).then(function() {
+        var originalText = btn.innerHTML;
         btn.classList.add('copied');
-        btn.innerHTML = `
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Copied!
-        `;
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
         
-        setTimeout(() => {
+        setTimeout(function() {
             btn.classList.remove('copied');
             btn.innerHTML = originalText;
         }, 2000);
@@ -1153,22 +1286,11 @@ function copyUrl(btn, url) {
 }
 
 function escapeHtml(text) {
-    const div = document.createElement('div');
+    if (!text) return '';
+    var div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML;
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-
-// Keyboard shortcut to close panel
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && detailPanel.classList.contains('open')) {
-        closeDetailPanel();
-    }
-});
-
-// Stop propagation on form buttons to prevent opening panel
-document.querySelectorAll('.image-actions button, .image-actions a').forEach(el => {
-    el.addEventListener('click', (e) => e.stopPropagation());
-});
 </script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -11,7 +11,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'VoidForge');
-define('CMS_VERSION', '0.1.1-beta');
+define('CMS_VERSION', '0.1.2');
 
 // Database settings - configured during installation
 define('DB_HOST', '');
@@ -34,10 +34,6 @@ define('UPLOADS_URL', SITE_URL . '/uploads');
 define('PLUGINS_PATH', CMS_ROOT . '/plugins');
 define('PLUGINS_URL', SITE_URL . '/plugins');
 define('THEMES_URL', SITE_URL . '/themes');
-
-// Current theme
-define('CURRENT_THEME', 'default');
-define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);
 
 // Session settings
 define('SESSION_NAME', 'voidforge_session');

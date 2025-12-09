@@ -1,0 +1,12 @@
+{
+    "name": "Default",
+    "description": "The original VoidForge theme with a bold, modern design featuring gradient accents and dark mode support.",
+    "version": "1.0.0",
+    "author": "VoidForge",
+    "author_uri": "https://voidforge.dev",
+    "theme_uri": "https://voidforge.dev/themes/default",
+    "requires_php": "8.0",
+    "requires_cms": "0.1.2",
+    "license": "MIT",
+    "tags": ["dark", "modern", "gradient", "responsive", "blog"]
+}

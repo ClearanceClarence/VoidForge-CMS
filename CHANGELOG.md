@@ -7,7 +7,169 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1-beta] - 2025-12-08
+## [0.1.2] - 2025-12-09
+
+### 🎨 Theme System
+
+#### Theme Settings
+- **Per-Theme Customization** — Each theme can now have its own settings
+- New admin page: `theme-settings.php` for managing theme options
+- Settings categories: Colors, Hero Section, Features, Stats, CTA, Custom CSS
+- Live preview with iframe-based real-time updates
+- Settings persist per-theme in database
+
+#### Multiple Themes
+- **Default Theme** — Dark gradient design with animated background grid, glowing orbs, bento grid layout
+- **Flavor Theme** — Light, minimal design with clean typography and soft shadows
+- Each theme has unique landing page (`welcome.php`)
+- Theme switching preserves individual theme settings
+
+#### Theme Features
+- Hero section with customizable title, subtitle, and buttons
+- Feature cards (up to 6) with icons, titles, and descriptions
+- Stats bar with customizable metrics
+- CTA section with gradient background
+- Custom CSS injection without file editing
+
+### 🖼️ Media Library Redesign
+
+#### Full-Screen Modal
+- **New Modal Interface** — Replaced inline editing with full-screen modal
+- Two-column layout: large preview area + editing sidebar
+- Dark preview background for better image visibility
+- Keyboard navigation: Arrow keys to browse, Escape to close
+
+#### Navigation
+- Previous/Next buttons with hover effects
+- Counter badge showing current position (e.g., "3 / 24")
+- Disabled states at boundaries
+- Smooth transitions between images
+
+#### Sidebar Design (Light Theme)
+- Clean white background with subtle gray cards
+- Section cards with icons: Information, Edit Details, File URL
+- Purple gradient accent bar in header
+- Larger, more accessible form inputs (0.875rem padding)
+- 440px width for comfortable editing
+
+#### Grid/List Views
+- Toggle between visual grid and detailed list view
+- Persistent view preference
+- Responsive grid layout
+
+### 📸 Thumbnails Page Redesign
+
+#### Full-Screen Modal
+- **Converted from Slide Panel** — Now uses full-screen modal like Media Library
+- Two-column layout matching Media Library design
+- Dark preview area with navigation controls
+- Keyboard navigation support
+
+#### Sidebar Design (Light Theme)
+- 460px width for thumbnail size list
+- Meta card showing filename and dimensions
+- Scrollable thumbnail sizes section (max-height: 450px)
+- Each size shows: name, dimensions, status badge, URL with copy button
+
+#### Thumbnail Size Items
+- White cards with subtle borders
+- Status badges: green "OK" or red "MISSING"
+- Gradient copy buttons with success state
+- Hover effects on cards
+
+### 🔌 Plugin System Enhancements
+
+#### Comprehensive Documentation
+- **72KB HTML Documentation** — Complete plugin development guide
+- Located at `/docs/plugin-development.html`
+- Covers: Hooks, Shortcodes, Settings API, AJAX, REST API, Widgets, Cron, Database
+- Code examples for every feature
+- Styled with VoidForge branding
+
+#### Plugin Features
+- Shortcode system with nested support
+- Settings API with persistent storage
+- AJAX handler registration
+- Asset enqueueing (scripts/styles)
+- Admin notices system
+- Widget registration
+- REST API extensions
+- Scheduled tasks (cron)
+- Database table helpers
+
+#### Included Plugins
+- **Starter Shortcodes** — 15+ ready-to-use shortcodes
+- **Social Share** — Social sharing with settings page
+
+### 🐛 Bug Fixes
+
+#### Critical Fixes
+- **Modal Function Conflict** — Fixed global `openModal()` collision between admin.js and media.php
+- Renamed to `openMediaModal()` and `openThumbModal()` for unique namespacing
+- Fixed click events not firing on media gallery items
+
+#### JavaScript Improvements
+- ES5 syntax for maximum browser compatibility
+- Traditional for loops with closures for event handlers
+- All functions defined before use
+- Removed debug console.log statements
+
+### 🎯 UI/UX Improvements
+
+#### Accessibility
+- Light theme sidebars (not dark) for better readability
+- Larger touch targets (40px+ buttons)
+- Higher contrast text (#1e293b on white)
+- Larger font sizes throughout (0.875rem - 0.9375rem base)
+
+#### Responsive Design
+- Breakpoint at 1024px for modal layouts
+- Stacked layout on smaller screens
+- Sidebar becomes scrollable bottom panel on mobile
+- Navigation buttons resize appropriately
+
+#### Copy URL Feature
+- Gradient purple copy buttons
+- Success state with green color and checkmark
+- Auto-reset after 1.5 seconds
+
+### 📁 New Files
+
+```
+docs/
+└── plugin-development.html    # 72KB plugin dev documentation
+
+themes/
+├── default/
+│   └── welcome.php           # Dark gradient landing page
+└── flavor/
+    ├── index.php             # Theme entry point
+    ├── header.php
+    ├── footer.php
+    ├── home.php
+    ├── single.php
+    ├── page.php
+    ├── archive.php
+    ├── welcome.php           # Light minimal landing page
+    └── 404.php
+
+admin/
+├── themes.php                # Theme management
+└── theme-settings.php        # Per-theme customization
+```
+
+### 📝 Modified Files
+
+- `includes/config.php` — Version updated to 0.1.2
+- `includes/functions.php` — Added `getThemeSettings()`, `saveThemeSettings()`
+- `admin/media.php` — Complete modal redesign, light sidebar
+- `admin/thumbnails.php` — Converted to modal, light sidebar
+- `admin/includes/sidebar.php` — Added Themes menu section
+- `README.md` — Updated for 0.1.2 features
+
+---
+
+## [0.1.1] - 2025-12-08
 
 ### 🎨 Major Rebrand
 - **Renamed from Forge CMS to VoidForge CMS** — Complete rebrand with new identity
@@ -21,130 +183,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Custom Fields System
 - **New Custom Field Groups** — Create reusable field groups
 - Assign field groups to any post type or users
-- 14 field types supported: text, textarea, number, email, url, date, datetime, color, select, checkbox, image, file, wysiwyg
-- Field groups now automatically appear in post editor when assigned
+- 14 field types supported
+- Field groups automatically appear in post editor when assigned
 - New admin pages: `custom-fields.php` and `custom-field-edit.php`
 
 #### Admin Theme Enhancements
 - **Granular Font Size Controls** — Separate settings for sidebar, header, and content
 - Font sizes: Small (12px), Medium (14px), Large (16px)
 - **Custom Color Scheme Management** — Save up to 5 custom color schemes
-- Delete confirmation modal for color schemes (replaces JS alert)
-- Color scheme cards show preview dots for primary, secondary, and sidebar colors
+- Delete confirmation modal for color schemes
 
 #### Icon Library Expansion
 - **80+ Admin Icons** — Expanded from 16 to 80+ icons
-- Icons organized by category:
-  - Content: document, article, book, bookmark, archive, folder, copy
-  - Media: image, video, music, mic, camera
-  - Commerce: shopping-bag, package, truck, briefcase, gift, tag
-  - People & Social: users, user, heart, thumbs-up, share, mail, phone
-  - Interface: star, flag, award, target, compass, map-pin
-  - Objects: box, layers, grid, calendar, clock, tool, key, shield, lock
-  - Tech: code, terminal, database, server, cpu, globe, link, zap
-  - Misc: coffee, home, settings, eye, edit, printer, save, and more
-
-#### Post Date Tracking
-- Enhanced date display in post editor sidebar
-- Shows: Published date, Updated date (when different), Created date
-- All timestamps with time display (M j, Y g:i a format)
+- Icons organized by category
 
 #### Landing Page
 - **Stunning New Welcome Page** — Complete overhaul
 - Dark theme with animated background grid
 - Glowing orb effects and gradient text
 - Feature showcase with 6 feature cards
-- Stats bar (0 Dependencies, 14+ Field Types, 80+ Icons, ∞ Possibilities)
-- Bento grid layout for highlighting capabilities
-- Technology stack section
-- Call-to-action sections with animated background
-- Fully responsive design
+- Stats bar and bento grid layout
 
 ### 🔧 Improvements
 
 #### UI/UX Consistency
-- **Unified Structure Pages** — Post Types and Custom Fields now share CSS classes
-- New shared classes in `admin.css`:
-  - `.structure-page` — Page container
-  - `.structure-header` — Page header with title and action
-  - `.btn-primary-action` — Primary gradient button
-  - `.info-box` — Blue info/help box
-  - `.items-grid` / `.item-card` — Card-based layouts
-  - `.item-actions` / `.item-btn` — Action buttons
-  - `.modal-overlay` / `.modal-box` — Confirmation modals
-  - `.data-table` — Table styling
-  - `.empty-state` — Empty state displays
+- **Unified Structure Pages** — Post Types and Custom Fields share CSS classes
 - Removed inline `<style>` blocks from structure pages
 - Consistent button styling across all pages
 
 #### Delete Confirmations
 - All delete actions now use proper modal dialogs
 - No more JavaScript `confirm()` alerts
-- Cancel and Delete buttons with proper styling
-- Click outside or press Escape to close
-
-#### Button Styling
-- Improved `.btn-primary-action` with box-shadow and hover effects
-- Fixed border-radius consistency (12px)
-- Better SVG icon sizing (18x18)
-
-#### Footer Positioning
-- Fixed admin footer not staying at bottom on short pages
-- Updated `.admin-content` to use `flex: 1 0 auto`
 
 ### 🐛 Bug Fixes
-
-#### Critical Fixes
-- **Plugin Class Error** — Added missing `require_once` for Plugin class in 15 admin files
-- **Update System Network Errors** — Fixed curl configuration for proper error handling
-- **Package Structure** — Fixed missing directories in update packages
-
-#### Database & Data
+- **Plugin Class Error** — Added missing `require_once` for Plugin class
+- **Update System Network Errors** — Fixed curl configuration
 - **Date Format Display** — Fixed corrupted date format
-- `formatDate()` now uses site's configured date format by default
-- Added format sanitization to prevent invalid characters
-- Falls back to 'M j, Y' if format is invalid
-
-#### Installation
 - **Homepage Setting** — Fresh installs no longer set a homepage by default
-- Demo landing page (welcome.php) shows on new installations
-- Homepage dropdown now clearly shows "— None (show demo page) —" option
-- Creates "About" sample page instead of "Home" page
-
-#### Custom Fields Integration
-- **Field Groups Not Showing** — Fixed `get_post_type_fields()` to include fields from Custom Field Groups
-- Fields from assigned groups now appear in post editor
-- Fields include source tracking (post_type vs field_group)
-
-### 📝 Documentation
-- **Comprehensive README.md** — Complete rewrite
-- **CHANGELOG.md** — This file, documenting all changes
-
-### 🗂️ File Changes
-
-#### New Files
-- `admin/custom-fields.php` — Field group listing
-- `admin/custom-field-edit.php` — Field group editor
-- `CHANGELOG.md` — This changelog
-
-#### Modified Files
-- `admin/assets/css/admin.css` — Added 200+ lines of shared structure page styles
-- `admin/includes/header.php` — Granular font size CSS variables
-- `admin/includes/sidebar.php` — Added Custom Fields nav link
-- `admin/admin-theme.php` — Font size controls, delete modal
-- `admin/post-types.php` — Rewritten with shared classes
-- `admin/settings.php` — Updated homepage dropdown text
-- `includes/functions.php` — Updated `get_post_type_fields()`, `formatDate()`
-- `install.php` — Removed auto homepage setting, renamed sample page
-- `themes/default/welcome.php` — Complete redesign
-- `README.md` — Complete rewrite
-- Multiple admin files — Added Plugin class include
+- **Custom Fields Integration** — Fixed `get_post_type_fields()` to include field groups
 
 ---
 
-## [0.1.0-beta] - 2025-12-08
+## [0.1.0] - 2025-12-08
 
-### Initial Beta Release
+### Initial Release
 - Core CMS functionality
 - Custom post types with custom fields
 - Media library with folder organization
@@ -164,10 +246,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-| Version | Date | Codename |
-|---------|------|----------|
-| 0.1.1-beta | 2025-12-08 | VoidForge |
-| 0.1.0-beta | 2025-12-08 | Genesis |
+| Version | Date | Highlights |
+|---------|------|------------|
+| 0.1.2 | 2025-12-09 | Theme system, Media/Thumbnails modal redesign, Plugin docs |
+| 0.1.1 | 2025-12-08 | VoidForge rebrand, Custom fields, 80+ icons |
+| 0.1.0 | 2025-12-08 | Initial release |
 
 ---
 
