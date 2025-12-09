@@ -1,3229 +1,1977 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidForge CMS — Modern Content Management</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      :root {
-        --white: #ffffff;
-        --gray-25: #fcfcfd;
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
-        --gray-950: #030712;
+        :root {
+            --white: #ffffff;
+            --gray-25: #fcfcfd;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gray-950: #030712;
+            
+            --indigo-50: #eef2ff;
+            --indigo-100: #e0e7ff;
+            --indigo-200: #c7d2fe;
+            --indigo-300: #a5b4fc;
+            --indigo-400: #818cf8;
+            --indigo-500: #6366f1;
+            --indigo-600: #4f46e5;
+            --indigo-700: #4338ca;
+            
+            --violet-50: #f5f3ff;
+            --violet-100: #ede9fe;
+            --violet-400: #a78bfa;
+            --violet-500: #8b5cf6;
+            --violet-600: #7c3aed;
+            
+            --purple-500: #a855f7;
+            
+            --emerald-50: #ecfdf5;
+            --emerald-400: #34d399;
+            --emerald-500: #10b981;
+            --emerald-600: #059669;
+            
+            --amber-50: #fffbeb;
+            --amber-400: #fbbf24;
+            --amber-500: #f59e0b;
+            
+            --rose-50: #fff1f2;
+            --rose-400: #fb7185;
+            --rose-500: #f43f5e;
+            
+            --cyan-50: #ecfeff;
+            --cyan-400: #22d3ee;
+            --cyan-500: #06b6d4;
+            
+            --blue-50: #eff6ff;
+            --blue-400: #60a5fa;
+            --blue-500: #3b82f6;
+        }
 
-        --indigo-50: #eef2ff;
-        --indigo-100: #e0e7ff;
-        --indigo-200: #c7d2fe;
-        --indigo-300: #a5b4fc;
-        --indigo-400: #818cf8;
-        --indigo-500: #6366f1;
-        --indigo-600: #4f46e5;
-        --indigo-700: #4338ca;
+        html { scroll-behavior: smooth; }
 
-        --violet-50: #f5f3ff;
-        --violet-100: #ede9fe;
-        --violet-400: #a78bfa;
-        --violet-500: #8b5cf6;
-        --violet-600: #7c3aed;
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--white);
+            color: var(--gray-800);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
 
-        --purple-500: #a855f7;
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+        .container-wide { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
 
-        --emerald-50: #ecfdf5;
-        --emerald-400: #34d399;
-        --emerald-500: #10b981;
-        --emerald-600: #059669;
+        .gradient-text {
+            background: linear-gradient(135deg, var(--indigo-600) 0%, var(--violet-500) 50%, var(--purple-500) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-        --amber-50: #fffbeb;
-        --amber-400: #fbbf24;
-        --amber-500: #f59e0b;
-
-        --rose-50: #fff1f2;
-        --rose-400: #fb7185;
-        --rose-500: #f43f5e;
-
-        --cyan-50: #ecfeff;
-        --cyan-400: #22d3ee;
-        --cyan-500: #06b6d4;
-
-        --blue-50: #eff6ff;
-        --blue-400: #60a5fa;
-        --blue-500: #3b82f6;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        font-family: "Inter", system-ui, -apple-system, sans-serif;
-        background: var(--white);
-        color: var(--gray-800);
-        line-height: 1.6;
-        overflow-x: hidden;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      .container {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 0 2rem;
-      }
-      .container-wide {
-        max-width: 1440px;
-        margin: 0 auto;
-        padding: 0 2rem;
-      }
-
-      .gradient-text {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-600) 0%,
-          var(--violet-500) 50%,
-          var(--purple-500) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      /* ================================================
+        /* ================================================
            ANIMATED BACKGROUND
         ================================================ */
-      .page-bg {
-        position: fixed;
-        inset: 0;
-        z-index: -10;
-        overflow: hidden;
-        background: linear-gradient(
-          180deg,
-          var(--gray-25) 0%,
-          var(--white) 50%,
-          var(--gray-50) 100%
-        );
-      }
-
-      .bg-gradient-orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.5;
-        animation: orbFloat 20s ease-in-out infinite;
-      }
-
-      .bg-gradient-orb-1 {
-        width: 600px;
-        height: 600px;
-        background: linear-gradient(
-          135deg,
-          rgba(99, 102, 241, 0.15),
-          rgba(139, 92, 246, 0.1)
-        );
-        top: -200px;
-        right: -100px;
-        animation-delay: 0s;
-      }
-
-      .bg-gradient-orb-2 {
-        width: 500px;
-        height: 500px;
-        background: linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.1),
-          rgba(168, 85, 247, 0.08)
-        );
-        bottom: -150px;
-        left: -100px;
-        animation-delay: -7s;
-      }
-
-      .bg-gradient-orb-3 {
-        width: 400px;
-        height: 400px;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.08),
-          rgba(99, 102, 241, 0.1)
-        );
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation-delay: -14s;
-      }
-
-      @keyframes orbFloat {
-        0%,
-        100% {
-          transform: translate(0, 0) scale(1);
+        .page-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--gray-25) 0%, var(--white) 50%, var(--gray-50) 100%);
         }
-        25% {
-          transform: translate(30px, -30px) scale(1.05);
-        }
-        50% {
-          transform: translate(-20px, 20px) scale(0.95);
-        }
-        75% {
-          transform: translate(20px, 30px) scale(1.02);
-        }
-      }
 
-      .bg-grid {
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(
-            rgba(99, 102, 241, 0.03) 1px,
-            transparent 1px
-          ),
-          linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-        background-size: 60px 60px;
-        mask-image: radial-gradient(
-          ellipse 80% 60% at 50% 40%,
-          black,
-          transparent
-        );
-      }
+        .bg-gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
 
-      .bg-noise {
-        position: absolute;
-        inset: 0;
-        opacity: 0.02;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      }
+        .bg-gradient-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
 
-      /* ================================================
+        .bg-gradient-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(168,85,247,0.08));
+            bottom: -150px;
+            left: -100px;
+            animation-delay: -7s;
+        }
+
+        .bg-gradient-orb-3 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.1));
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent);
+        }
+
+        .bg-noise {
+            position: absolute;
+            inset: 0;
+            opacity: 0.02;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* ================================================
            HEADER
         ================================================ */
-      .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        padding: 1rem 0;
-        transition: all 0.3s ease;
-      }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
 
-      .header-blur {
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(20px) saturate(180%);
-        border-bottom: 1px solid transparent;
-        transition: all 0.3s ease;
-      }
+        .header-blur {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
 
-      .header.scrolled .header-blur {
-        background: rgba(255, 255, 255, 0.85);
-        border-bottom-color: var(--gray-200);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-      }
+        .header.scrolled .header-blur {
+            background: rgba(255,255,255,0.85);
+            border-bottom-color: var(--gray-200);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.03);
+        }
 
-      .header-inner {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+        .header-inner {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: var(--gray-900);
-      }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--gray-900);
+        }
 
-      .logo-icon {
-        width: 42px;
-        height: 42px;
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500) 0%,
-          var(--violet-500) 100%
-        );
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        position: relative;
-      }
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--indigo-500) 0%, var(--violet-500) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+            position: relative;
+        }
 
-      .logo-icon::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 12px;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.2) 0%,
-          transparent 50%
-        );
-      }
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
 
-      .logo-text {
-        font-weight: 800;
-        font-size: 1.375rem;
-        letter-spacing: -0.03em;
-        background: linear-gradient(
-          135deg,
-          var(--gray-900) 0%,
-          var(--gray-700) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.375rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-700) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-      .nav {
-        display: flex;
-        align-items: center;
-        gap: 2.5rem;
-      }
+        .nav { display: flex; align-items: center; gap: 2.5rem; }
 
-      .nav-links {
-        display: flex;
-        gap: 0.5rem;
-        list-style: none;
-      }
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+        }
 
-      .nav-links a {
-        display: block;
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: var(--gray-600);
-        font-weight: 500;
-        font-size: 0.9375rem;
-        border-radius: 8px;
-        transition: all 0.2s;
-      }
+        .nav-links a {
+            display: block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
 
-      .nav-links a:hover {
-        color: var(--gray-900);
-        background: var(--gray-100);
-      }
+        .nav-links a:hover {
+            color: var(--gray-900);
+            background: var(--gray-100);
+        }
 
-      .nav-cta {
-        display: flex;
-        gap: 0.75rem;
-      }
+        .nav-cta { display: flex; gap: 0.75rem; }
 
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.625rem 1.25rem;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.875rem;
-        text-decoration: none;
-        transition: all 0.2s;
-        border: none;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-      }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
 
-      .btn-ghost {
-        background: transparent;
-        color: var(--gray-700);
-      }
+        .btn-ghost {
+            background: transparent;
+            color: var(--gray-700);
+        }
 
-      .btn-ghost:hover {
-        background: var(--gray-100);
-        color: var(--gray-900);
-      }
+        .btn-ghost:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
 
-      .btn-primary {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500) 0%,
-          var(--violet-500) 100%
-        );
-        color: white;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--indigo-500) 0%, var(--violet-500) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
 
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
 
-      .btn-primary::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.15) 0%,
-          transparent 50%
-        );
-        border-radius: inherit;
-      }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            border-radius: inherit;
+        }
 
-      .btn-secondary {
-        background: var(--white);
-        color: var(--gray-700);
-        border: 1px solid var(--gray-200);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-      }
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
 
-      .btn-secondary:hover {
-        background: var(--gray-50);
-        border-color: var(--gray-300);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      }
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
 
-      .btn-large {
-        padding: 0.875rem 1.75rem;
-        font-size: 0.9375rem;
-        border-radius: 12px;
-      }
+        .btn-large {
+            padding: 0.875rem 1.75rem;
+            font-size: 0.9375rem;
+            border-radius: 12px;
+        }
 
-      .btn-xl {
-        padding: 1rem 2rem;
-        font-size: 1rem;
-        border-radius: 14px;
-      }
+        .btn-xl {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border-radius: 14px;
+        }
 
-      /* ================================================
+        /* ================================================
            HERO SECTION
         ================================================ */
-      .hero {
-        padding: 11rem 0 7rem;
-        position: relative;
-      }
-
-      .hero-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 5rem;
-        align-items: center;
-      }
-
-      .hero-text {
-        max-width: 580px;
-      }
-
-      .hero-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.5rem 0.5rem 0.5rem 0.75rem;
-        background: linear-gradient(135deg, var(--indigo-50), var(--violet-50));
-        border: 1px solid var(--indigo-100);
-        border-radius: 100px;
-        margin-bottom: 1.75rem;
-        animation: fadeInUp 0.6s ease;
-      }
-
-      .hero-eyebrow-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--emerald-500);
-        border-radius: 50%;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-        animation: pulse 2s ease-in-out infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        .hero {
+            padding: 11rem 0 7rem;
+            position: relative;
         }
-        50% {
-          box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5rem;
+            align-items: center;
         }
-      }
 
-      .hero-eyebrow-text {
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--indigo-700);
-      }
+        .hero-text { max-width: 580px; }
 
-      .hero-eyebrow-badge {
-        padding: 0.25rem 0.625rem;
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        color: white;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        border-radius: 100px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .hero h1 {
-        font-size: 4rem;
-        font-weight: 800;
-        line-height: 1.08;
-        letter-spacing: -0.035em;
-        color: var(--gray-900);
-        margin-bottom: 1.5rem;
-        animation: fadeInUp 0.6s ease 0.1s both;
-      }
-
-      .hero-description {
-        font-size: 1.25rem;
-        color: var(--gray-500);
-        line-height: 1.7;
-        margin-bottom: 2.5rem;
-        animation: fadeInUp 0.6s ease 0.2s both;
-      }
-
-      .hero-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 3.5rem;
-        animation: fadeInUp 0.6s ease 0.3s both;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+            background: linear-gradient(135deg, var(--indigo-50), var(--violet-50));
+            border: 1px solid var(--indigo-100);
+            border-radius: 100px;
+            margin-bottom: 1.75rem;
+            animation: fadeInUp 0.6s ease;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+
+        .hero-eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--emerald-500);
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+            animation: pulse 2s ease-in-out infinite;
         }
-      }
 
-      .hero-metrics {
-        display: flex;
-        gap: 3.5rem;
-        animation: fadeInUp 0.6s ease 0.4s both;
-      }
-
-      .hero-metric {
-        position: relative;
-        padding-left: 1rem;
-      }
-
-      .hero-metric::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0.25rem;
-        bottom: 0.25rem;
-        width: 3px;
-        background: linear-gradient(
-          180deg,
-          var(--indigo-400),
-          var(--violet-400)
-        );
-        border-radius: 2px;
-      }
-
-      .hero-metric-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--gray-900);
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-      }
-
-      .hero-metric-label {
-        font-size: 0.875rem;
-        color: var(--gray-500);
-        font-weight: 500;
-      }
-
-      /* Hero Visual */
-      .hero-visual {
-        position: relative;
-        animation: fadeInUp 0.8s ease 0.3s both;
-      }
-
-      .hero-visual-glow {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 120%;
-        height: 120%;
-        background: radial-gradient(
-          ellipse,
-          rgba(99, 102, 241, 0.12) 0%,
-          transparent 60%
-        );
-        pointer-events: none;
-      }
-
-      .hero-window {
-        position: relative;
-        background: var(--white);
-        border-radius: 20px;
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.02),
-          0 12px 24px rgba(0, 0, 0, 0.06), 0 48px 80px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
-        transition: transform 0.5s ease;
-      }
-
-      .hero-window:hover {
-        transform: perspective(1200px) rotateY(-2deg) rotateX(1deg);
-      }
-
-      .window-chrome {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 1.25rem;
-        background: var(--gray-50);
-        border-bottom: 1px solid var(--gray-200);
-      }
-
-      .window-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        transition: transform 0.2s;
-      }
-
-      .window-dot:hover {
-        transform: scale(1.2);
-      }
-      .window-dot.red {
-        background: #ff5f57;
-      }
-      .window-dot.yellow {
-        background: #ffbd2e;
-      }
-      .window-dot.green {
-        background: #28c840;
-      }
-
-      .window-url {
-        flex: 1;
-        margin-left: 1rem;
-        padding: 0.5rem 1rem;
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 8px;
-        font-size: 0.75rem;
-        color: var(--gray-500);
-        font-family: "JetBrains Mono", monospace;
-      }
-
-      .window-body {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        min-height: 380px;
-      }
-
-      .window-sidebar {
-        background: var(--gray-900);
-        padding: 1.25rem;
-      }
-
-      .sidebar-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.5rem;
-        margin-bottom: 1.25rem;
-      }
-
-      .sidebar-brand-icon {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .sidebar-brand-text {
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: var(--white);
-      }
-
-      .sidebar-nav {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-
-      .sidebar-item {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem 0.875rem;
-        border-radius: 8px;
-        font-size: 0.8125rem;
-        color: var(--gray-400);
-        transition: all 0.2s;
-      }
-
-      .sidebar-item:hover {
-        color: var(--gray-200);
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .sidebar-item.active {
-        background: rgba(99, 102, 241, 0.2);
-        color: var(--indigo-300);
-      }
-      .sidebar-item svg {
-        width: 18px;
-        height: 18px;
-        opacity: 0.7;
-      }
-
-      .window-main {
-        background: var(--gray-50);
-        padding: 1.5rem;
-      }
-
-      .main-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-      }
-
-      .main-title {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: var(--gray-900);
-      }
-
-      .main-actions {
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      .main-btn {
-        padding: 0.5rem 0.875rem;
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--gray-600);
-      }
-
-      .main-btn.primary {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        border: none;
-        color: white;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .stat-card {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 12px;
-        padding: 1rem;
-      }
-
-      .stat-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-      }
-
-      .stat-card-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .stat-card-icon.indigo {
-        background: var(--indigo-50);
-        color: var(--indigo-500);
-      }
-      .stat-card-icon.emerald {
-        background: var(--emerald-50);
-        color: var(--emerald-500);
-      }
-      .stat-card-icon.amber {
-        background: var(--amber-50);
-        color: var(--amber-500);
-      }
-
-      .stat-card-badge {
-        padding: 0.125rem 0.5rem;
-        font-size: 0.625rem;
-        font-weight: 600;
-        border-radius: 100px;
-      }
-
-      .stat-card-badge.up {
-        background: var(--emerald-50);
-        color: var(--emerald-600);
-      }
-      .stat-card-badge.down {
-        background: var(--rose-50);
-        color: var(--rose-500);
-      }
-
-      .stat-card-value {
-        font-size: 1.375rem;
-        font-weight: 800;
-        color: var(--gray-900);
-        letter-spacing: -0.02em;
-      }
-
-      .stat-card-label {
-        font-size: 0.6875rem;
-        color: var(--gray-500);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .chart-card {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 12px;
-        padding: 1rem;
-      }
-
-      .chart-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-      }
-
-      .chart-title {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--gray-800);
-      }
-
-      .chart-badge {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.25rem 0.5rem;
-        background: var(--emerald-50);
-        border-radius: 100px;
-        font-size: 0.625rem;
-        font-weight: 600;
-        color: var(--emerald-600);
-      }
-
-      .chart-bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 0.375rem;
-        height: 80px;
-      }
-
-      .chart-bar {
-        flex: 1;
-        background: linear-gradient(
-          180deg,
-          var(--indigo-400),
-          var(--indigo-500)
-        );
-        border-radius: 4px 4px 0 0;
-        transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        position: relative;
-      }
-
-      .chart-bar::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50%;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        border-radius: 4px 4px 0 0;
-      }
-
-      /* Floating Elements */
-      .floating-element {
-        position: absolute;
-        background: var(--white);
-        border-radius: 14px;
-        padding: 1rem 1.25rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
-          0 0 0 1px rgba(0, 0, 0, 0.02);
-        animation: float 5s ease-in-out infinite;
-      }
-
-      .floating-element-1 {
-        top: 5%;
-        right: -30px;
-        animation-delay: 0s;
-      }
-
-      .floating-element-2 {
-        bottom: 10%;
-        left: -40px;
-        animation-delay: 2s;
-      }
-
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0px);
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+            50% { box-shadow: 0 0 0 6px rgba(16,185,129,0.1); }
         }
-        50% {
-          transform: translateY(-12px);
+
+        .hero-eyebrow-text {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--indigo-700);
         }
-      }
 
-      .floating-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 0.625rem;
-      }
+        .hero-eyebrow-badge {
+            padding: 0.25rem 0.625rem;
+            background: linear-gradient(135deg, var(--indigo-500), var(--violet-500));
+            color: white;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-      .floating-icon.gradient-purple {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        color: white;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-      }
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
 
-      .floating-icon.gradient-emerald {
-        background: linear-gradient(
-          135deg,
-          var(--emerald-400),
-          var(--emerald-500)
-        );
-        color: white;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-      }
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--gray-500);
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
 
-      .floating-label {
-        font-size: 0.75rem;
-        color: var(--gray-500);
-        margin-bottom: 0.125rem;
-      }
-      .floating-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--gray-900);
-      }
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
 
-      /* ================================================
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-metrics {
+            display: flex;
+            gap: 3.5rem;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+
+        .hero-metric {
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .hero-metric::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            bottom: 0.25rem;
+            width: 3px;
+            background: linear-gradient(180deg, var(--indigo-400), var(--violet-400));
+            border-radius: 2px;
+        }
+
+        .hero-metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+
+        .hero-metric-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .hero-visual-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-window {
+            position: relative;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 
+                0 0 0 1px rgba(0,0,0,0.03),
+                0 2px 4px rgba(0,0,0,0.02),
+                0 12px 24px rgba(0,0,0,0.06),
+                0 48px 80px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
+            transition: transform 0.5s ease;
+        }
+
+        .hero-window:hover {
+            transform: perspective(1200px) rotateY(-2deg) rotateX(1deg);
+        }
+
+        .window-chrome {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.25rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .window-dot:hover { transform: scale(1.2); }
+        .window-dot.red { background: #ff5f57; }
+        .window-dot.yellow { background: #ffbd2e; }
+        .window-dot.green { background: #28c840; }
+
+        .window-url {
+            flex: 1;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .window-body {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            min-height: 380px;
+        }
+
+        .window-sidebar {
+            background: var(--gray-900);
+            padding: 1.25rem;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sidebar-brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--indigo-500), var(--violet-500));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-brand-text {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .sidebar-nav { display: flex; flex-direction: column; gap: 0.25rem; }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.625rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            color: var(--gray-400);
+            transition: all 0.2s;
+        }
+
+        .sidebar-item:hover { color: var(--gray-200); background: rgba(255,255,255,0.05); }
+        .sidebar-item.active { background: rgba(99,102,241,0.2); color: var(--indigo-300); }
+        .sidebar-item svg { width: 18px; height: 18px; opacity: 0.7; }
+
+        .window-main {
+            background: var(--gray-50);
+            padding: 1.5rem;
+        }
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .main-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .main-btn {
+            padding: 0.5rem 0.875rem;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .main-btn.primary {
+            background: linear-gradient(135deg, var(--indigo-500), var(--violet-500));
+            border: none;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card-icon.indigo { background: var(--indigo-50); color: var(--indigo-500); }
+        .stat-card-icon.emerald { background: var(--emerald-50); color: var(--emerald-500); }
+        .stat-card-icon.amber { background: var(--amber-50); color: var(--amber-500); }
+
+        .stat-card-badge {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.625rem;
+            font-weight: 600;
+            border-radius: 100px;
+        }
+
+        .stat-card-badge.up { background: var(--emerald-50); color: var(--emerald-600); }
+        .stat-card-badge.down { background: var(--rose-50); color: var(--rose-500); }
+
+        .stat-card-value {
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card-label {
+            font-size: 0.6875rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .chart-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .chart-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--emerald-50);
+            border-radius: 100px;
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: var(--emerald-600);
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.375rem;
+            height: 80px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--indigo-400), var(--indigo-500));
+            border-radius: 4px 4px 0 0;
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .chart-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02);
+            animation: float 5s ease-in-out infinite;
+        }
+
+        .floating-element-1 {
+            top: 5%;
+            right: -30px;
+            animation-delay: 0s;
+        }
+
+        .floating-element-2 {
+            bottom: 10%;
+            left: -40px;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .floating-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.625rem;
+        }
+
+        .floating-icon.gradient-purple {
+            background: linear-gradient(135deg, var(--indigo-500), var(--violet-500));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        }
+
+        .floating-icon.gradient-emerald {
+            background: linear-gradient(135deg, var(--emerald-400), var(--emerald-500));
+            color: white;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+
+        .floating-label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.125rem; }
+        .floating-value { font-size: 1.25rem; font-weight: 700; color: var(--gray-900); }
+
+        /* ================================================
            LOGOS SECTION
         ================================================ */
-      .logos {
-        padding: 5rem 0;
-        border-top: 1px solid var(--gray-100);
-        background: linear-gradient(180deg, var(--gray-50), var(--white));
-      }
+        .logos {
+            padding: 5rem 0;
+            border-top: 1px solid var(--gray-100);
+            background: linear-gradient(180deg, var(--gray-50), var(--white));
+        }
 
-      .logos-label {
-        text-align: center;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--gray-400);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 2.5rem;
-      }
+        .logos-label {
+            text-align: center;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2.5rem;
+        }
 
-      .logos-grid {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4rem;
-        flex-wrap: wrap;
-      }
+        .logos-grid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+        }
 
-      .logo-item {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--gray-300);
-        transition: color 0.3s;
-      }
+        .logo-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-300);
+            transition: color 0.3s;
+        }
 
-      .logo-item:hover {
-        color: var(--gray-500);
-      }
-      .logo-item svg {
-        width: 28px;
-        height: 28px;
-      }
+        .logo-item:hover { color: var(--gray-500); }
+        .logo-item svg { width: 28px; height: 28px; }
 
-      /* ================================================
+        /* ================================================
            FEATURES SECTION
         ================================================ */
-      .features {
-        padding: 8rem 0;
-      }
+        .features {
+            padding: 8rem 0;
+        }
 
-      .section-header {
-        text-align: center;
-        max-width: 700px;
-        margin: 0 auto 5rem;
-      }
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
 
-      .section-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 0.875rem;
-        background: var(--indigo-50);
-        border-radius: 100px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--indigo-600);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 1.25rem;
-      }
+        .section-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            background: var(--indigo-50);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--indigo-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+        }
 
-      .section-title {
-        font-size: 3rem;
-        font-weight: 800;
-        letter-spacing: -0.035em;
-        color: var(--gray-900);
-        margin-bottom: 1.25rem;
-        line-height: 1.15;
-      }
+        .section-title {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--gray-900);
+            margin-bottom: 1.25rem;
+            line-height: 1.15;
+        }
 
-      .section-description {
-        font-size: 1.125rem;
-        color: var(--gray-500);
-        line-height: 1.7;
-      }
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--gray-500);
+            line-height: 1.7;
+        }
 
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-      }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
 
-      .feature-card {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 20px;
-        padding: 2rem;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-      }
+        .feature-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
 
-      .feature-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(
-          90deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.4s ease;
-      }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--indigo-500), var(--violet-500));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
 
-      .feature-card:hover {
-        border-color: var(--indigo-200);
-        box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.15);
-        transform: translateY(-8px);
-      }
+        .feature-card:hover {
+            border-color: var(--indigo-200);
+            box-shadow: 0 25px 50px -12px rgba(99,102,241,0.15);
+            transform: translateY(-8px);
+        }
 
-      .feature-card:hover::before {
-        transform: scaleX(1);
-      }
+        .feature-card:hover::before { transform: scaleX(1); }
 
-      .feature-icon-wrapper {
-        position: relative;
-        width: 56px;
-        height: 56px;
-        margin-bottom: 1.5rem;
-      }
+        .feature-icon-wrapper {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            margin-bottom: 1.5rem;
+        }
 
-      .feature-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        position: relative;
-        z-index: 1;
-      }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
 
-      .feature-icon svg {
-        width: 26px;
-        height: 26px;
-      }
+        .feature-icon svg { width: 26px; height: 26px; }
 
-      .feature-icon-glow {
-        position: absolute;
-        inset: -8px;
-        border-radius: 20px;
-        opacity: 0.3;
-        filter: blur(12px);
-        z-index: 0;
-      }
+        .feature-icon-glow {
+            position: absolute;
+            inset: -8px;
+            border-radius: 20px;
+            opacity: 0.3;
+            filter: blur(12px);
+            z-index: 0;
+        }
 
-      .feature-icon.indigo {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--indigo-600)
-        );
-      }
-      .feature-icon.indigo + .feature-icon-glow {
-        background: var(--indigo-500);
-      }
+        .feature-icon.indigo { background: linear-gradient(135deg, var(--indigo-500), var(--indigo-600)); }
+        .feature-icon.indigo + .feature-icon-glow { background: var(--indigo-500); }
 
-      .feature-icon.violet {
-        background: linear-gradient(
-          135deg,
-          var(--violet-500),
-          var(--violet-600)
-        );
-      }
-      .feature-icon.violet + .feature-icon-glow {
-        background: var(--violet-500);
-      }
+        .feature-icon.violet { background: linear-gradient(135deg, var(--violet-500), var(--violet-600)); }
+        .feature-icon.violet + .feature-icon-glow { background: var(--violet-500); }
 
-      .feature-icon.emerald {
-        background: linear-gradient(
-          135deg,
-          var(--emerald-400),
-          var(--emerald-500)
-        );
-      }
-      .feature-icon.emerald + .feature-icon-glow {
-        background: var(--emerald-500);
-      }
+        .feature-icon.emerald { background: linear-gradient(135deg, var(--emerald-400), var(--emerald-500)); }
+        .feature-icon.emerald + .feature-icon-glow { background: var(--emerald-500); }
 
-      .feature-icon.amber {
-        background: linear-gradient(135deg, var(--amber-400), var(--amber-500));
-      }
-      .feature-icon.amber + .feature-icon-glow {
-        background: var(--amber-500);
-      }
+        .feature-icon.amber { background: linear-gradient(135deg, var(--amber-400), var(--amber-500)); }
+        .feature-icon.amber + .feature-icon-glow { background: var(--amber-500); }
 
-      .feature-icon.cyan {
-        background: linear-gradient(135deg, var(--cyan-400), var(--cyan-500));
-      }
-      .feature-icon.cyan + .feature-icon-glow {
-        background: var(--cyan-500);
-      }
+        .feature-icon.cyan { background: linear-gradient(135deg, var(--cyan-400), var(--cyan-500)); }
+        .feature-icon.cyan + .feature-icon-glow { background: var(--cyan-500); }
 
-      .feature-icon.rose {
-        background: linear-gradient(135deg, var(--rose-400), var(--rose-500));
-      }
-      .feature-icon.rose + .feature-icon-glow {
-        background: var(--rose-500);
-      }
+        .feature-icon.rose { background: linear-gradient(135deg, var(--rose-400), var(--rose-500)); }
+        .feature-icon.rose + .feature-icon-glow { background: var(--rose-500); }
 
-      .feature-icon.blue {
-        background: linear-gradient(135deg, var(--blue-400), var(--blue-500));
-      }
-      .feature-icon.blue + .feature-icon-glow {
-        background: var(--blue-500);
-      }
+        .feature-icon.blue { background: linear-gradient(135deg, var(--blue-400), var(--blue-500)); }
+        .feature-icon.blue + .feature-icon-glow { background: var(--blue-500); }
 
-      .feature-icon.purple {
-        background: linear-gradient(
-          135deg,
-          var(--violet-400),
-          var(--purple-500)
-        );
-      }
-      .feature-icon.purple + .feature-icon-glow {
-        background: var(--purple-500);
-      }
+        .feature-icon.purple { background: linear-gradient(135deg, var(--violet-400), var(--purple-500)); }
+        .feature-icon.purple + .feature-icon-glow { background: var(--purple-500); }
 
-      .feature-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--gray-900);
-        margin-bottom: 0.625rem;
-        letter-spacing: -0.02em;
-      }
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.625rem;
+            letter-spacing: -0.02em;
+        }
 
-      .feature-description {
-        font-size: 0.9375rem;
-        color: var(--gray-500);
-        line-height: 1.65;
-        margin-bottom: 1.25rem;
-      }
+        .feature-description {
+            font-size: 0.9375rem;
+            color: var(--gray-500);
+            line-height: 1.65;
+            margin-bottom: 1.25rem;
+        }
 
-      .feature-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
 
-      .feature-tag {
-        padding: 0.25rem 0.625rem;
-        background: var(--gray-100);
-        border-radius: 6px;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        color: var(--gray-600);
-      }
+        .feature-tag {
+            padding: 0.25rem 0.625rem;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
 
-      /* ================================================
+        /* ================================================
            BENTO SHOWCASE
         ================================================ */
-      .showcase {
-        padding: 5rem 0 8rem;
-        background: var(--gray-50);
-        border-top: 1px solid var(--gray-200);
-        border-bottom: 1px solid var(--gray-200);
-      }
+        .showcase {
+            padding: 5rem 0 8rem;
+            background: var(--gray-50);
+            border-top: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-200);
+        }
 
-      .bento-grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 1.5rem;
-      }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
 
-      .bento-card {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 24px;
-        padding: 2rem;
-        overflow: hidden;
-        position: relative;
-        transition: all 0.3s ease;
-      }
+        .bento-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 24px;
+            padding: 2rem;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
 
-      .bento-card:hover {
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
-      }
+        .bento-card:hover {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+        }
 
-      .bento-card-xl {
-        grid-column: span 8;
-        grid-row: span 2;
-        padding: 2.5rem;
-      }
-      .bento-card-tall {
-        grid-column: span 4;
-        grid-row: span 2;
-      }
-      .bento-card-wide {
-        grid-column: span 6;
-      }
+        .bento-card-xl { grid-column: span 8; grid-row: span 2; padding: 2.5rem; }
+        .bento-card-tall { grid-column: span 4; grid-row: span 2; }
+        .bento-card-wide { grid-column: span 6; }
 
-      .bento-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        color: var(--indigo-600);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 0.875rem;
-      }
+        .bento-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--indigo-600);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.875rem;
+        }
 
-      .bento-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--gray-900);
-        margin-bottom: 0.625rem;
-        letter-spacing: -0.02em;
-      }
+        .bento-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.625rem;
+            letter-spacing: -0.02em;
+        }
 
-      .bento-description {
-        font-size: 0.9375rem;
-        color: var(--gray-500);
-        line-height: 1.6;
-        margin-bottom: 1.5rem;
-      }
+        .bento-description {
+            font-size: 0.9375rem;
+            color: var(--gray-500);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
 
-      /* Code Block */
-      .code-block {
-        background: var(--gray-900);
-        border-radius: 16px;
-        overflow: hidden;
-      }
+        /* Code Block */
+        .code-block {
+            background: var(--gray-900);
+            border-radius: 16px;
+            overflow: hidden;
+        }
 
-      .code-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.875rem 1.25rem;
-        background: var(--gray-800);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      }
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.25rem;
+            background: var(--gray-800);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
 
-      .code-dots {
-        display: flex;
-        gap: 0.375rem;
-      }
+        .code-dots {
+            display: flex;
+            gap: 0.375rem;
+        }
 
-      .code-dots span {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-      }
+        .code-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
 
-      .code-dots span:nth-child(1) {
-        background: #ff5f57;
-      }
-      .code-dots span:nth-child(2) {
-        background: #ffbd2e;
-      }
-      .code-dots span:nth-child(3) {
-        background: #28c840;
-      }
+        .code-dots span:nth-child(1) { background: #ff5f57; }
+        .code-dots span:nth-child(2) { background: #ffbd2e; }
+        .code-dots span:nth-child(3) { background: #28c840; }
 
-      .code-filename {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.75rem;
-        color: var(--gray-400);
-      }
+        .code-filename {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
 
-      .code-content {
-        padding: 1.5rem;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.8125rem;
-        line-height: 1.9;
-        overflow-x: auto;
-        white-space: pre;
-        color: #e5e7eb;
-      }
+        .code-content {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.9;
+            overflow-x: auto;
+            white-space: pre;
+            color: #e5e7eb;
+        }
 
-      .code-content .comment {
-        color: #6b7280;
-      }
-      .code-content .keyword {
-        color: #c084fc;
-      }
-      .code-content .function {
-        color: #67e8f9;
-      }
-      .code-content .string {
-        color: #86efac;
-      }
-      .code-content .variable {
-        color: #fcd34d;
-      }
-      .code-content .operator {
-        color: #f472b6;
-      }
+        .code-content .comment { color: #6b7280; }
+        .code-content .keyword { color: #c084fc; }
+        .code-content .function { color: #67e8f9; }
+        .code-content .string { color: #86efac; }
+        .code-content .variable { color: #fcd34d; }
+        .code-content .operator { color: #f472b6; }
 
-      /* Stats Bento */
-      .bento-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
+        /* Stats Bento */
+        .bento-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
 
-      .bento-stat {
-        background: var(--gray-50);
-        border-radius: 14px;
-        padding: 1.25rem;
-        text-align: center;
-        transition: all 0.3s;
-      }
+        .bento-stat {
+            background: var(--gray-50);
+            border-radius: 14px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
 
-      .bento-stat:hover {
-        background: var(--indigo-50);
-      }
+        .bento-stat:hover {
+            background: var(--indigo-50);
+        }
 
-      .bento-stat-value {
-        font-size: 2.25rem;
-        font-weight: 800;
-        color: var(--gray-900);
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-      }
+        .bento-stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
 
-      .bento-stat-value span {
-        color: var(--indigo-500);
-      }
+        .bento-stat-value span { color: var(--indigo-500); }
 
-      .bento-stat-label {
-        font-size: 0.8125rem;
-        color: var(--gray-500);
-        font-weight: 500;
-      }
+        .bento-stat-label {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
 
-      /* Theme Cards */
-      .theme-cards {
-        display: flex;
-        gap: 1rem;
-      }
+        /* Theme Cards */
+        .theme-cards { display: flex; gap: 1rem; }
 
-      .theme-card {
-        flex: 1;
-        border-radius: 14px;
-        overflow: hidden;
-        border: 2px solid var(--gray-200);
-        transition: all 0.3s;
-        cursor: pointer;
-      }
+        .theme-card {
+            flex: 1;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
 
-      .theme-card:hover {
-        border-color: var(--indigo-300);
-        transform: translateY(-4px);
-      }
+        .theme-card:hover { border-color: var(--indigo-300); transform: translateY(-4px); }
 
-      .theme-card-preview {
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        .theme-card-preview {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-      .theme-card.dark .theme-card-preview {
-        background: linear-gradient(135deg, #0f172a, #1e1b4b);
-      }
-      .theme-card.light .theme-card-preview {
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      }
+        .theme-card.dark .theme-card-preview { background: linear-gradient(135deg, #0f172a, #1e1b4b); }
+        .theme-card.light .theme-card-preview { background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
 
-      .theme-card-label {
-        padding: 0.875rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--gray-700);
-        text-align: center;
-        background: var(--gray-50);
-      }
+        .theme-card-label {
+            padding: 0.875rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-align: center;
+            background: var(--gray-50);
+        }
 
-      /* Field Tags */
-      .field-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
+        /* Field Tags */
+        .field-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-      .field-tag {
-        padding: 0.5rem 1rem;
-        background: var(--gray-100);
-        border-radius: 100px;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--gray-600);
-        transition: all 0.2s;
-      }
+        .field-tag {
+            padding: 0.5rem 1rem;
+            background: var(--gray-100);
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
 
-      .field-tag:hover {
-        background: var(--indigo-100);
-        color: var(--indigo-700);
-        transform: translateY(-2px);
-      }
+        .field-tag:hover {
+            background: var(--indigo-100);
+            color: var(--indigo-700);
+            transform: translateY(-2px);
+        }
 
-      /* ================================================
+        /* ================================================
            COMPARISON TABLE
         ================================================ */
-      .comparison {
-        padding: 8rem 0;
-      }
+        .comparison {
+            padding: 8rem 0;
+        }
 
-      .comparison-table {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
-      }
+        .comparison-table {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+        }
 
-      .comparison-header {
-        display: grid;
-        grid-template-columns: 2fr repeat(3, 1fr);
-        background: var(--gray-50);
-        border-bottom: 1px solid var(--gray-200);
-      }
+        .comparison-header {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
 
-      .comparison-header-cell {
-        padding: 1.5rem;
-        text-align: center;
-      }
+        .comparison-header-cell {
+            padding: 1.5rem;
+            text-align: center;
+        }
 
-      .comparison-header-cell:first-child {
-        text-align: left;
-      }
+        .comparison-header-cell:first-child { text-align: left; }
 
-      .comparison-header-cell.highlight {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-500),
-          var(--violet-500)
-        );
-        color: white;
-      }
+        .comparison-header-cell.highlight {
+            background: linear-gradient(135deg, var(--indigo-500), var(--violet-500));
+            color: white;
+        }
 
-      .comparison-product {
-        font-weight: 700;
-        font-size: 1rem;
-        color: var(--gray-800);
-      }
+        .comparison-product {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--gray-800);
+        }
 
-      .comparison-header-cell.highlight .comparison-product {
-        color: white;
-      }
+        .comparison-header-cell.highlight .comparison-product { color: white; }
 
-      .comparison-tag {
-        display: inline-block;
-        padding: 0.25rem 0.625rem;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 100px;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        margin-top: 0.375rem;
-      }
+        .comparison-tag {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            margin-top: 0.375rem;
+        }
 
-      .comparison-row {
-        display: grid;
-        grid-template-columns: 2fr repeat(3, 1fr);
-        border-bottom: 1px solid var(--gray-100);
-      }
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            border-bottom: 1px solid var(--gray-100);
+        }
 
-      .comparison-row:last-child {
-        border-bottom: none;
-      }
+        .comparison-row:last-child { border-bottom: none; }
 
-      .comparison-cell {
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        .comparison-cell {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-      .comparison-cell:first-child {
-        justify-content: flex-start;
-      }
+        .comparison-cell:first-child { justify-content: flex-start; }
 
-      .comparison-feature {
-        font-size: 0.9375rem;
-        color: var(--gray-700);
-      }
+        .comparison-feature {
+            font-size: 0.9375rem;
+            color: var(--gray-700);
+        }
 
-      .comparison-check {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        .comparison-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-      .comparison-check.yes {
-        background: var(--emerald-50);
-        color: var(--emerald-500);
-      }
+        .comparison-check.yes {
+            background: var(--emerald-50);
+            color: var(--emerald-500);
+        }
 
-      .comparison-check.no {
-        background: var(--gray-100);
-        color: var(--gray-400);
-      }
+        .comparison-check.no {
+            background: var(--gray-100);
+            color: var(--gray-400);
+        }
 
-      .comparison-check.highlight {
-        background: var(--indigo-100);
-        color: var(--indigo-500);
-      }
+        .comparison-check.highlight {
+            background: var(--indigo-100);
+            color: var(--indigo-500);
+        }
 
-      /* ================================================
+        /* ================================================
            CTA SECTION
         ================================================ */
-      .cta {
-        padding: 8rem 0;
-      }
+        .cta {
+            padding: 8rem 0;
+        }
 
-      .cta-card {
-        background: linear-gradient(
-          135deg,
-          var(--gray-900) 0%,
-          #1a1a2e 50%,
-          var(--gray-900) 100%
-        );
-        border-radius: 32px;
-        padding: 5rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-      }
+        .cta-card {
+            background: linear-gradient(135deg, var(--gray-900) 0%, #1a1a2e 50%, var(--gray-900) 100%);
+            border-radius: 32px;
+            padding: 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-      .cta-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(
-            ellipse at 20% 20%,
-            rgba(99, 102, 241, 0.2) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            ellipse at 80% 80%,
-            rgba(139, 92, 246, 0.15) 0%,
-            transparent 50%
-          );
-      }
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.15) 0%, transparent 50%);
+        }
 
-      .cta-card::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(
-            rgba(255, 255, 255, 0.02) 1px,
-            transparent 1px
-          ),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 40px 40px;
-      }
+        .cta-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
 
-      .cta-content {
-        position: relative;
-        z-index: 1;
-      }
+        .cta-content { position: relative; z-index: 1; }
 
-      .cta h2 {
-        font-size: 3.25rem;
-        font-weight: 800;
-        color: var(--white);
-        letter-spacing: -0.035em;
-        margin-bottom: 1.25rem;
-        line-height: 1.15;
-      }
+        .cta h2 {
+            font-size: 3.25rem;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -0.035em;
+            margin-bottom: 1.25rem;
+            line-height: 1.15;
+        }
 
-      .cta p {
-        font-size: 1.25rem;
-        color: var(--gray-400);
-        margin-bottom: 3rem;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
-      }
+        .cta p {
+            font-size: 1.25rem;
+            color: var(--gray-400);
+            margin-bottom: 3rem;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-      .cta-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-      }
+        .cta-buttons { display: flex; justify-content: center; gap: 1rem; }
 
-      .cta .btn-primary {
-        background: linear-gradient(
-          135deg,
-          var(--indigo-400),
-          var(--violet-400)
-        );
-        box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
-      }
+        .cta .btn-primary {
+            background: linear-gradient(135deg, var(--indigo-400), var(--violet-400));
+            box-shadow: 0 8px 30px rgba(99,102,241,0.4);
+        }
 
-      .cta .btn-secondary {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: var(--white);
-      }
+        .cta .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--white);
+        }
 
-      .cta .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.25);
-      }
+        .cta .btn-secondary:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.25);
+        }
 
-      /* ================================================
+        /* ================================================
            FOOTER
         ================================================ */
-      .footer {
-        padding: 5rem 0 2rem;
-        border-top: 1px solid var(--gray-200);
-      }
+        .footer {
+            padding: 5rem 0 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
 
-      .footer-grid {
-        display: grid;
-        grid-template-columns: 2fr repeat(3, 1fr);
-        gap: 4rem;
-        margin-bottom: 4rem;
-      }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 4rem;
+            margin-bottom: 4rem;
+        }
 
-      .footer-brand p {
-        font-size: 0.9375rem;
-        color: var(--gray-500);
-        line-height: 1.7;
-        margin-top: 1.25rem;
-        max-width: 320px;
-      }
+        .footer-brand p {
+            font-size: 0.9375rem;
+            color: var(--gray-500);
+            line-height: 1.7;
+            margin-top: 1.25rem;
+            max-width: 320px;
+        }
 
-      .footer-links h4 {
-        font-size: 0.8125rem;
-        font-weight: 700;
-        color: var(--gray-900);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 1.5rem;
-      }
+        .footer-links h4 {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.5rem;
+        }
 
-      .footer-links ul {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 0.875rem;
-      }
+        .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 0.875rem; }
 
-      .footer-links a {
-        font-size: 0.9375rem;
-        color: var(--gray-500);
-        text-decoration: none;
-        transition: color 0.2s;
-      }
+        .footer-links a {
+            font-size: 0.9375rem;
+            color: var(--gray-500);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
 
-      .footer-links a:hover {
-        color: var(--indigo-600);
-      }
+        .footer-links a:hover { color: var(--indigo-600); }
 
-      .footer-bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 2rem;
-        border-top: 1px solid var(--gray-200);
-      }
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
 
-      .footer-copyright {
-        font-size: 0.875rem;
-        color: var(--gray-500);
-      }
+        .footer-copyright { font-size: 0.875rem; color: var(--gray-500); }
 
-      .footer-social {
-        display: flex;
-        gap: 0.75rem;
-      }
+        .footer-social { display: flex; gap: 0.75rem; }
 
-      .footer-social a {
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--gray-100);
-        border-radius: 10px;
-        color: var(--gray-600);
-        transition: all 0.2s;
-      }
+        .footer-social a {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-100);
+            border-radius: 10px;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
 
-      .footer-social a:hover {
-        background: var(--indigo-500);
-        color: white;
-        transform: translateY(-2px);
-      }
+        .footer-social a:hover {
+            background: var(--indigo-500);
+            color: white;
+            transform: translateY(-2px);
+        }
 
-      /* ================================================
+        /* ================================================
            RESPONSIVE
         ================================================ */
-      @media (max-width: 1024px) {
-        .hero h1 {
-          font-size: 3rem;
+        @media (max-width: 1024px) {
+            .hero h1 { font-size: 3rem; }
+            .hero-content { grid-template-columns: 1fr; gap: 4rem; }
+            .hero-visual { order: -1; }
+            .hero-window { transform: none; }
+            .hero-window:hover { transform: none; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-card-xl, .bento-card-tall, .bento-card-wide { grid-column: span 1; grid-row: span 1; }
+            .comparison-table { overflow-x: auto; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
         }
-        .hero-content {
-          grid-template-columns: 1fr;
-          gap: 4rem;
-        }
-        .hero-visual {
-          order: -1;
-        }
-        .hero-window {
-          transform: none;
-        }
-        .hero-window:hover {
-          transform: none;
-        }
-        .features-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .bento-grid {
-          grid-template-columns: 1fr;
-        }
-        .bento-card-xl,
-        .bento-card-tall,
-        .bento-card-wide {
-          grid-column: span 1;
-          grid-row: span 1;
-        }
-        .comparison-table {
-          overflow-x: auto;
-        }
-        .footer-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem;
-        }
-      }
 
-      @media (max-width: 768px) {
-        .container {
-          padding: 0 1.25rem;
+        @media (max-width: 768px) {
+            .container { padding: 0 1.25rem; }
+            .nav-links { display: none; }
+            .nav-cta { display: none; }
+            .mobile-menu { display: flex; }
+            .hero { padding: 9rem 0 5rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero-description { font-size: 1.0625rem; }
+            .hero-buttons { flex-direction: column; }
+            .hero-metrics { flex-wrap: wrap; gap: 2rem; }
+            .section-title { font-size: 2.25rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-card { padding: 3rem 1.5rem; }
+            .cta h2 { font-size: 2.25rem; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .footer-bottom { flex-direction: column; gap: 1.5rem; text-align: center; }
         }
-        .nav-links {
-          display: none;
-        }
-        .nav-cta {
-          display: none;
-        }
+
         .mobile-menu {
-          display: flex;
+            display: none;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-100);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--gray-700);
         }
-        .hero {
-          padding: 9rem 0 5rem;
-        }
-        .hero h1 {
-          font-size: 2.5rem;
-        }
-        .hero-description {
-          font-size: 1.0625rem;
-        }
-        .hero-buttons {
-          flex-direction: column;
-        }
-        .hero-metrics {
-          flex-wrap: wrap;
-          gap: 2rem;
-        }
-        .section-title {
-          font-size: 2.25rem;
-        }
-        .features-grid {
-          grid-template-columns: 1fr;
-        }
-        .cta-card {
-          padding: 3rem 1.5rem;
-        }
-        .cta h2 {
-          font-size: 2.25rem;
-        }
-        .cta-buttons {
-          flex-direction: column;
-          align-items: center;
-        }
-        .footer-grid {
-          grid-template-columns: 1fr;
-        }
-        .footer-bottom {
-          flex-direction: column;
-          gap: 1.5rem;
-          text-align: center;
-        }
-      }
 
-      .mobile-menu {
-        display: none;
-        width: 42px;
-        height: 42px;
-        align-items: center;
-        justify-content: center;
-        background: var(--gray-100);
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        color: var(--gray-700);
-      }
-
-      @media (max-width: 768px) {
-        .mobile-menu {
-          display: flex;
+        @media (max-width: 768px) {
+            .mobile-menu { display: flex; }
         }
-      }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <!-- Animated Background -->
     <div class="page-bg">
-      <div class="bg-gradient-orb bg-gradient-orb-1"></div>
-      <div class="bg-gradient-orb bg-gradient-orb-2"></div>
-      <div class="bg-gradient-orb bg-gradient-orb-3"></div>
-      <div class="bg-grid"></div>
-      <div class="bg-noise"></div>
+        <div class="bg-gradient-orb bg-gradient-orb-1"></div>
+        <div class="bg-gradient-orb bg-gradient-orb-2"></div>
+        <div class="bg-gradient-orb bg-gradient-orb-3"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-noise"></div>
     </div>
 
     <!-- Header -->
     <header class="header" id="header">
-      <div class="header-blur"></div>
-      <div class="container">
-        <div class="header-inner">
-          <a href="/" class="logo">
-            <div class="logo-icon">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-              >
-                <path d="M6 4L12 20L18 4" />
-              </svg>
+        <div class="header-blur"></div>
+        <div class="container">
+            <div class="header-inner">
+                <a href="https://github.com/ClearanceClarence/VoidForge-CMS" class="logo">
+                    <div class="logo-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg>
+                    </div>
+                    <span class="logo-text">VoidForge</span>
+                </a>
+                <nav class="nav">
+                    <ul class="nav-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#showcase">Showcase</a></li>
+                        <li><a href="#comparison">Compare</a></li>
+                        <li><a href="docs/plugin-development.html">Docs</a></li>
+                    </ul>
+                    <div class="nav-cta">
+                        <a href="https://github.com/ClearanceClarence/VoidForge-CMS" class="btn btn-primary">Github Repository</a>
+                    </div>
+                    <button class="mobile-menu" aria-label="Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                </nav>
             </div>
-            <span class="logo-text">VoidForge</span>
-          </a>
-          <nav class="nav">
-            <ul class="nav-links">
-              <li><a href="#features">Features</a></li>
-              <li><a href="#showcase">Showcase</a></li>
-              <li><a href="#comparison">Compare</a></li>
-              <li><a href="docs/plugin-development.html">Docs</a></li>
-            </ul>
-            <div class="nav-cta">
-              <a
-                href="https://github.com/ClearanceClarence/VoidForge-CMS"
-                class="btn btn-primary"
-                >Github Repository</a
-              >
-            </div>
-            <button class="mobile-menu" aria-label="Menu">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-          </nav>
         </div>
-      </div>
     </header>
 
     <!-- Hero -->
     <section class="hero">
-      <div class="container">
-        <div class="hero-content">
-          <div class="hero-text">
-            <div class="hero-eyebrow">
-              <span class="hero-eyebrow-dot"></span>
-              <span class="hero-eyebrow-text">Now Available</span>
-              <span class="hero-eyebrow-badge">v0.1.4</span>
-            </div>
-            <h1>
-              Build Content<br />from the
-              <span class="gradient-text">Void</span>
-            </h1>
-            <p class="hero-description">
-              A modern, lightweight CMS built with pure PHP. No frameworks, no
-              dependencies, no bloat — just powerful features, elegant
-              architecture, and infinite extensibility.
-            </p>
-            <div class="hero-buttons">
-              <a href="admin/" class="btn btn-primary btn-xl">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-                Launch Dashboard
-              </a>
-              <a href="#features" class="btn btn-secondary btn-xl"
-                >Explore Features</a
-              >
-            </div>
-            <div class="hero-metrics">
-              <div class="hero-metric">
-                <div class="hero-metric-value">14+</div>
-                <div class="hero-metric-label">Field Types</div>
-              </div>
-              <div class="hero-metric">
-                <div class="hero-metric-value">80+</div>
-                <div class="hero-metric-label">Admin Icons</div>
-              </div>
-              <div class="hero-metric">
-                <div class="hero-metric-value">&lt;1MB</div>
-                <div class="hero-metric-label">Core Size</div>
-              </div>
-            </div>
-          </div>
-          <div class="hero-visual">
-            <div class="hero-visual-glow"></div>
-            <div class="hero-window">
-              <div class="window-chrome">
-                <div class="window-dot red"></div>
-                <div class="window-dot yellow"></div>
-                <div class="window-dot green"></div>
-                <div class="window-url">localhost/admin/dashboard.php</div>
-              </div>
-              <div class="window-body">
-                <div class="window-sidebar">
-                  <div class="sidebar-brand">
-                    <div class="sidebar-brand-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="white"
-                        stroke-width="3"
-                      >
-                        <path d="M6 4L12 20L18 4" />
-                      </svg>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-eyebrow">
+                        <span class="hero-eyebrow-dot"></span>
+                        <span class="hero-eyebrow-text">Now Available</span>
+                        <span class="hero-eyebrow-badge">v0.1.2</span>
                     </div>
-                    <div class="sidebar-brand-text">VoidForge</div>
-                  </div>
-                  <div class="sidebar-nav">
-                    <div class="sidebar-item active">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <rect x="3" y="3" width="7" height="9" />
-                        <rect x="14" y="3" width="7" height="5" />
-                        <rect x="14" y="12" width="7" height="9" />
-                        <rect x="3" y="16" width="7" height="5" /></svg
-                      >Dashboard
+                    <h1>Build Content<br>from the <span class="gradient-text">Void</span></h1>
+                    <p class="hero-description">A modern, lightweight CMS built with pure PHP. No frameworks, no dependencies, no bloat — just powerful features, elegant architecture, and infinite extensibility.</p>
+                    <div class="hero-buttons">
+                        <a href="admin/" class="btn btn-primary btn-xl">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            Launch Dashboard
+                        </a>
+                        <a href="#features" class="btn btn-secondary btn-xl">Explore Features</a>
                     </div>
-                    <div class="sidebar-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path
-                          d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                        />
-                        <path
-                          d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                        /></svg
-                      >Posts
+                    <div class="hero-metrics">
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">14+</div>
+                            <div class="hero-metric-label">Field Types</div>
+                        </div>
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">80+</div>
+                            <div class="hero-metric-label">Admin Icons</div>
+                        </div>
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">&lt;1MB</div>
+                            <div class="hero-metric-label">Core Size</div>
+                        </div>
                     </div>
-                    <div class="sidebar-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" /></svg
-                      >Media
-                    </div>
-                    <div class="sidebar-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" /></svg
-                      >Users
-                    </div>
-                    <div class="sidebar-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <rect
-                          x="4"
-                          y="4"
-                          width="16"
-                          height="16"
-                          rx="2"
-                          ry="2"
-                        />
-                        <rect x="9" y="9" width="6" height="6" /></svg
-                      >Plugins
-                    </div>
-                  </div>
                 </div>
-                <div class="window-main">
-                  <div class="main-header">
-                    <div class="main-title">Dashboard</div>
-                    <div class="main-actions">
-                      <div class="main-btn">Export</div>
-                      <div class="main-btn primary">+ New Post</div>
-                    </div>
-                  </div>
-                  <div class="stats-grid">
-                    <div class="stat-card">
-                      <div class="stat-card-header">
-                        <div class="stat-card-icon indigo">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                          >
-                            <path
-                              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                            />
-                          </svg>
+                <div class="hero-visual">
+                    <div class="hero-visual-glow"></div>
+                    <div class="hero-window">
+                        <div class="window-chrome">
+                            <div class="window-dot red"></div>
+                            <div class="window-dot yellow"></div>
+                            <div class="window-dot green"></div>
+                            <div class="window-url">localhost/admin/dashboard.php</div>
                         </div>
-                        <div class="stat-card-badge up">+12%</div>
-                      </div>
-                      <div class="stat-card-value">248</div>
-                      <div class="stat-card-label">Total Posts</div>
-                    </div>
-                    <div class="stat-card">
-                      <div class="stat-card-header">
-                        <div class="stat-card-icon emerald">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                          >
-                            <path
-                              d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                            />
-                            <circle cx="9" cy="7" r="4" />
-                          </svg>
+                        <div class="window-body">
+                            <div class="window-sidebar">
+                                <div class="sidebar-brand">
+                                    <div class="sidebar-brand-icon">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg>
+                                    </div>
+                                    <div class="sidebar-brand-text">VoidForge</div>
+                                </div>
+                                <div class="sidebar-nav">
+                                    <div class="sidebar-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</div>
+                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Posts</div>
+                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Media</div>
+                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Users</div>
+                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>Plugins</div>
+                                </div>
+                            </div>
+                            <div class="window-main">
+                                <div class="main-header">
+                                    <div class="main-title">Dashboard</div>
+                                    <div class="main-actions">
+                                        <div class="main-btn">Export</div>
+                                        <div class="main-btn primary">+ New Post</div>
+                                    </div>
+                                </div>
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-card-header">
+                                            <div class="stat-card-icon indigo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+                                            <div class="stat-card-badge up">+12%</div>
+                                        </div>
+                                        <div class="stat-card-value">248</div>
+                                        <div class="stat-card-label">Total Posts</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-card-header">
+                                            <div class="stat-card-icon emerald"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                                            <div class="stat-card-badge up">+8%</div>
+                                        </div>
+                                        <div class="stat-card-value">1,842</div>
+                                        <div class="stat-card-label">Total Users</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-card-header">
+                                            <div class="stat-card-icon amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                                            <div class="stat-card-badge up">+24%</div>
+                                        </div>
+                                        <div class="stat-card-value">12.8K</div>
+                                        <div class="stat-card-label">Page Views</div>
+                                    </div>
+                                </div>
+                                <div class="chart-card">
+                                    <div class="chart-header">
+                                        <div class="chart-title">Weekly Traffic</div>
+                                        <div class="chart-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/></svg>Live</div>
+                                    </div>
+                                    <div class="chart-bars">
+                                        <div class="chart-bar" style="height: 40%"></div>
+                                        <div class="chart-bar" style="height: 65%"></div>
+                                        <div class="chart-bar" style="height: 45%"></div>
+                                        <div class="chart-bar" style="height: 80%"></div>
+                                        <div class="chart-bar" style="height: 55%"></div>
+                                        <div class="chart-bar" style="height: 90%"></div>
+                                        <div class="chart-bar" style="height: 70%"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card-badge up">+8%</div>
-                      </div>
-                      <div class="stat-card-value">1,842</div>
-                      <div class="stat-card-label">Total Users</div>
                     </div>
-                    <div class="stat-card">
-                      <div class="stat-card-header">
-                        <div class="stat-card-icon amber">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                          >
-                            <polyline
-                              points="22 12 18 12 15 21 9 3 6 12 2 12"
-                            />
-                          </svg>
-                        </div>
-                        <div class="stat-card-badge up">+24%</div>
-                      </div>
-                      <div class="stat-card-value">12.8K</div>
-                      <div class="stat-card-label">Page Views</div>
+                    <div class="floating-element floating-element-1">
+                        <div class="floating-icon gradient-purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                        <div class="floating-label">This Month</div>
+                        <div class="floating-value">+32.5%</div>
                     </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Weekly Traffic</div>
-                      <div class="chart-badge">
-                        <svg
-                          width="10"
-                          height="10"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="3"
-                        >
-                          <circle cx="12" cy="12" r="10" /></svg
-                        >Live
-                      </div>
+                    <div class="floating-element floating-element-2">
+                        <div class="floating-icon gradient-emerald"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+                        <div class="floating-label">Active Plugins</div>
+                        <div class="floating-value">4</div>
                     </div>
-                    <div class="chart-bars">
-                      <div class="chart-bar" style="height: 40%"></div>
-                      <div class="chart-bar" style="height: 65%"></div>
-                      <div class="chart-bar" style="height: 45%"></div>
-                      <div class="chart-bar" style="height: 80%"></div>
-                      <div class="chart-bar" style="height: 55%"></div>
-                      <div class="chart-bar" style="height: 90%"></div>
-                      <div class="chart-bar" style="height: 70%"></div>
-                    </div>
-                  </div>
                 </div>
-              </div>
             </div>
-            <div class="floating-element floating-element-1">
-              <div class="floating-icon gradient-purple">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-              </div>
-              <div class="floating-label">This Month</div>
-              <div class="floating-value">+32.5%</div>
-            </div>
-            <div class="floating-element floating-element-2">
-              <div class="floating-icon gradient-emerald">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div class="floating-label">Active Plugins</div>
-              <div class="floating-value">4</div>
-            </div>
-          </div>
         </div>
-      </div>
     </section>
 
     <!-- Features -->
     <section class="features" id="features">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-eyebrow"
-            ><svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-              /></svg
-            >Features</span
-          >
-          <h2 class="section-title">
-            Everything you need.<br />Nothing you don't.
-          </h2>
-          <p class="section-description">
-            A complete toolkit for modern content management. From custom post
-            types to theme customization — powerful features without the
-            complexity.
-          </p>
+        <div class="container">
+            <div class="section-header">
+                <span class="section-eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Features</span>
+                <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+                <p class="section-description">A complete toolkit for modern content management. From custom post types to theme customization — powerful features without the complexity.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Custom Post Types</h3>
+                    <p class="feature-description">Create unlimited content types with custom fields, icons, and flexible URL structures. Build portfolios, testimonials, products, and more.</p>
+                    <div class="feature-tags"><span class="feature-tag">Unlimited Types</span><span class="feature-tag">Custom Slugs</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Media Library</h3>
+                    <p class="feature-description">Grid/list views, full-screen modal editing with keyboard navigation, drag-and-drop uploads, and automatic thumbnail generation.</p>
+                    <div class="feature-tags"><span class="feature-tag">Full-Screen Modal</span><span class="feature-tag">Thumbnails</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Theme System</h3>
+                    <p class="feature-description">Multiple themes with per-theme settings, live CSS preview, custom landing pages, and instant theme switching without losing configurations.</p>
+                    <div class="feature-tags"><span class="feature-tag">Live Preview</span><span class="feature-tag">Per-Theme Settings</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">14+ Field Types</h3>
+                    <p class="feature-description">Text, WYSIWYG, images, files, colors, dates, selects, checkboxes, radio buttons, repeaters, and more for any content structure.</p>
+                    <div class="feature-tags"><span class="feature-tag">Repeater Fields</span><span class="feature-tag">WYSIWYG</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Plugin System</h3>
+                    <p class="feature-description">WordPress-style hooks and filters. Create shortcodes, add admin pages, register AJAX handlers, and extend REST API endpoints.</p>
+                    <div class="feature-tags"><span class="feature-tag">Hooks & Filters</span><span class="feature-tag">Shortcodes</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Secure by Default</h3>
+                    <p class="feature-description">CSRF protection on all forms, XSS prevention, bcrypt password hashing, secure sessions, and input sanitization throughout.</p>
+                    <div class="feature-tags"><span class="feature-tag">CSRF Protection</span><span class="feature-tag">Bcrypt</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Menu Builder</h3>
+                    <p class="feature-description">Visual drag-and-drop menu management with nested items, multiple locations, custom links, and real-time reordering.</p>
+                    <div class="feature-tags"><span class="feature-tag">Drag & Drop</span><span class="feature-tag">Nested Menus</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Post Revisions</h3>
+                    <p class="feature-description">Automatic revision history with side-by-side comparison and one-click restore. Never lose your content changes.</p>
+                    <div class="feature-tags"><span class="feature-tag">Compare Revisions</span><span class="feature-tag">Restore</span></div>
+                </div>
+            </div>
         </div>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon indigo">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                  />
-                  <path
-                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                  />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Custom Post Types</h3>
-            <p class="feature-description">
-              Create unlimited content types with custom fields, icons, and
-              flexible URL structures. Build portfolios, testimonials, products,
-              and more.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Unlimited Types</span
-              ><span class="feature-tag">Custom Slugs</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon violet">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Media Library</h3>
-            <p class="feature-description">
-              Grid/list views, full-screen modal editing with keyboard
-              navigation, drag-and-drop uploads, and automatic thumbnail
-              generation.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Full-Screen Modal</span
-              ><span class="feature-tag">Thumbnails</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon emerald">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"
-                  />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Theme System</h3>
-            <p class="feature-description">
-              Multiple themes with per-theme settings, live CSS preview, custom
-              landing pages, and instant theme switching without losing
-              configurations.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Live Preview</span
-              ><span class="feature-tag">Per-Theme Settings</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon amber">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <line x1="3" y1="9" x2="21" y2="9" />
-                  <line x1="9" y1="21" x2="9" y2="9" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">14+ Field Types</h3>
-            <p class="feature-description">
-              Text, WYSIWYG, images, files, colors, dates, selects, checkboxes,
-              radio buttons, repeaters, and more for any content structure.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Repeater Fields</span
-              ><span class="feature-tag">WYSIWYG</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon cyan">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
-                  <rect x="9" y="9" width="6" height="6" />
-                  <line x1="9" y1="1" x2="9" y2="4" />
-                  <line x1="15" y1="1" x2="15" y2="4" />
-                  <line x1="9" y1="20" x2="9" y2="23" />
-                  <line x1="15" y1="20" x2="15" y2="23" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Plugin System</h3>
-            <p class="feature-description">
-              WordPress-style hooks and filters. Create shortcodes, add admin
-              pages, register AJAX handlers, and extend REST API endpoints.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Hooks & Filters</span
-              ><span class="feature-tag">Shortcodes</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon rose">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Secure by Default</h3>
-            <p class="feature-description">
-              CSRF protection on all forms, XSS prevention, bcrypt password
-              hashing, secure sessions, and input sanitization throughout.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">CSRF Protection</span
-              ><span class="feature-tag">Bcrypt</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon blue">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Menu Builder</h3>
-            <p class="feature-description">
-              Visual drag-and-drop menu management with nested items, multiple
-              locations, custom links, and real-time reordering.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Drag & Drop</span
-              ><span class="feature-tag">Nested Menus</span>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon purple">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
-              <div class="feature-icon-glow"></div>
-            </div>
-            <h3 class="feature-title">Post Revisions</h3>
-            <p class="feature-description">
-              Automatic revision history with side-by-side comparison and
-              one-click restore. Never lose your content changes.
-            </p>
-            <div class="feature-tags">
-              <span class="feature-tag">Compare Revisions</span
-              ><span class="feature-tag">Restore</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- Bento Showcase -->
     <section class="showcase" id="showcase">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-eyebrow"
-            ><svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="9" />
-              <rect x="14" y="3" width="7" height="5" />
-              <rect x="14" y="12" width="7" height="9" />
-              <rect x="3" y="16" width="7" height="5" /></svg
-            >Showcase</span
-          >
-          <h2 class="section-title">
-            Built for developers.<br />Designed for everyone.
-          </h2>
-          <p class="section-description">
-            Clean architecture meets intuitive design. Extend with confidence,
-            customize without limits.
-          </p>
-        </div>
-        <div class="bento-grid">
-          <div class="bento-card bento-card-xl">
-            <span class="bento-eyebrow"
-              ><svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" /></svg
-              >Developer Experience</span
-            >
-            <h3 class="bento-title">WordPress-Style Plugin API</h3>
-            <p class="bento-description">
-              Familiar hooks and filters. Create plugins with actions,
-              shortcodes, settings pages, AJAX handlers, and REST endpoints.
-            </p>
-            <div class="code-block">
-              <div class="code-header">
-                <div class="code-dots">
-                  <span></span><span></span><span></span>
-                </div>
-                <div class="code-filename">my-plugin/plugin.php</div>
-              </div>
-              <div class="code-content">
-                <span class="comment">// Register a custom shortcode</span>
-                <span class="function">add_shortcode</span>(<span class="string"
-                  >'greeting'</span
-                >, <span class="keyword">function</span>(<span class="variable"
-                  >$atts</span
-                >) { <span class="variable">$name</span>
-                <span class="operator">=</span>
-                <span class="variable">$atts</span>[<span class="string"
-                  >'name'</span
-                >] <span class="operator">??</span>
-                <span class="string">'World'</span>;
-                <span class="keyword">return</span>
-                <span class="string"
-                  >"&lt;h2&gt;Hello, {<span class="variable">$name</span
-                  >}!&lt;/h2&gt;"</span
-                >; });
+        <div class="container">
+            <div class="section-header">
+                <span class="section-eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Showcase</span>
+                <h2 class="section-title">Built for developers.<br>Designed for everyone.</h2>
+                <p class="section-description">Clean architecture meets intuitive design. Extend with confidence, customize without limits.</p>
+            </div>
+            <div class="bento-grid">
+                <div class="bento-card bento-card-xl">
+                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Developer Experience</span>
+                    <h3 class="bento-title">WordPress-Style Plugin API</h3>
+                    <p class="bento-description">Familiar hooks and filters. Create plugins with actions, shortcodes, settings pages, AJAX handlers, and REST endpoints.</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots"><span></span><span></span><span></span></div>
+                            <div class="code-filename">my-plugin/plugin.php</div>
+                        </div>
+                        <div class="code-content">
+<span class="comment">// Register a custom shortcode</span>
+<span class="function">add_shortcode</span>(<span class="string">'greeting'</span>, <span class="keyword">function</span>(<span class="variable">$atts</span>) {
+    <span class="variable">$name</span> <span class="operator">=</span> <span class="variable">$atts</span>[<span class="string">'name'</span>] <span class="operator">??</span> <span class="string">'World'</span>;
+    <span class="keyword">return</span> <span class="string">"&lt;h2&gt;Hello, {<span class="variable">$name</span>}!&lt;/h2&gt;"</span>;
+});
 
-                <span class="comment">// Hook into content rendering</span>
-                <span class="function">add_filter</span>(<span class="string"
-                  >'the_content'</span
-                >, <span class="keyword">function</span>(<span class="variable"
-                  >$content</span
-                >) { <span class="keyword">return</span>
-                <span class="variable">$content</span>
-                <span class="operator">.</span>
-                <span class="string"
-                  >'&lt;p class="signature"&gt;— VoidForge&lt;/p&gt;'</span
-                >; });
-              </div>
-            </div>
-          </div>
-          <div class="bento-card bento-card-tall">
-            <span class="bento-eyebrow"
-              ><svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg
-              >By the Numbers</span
-            >
-            <h3 class="bento-title">Lightweight & Powerful</h3>
-            <p class="bento-description">
-              Enterprise features without the enterprise bloat.
-            </p>
-            <div class="bento-stats">
-              <div class="bento-stat">
-                <div class="bento-stat-value">14<span>+</span></div>
-                <div class="bento-stat-label">Field Types</div>
-              </div>
-              <div class="bento-stat">
-                <div class="bento-stat-value">80<span>+</span></div>
-                <div class="bento-stat-label">Icons</div>
-              </div>
-              <div class="bento-stat">
-                <div class="bento-stat-value">&lt;1<span>MB</span></div>
-                <div class="bento-stat-label">Core Size</div>
-              </div>
-              <div class="bento-stat">
-                <div class="bento-stat-value">0</div>
-                <div class="bento-stat-label">Dependencies</div>
-              </div>
-            </div>
-          </div>
-          <div class="bento-card bento-card-wide">
-            <span class="bento-eyebrow"
-              ><svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" /></svg
-              >Theme System</span
-            >
-            <h3 class="bento-title">Multiple Themes, Unique Settings</h3>
-            <p class="bento-description">
-              Each theme maintains its own configuration. Switch instantly
-              without losing customizations.
-            </p>
-            <div class="theme-cards">
-              <div class="theme-card dark">
-                <div class="theme-card-preview">
-                  <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    stroke-width="1.5"
-                  >
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  </svg>
+<span class="comment">// Hook into content rendering</span>
+<span class="function">add_filter</span>(<span class="string">'the_content'</span>, <span class="keyword">function</span>(<span class="variable">$content</span>) {
+    <span class="keyword">return</span> <span class="variable">$content</span> <span class="operator">.</span> <span class="string">'&lt;p class="signature"&gt;— VoidForge&lt;/p&gt;'</span>;
+});
+                        </div>
+                    </div>
                 </div>
-                <div class="theme-card-label">Default (Dark)</div>
-              </div>
-              <div class="theme-card light">
-                <div class="theme-card-preview">
-                  <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                  >
-                    <circle cx="12" cy="12" r="5" />
-                    <line x1="12" y1="1" x2="12" y2="3" />
-                    <line x1="12" y1="21" x2="12" y2="23" />
-                  </svg>
+                <div class="bento-card bento-card-tall">
+                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>By the Numbers</span>
+                    <h3 class="bento-title">Lightweight & Powerful</h3>
+                    <p class="bento-description">Enterprise features without the enterprise bloat.</p>
+                    <div class="bento-stats">
+                        <div class="bento-stat"><div class="bento-stat-value">14<span>+</span></div><div class="bento-stat-label">Field Types</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">80<span>+</span></div><div class="bento-stat-label">Icons</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">&lt;1<span>MB</span></div><div class="bento-stat-label">Core Size</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">0</div><div class="bento-stat-label">Dependencies</div></div>
+                    </div>
                 </div>
-                <div class="theme-card-label">Flavor (Light)</div>
-              </div>
+                <div class="bento-card bento-card-wide">
+                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/></svg>Theme System</span>
+                    <h3 class="bento-title">Multiple Themes, Unique Settings</h3>
+                    <p class="bento-description">Each theme maintains its own configuration. Switch instantly without losing customizations.</p>
+                    <div class="theme-cards">
+                        <div class="theme-card dark"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div class="theme-card-label">Default (Dark)</div></div>
+                        <div class="theme-card light"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></div><div class="theme-card-label">Flavor (Light)</div></div>
+                    </div>
+                </div>
+                <div class="bento-card bento-card-wide">
+                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>Custom Fields</span>
+                    <h3 class="bento-title">14+ Field Types for Any Content</h3>
+                    <p class="bento-description">Build any content structure with our comprehensive field library.</p>
+                    <div class="field-tags">
+                        <span class="field-tag">Text</span>
+                        <span class="field-tag">Textarea</span>
+                        <span class="field-tag">WYSIWYG</span>
+                        <span class="field-tag">Number</span>
+                        <span class="field-tag">Email</span>
+                        <span class="field-tag">URL</span>
+                        <span class="field-tag">Date</span>
+                        <span class="field-tag">Color</span>
+                        <span class="field-tag">Image</span>
+                        <span class="field-tag">File</span>
+                        <span class="field-tag">Select</span>
+                        <span class="field-tag">Checkbox</span>
+                        <span class="field-tag">Radio</span>
+                        <span class="field-tag">Repeater</span>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="bento-card bento-card-wide">
-            <span class="bento-eyebrow"
-              ><svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="3" y1="9" x2="21" y2="9" /></svg
-              >Custom Fields</span
-            >
-            <h3 class="bento-title">14+ Field Types for Any Content</h3>
-            <p class="bento-description">
-              Build any content structure with our comprehensive field library.
-            </p>
-            <div class="field-tags">
-              <span class="field-tag">Text</span>
-              <span class="field-tag">Textarea</span>
-              <span class="field-tag">WYSIWYG</span>
-              <span class="field-tag">Number</span>
-              <span class="field-tag">Email</span>
-              <span class="field-tag">URL</span>
-              <span class="field-tag">Date</span>
-              <span class="field-tag">Color</span>
-              <span class="field-tag">Image</span>
-              <span class="field-tag">File</span>
-              <span class="field-tag">Select</span>
-              <span class="field-tag">Checkbox</span>
-              <span class="field-tag">Radio</span>
-              <span class="field-tag">Repeater</span>
-            </div>
-          </div>
         </div>
-      </div>
     </section>
 
     <!-- Comparison -->
     <section class="comparison" id="comparison">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-eyebrow"
-            ><svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" /></svg
-            >Compare</span
-          >
-          <h2 class="section-title">See the difference</h2>
-          <p class="section-description">
-            VoidForge delivers where it matters most: simplicity, performance,
-            and developer experience.
-          </p>
+        <div class="container">
+            <div class="section-header">
+                <span class="section-eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Compare</span>
+                <h2 class="section-title">See the difference</h2>
+                <p class="section-description">VoidForge delivers where it matters most: simplicity, performance, and developer experience.</p>
+            </div>
+            <div class="comparison-table">
+                <div class="comparison-header">
+                    <div class="comparison-header-cell"><span class="comparison-product">Feature</span></div>
+                    <div class="comparison-header-cell highlight"><span class="comparison-product">VoidForge</span><span class="comparison-tag">Recommended</span></div>
+                    <div class="comparison-header-cell"><span class="comparison-product">WordPress</span></div>
+                    <div class="comparison-header-cell"><span class="comparison-product">Others</span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Zero Dependencies</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Pure PHP (No Framework)</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">WordPress-Style Hooks</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Sub-1MB Core Size</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Per-Theme Settings</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Modern Admin UI</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                </div>
+            </div>
         </div>
-        <div class="comparison-table">
-          <div class="comparison-header">
-            <div class="comparison-header-cell">
-              <span class="comparison-product">Feature</span>
-            </div>
-            <div class="comparison-header-cell highlight">
-              <span class="comparison-product">VoidForge</span
-              ><span class="comparison-tag">Recommended</span>
-            </div>
-            <div class="comparison-header-cell">
-              <span class="comparison-product">WordPress</span>
-            </div>
-            <div class="comparison-header-cell">
-              <span class="comparison-product">Others</span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">Zero Dependencies</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">Pure PHP (No Framework)</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check yes"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">WordPress-Style Hooks</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check yes"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">Sub-1MB Core Size</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">Per-Theme Settings</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-          </div>
-          <div class="comparison-row">
-            <div class="comparison-cell">
-              <span class="comparison-feature">Modern Admin UI</span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check highlight"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check no"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" /></svg
-              ></span>
-            </div>
-            <div class="comparison-cell">
-              <span class="comparison-check yes"
-                ><svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <polyline points="20 6 9 17 4 12" /></svg
-              ></span>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- CTA -->
     <section class="cta">
-      <div class="container">
-        <div class="cta-card">
-          <div class="cta-content">
-            <h2>Ready to start building?</h2>
-            <p>
-              Join developers creating amazing content experiences with
-              VoidForge. It's free, open-source, and ready to go.
-            </p>
-            <div class="cta-buttons">
-              <a href="admin/" class="btn btn-primary btn-xl">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-                Get Started Free
-              </a>
-              <a
-                href="docs/plugin-development.html"
-                class="btn btn-secondary btn-xl"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-                Read Documentation
-              </a>
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2>Ready to start building?</h2>
+                    <p>Join developers creating amazing content experiences with VoidForge. It's free, open-source, and ready to go.</p>
+                    <div class="cta-buttons">
+                        <a href="admin/" class="btn btn-primary btn-xl">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            Get Started Free
+                        </a>
+                        <a href="docs/plugin-development.html" class="btn btn-secondary btn-xl">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Read Documentation
+                        </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-      <div class="container">
-        <div class="footer-grid">
-          <div class="footer-brand">
-            <a href="/" class="logo">
-              <div class="logo-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                >
-                  <path d="M6 4L12 20L18 4" />
-                </svg>
-              </div>
-              <span class="logo-text">VoidForge</span>
-            </a>
-            <p>
-              A modern, lightweight CMS built with pure PHP. No frameworks, no
-              bloat — just powerful features and elegant architecture.
-            </p>
-          </div>
-          <div class="footer-links">
-            <h4>Product</h4>
-            <ul>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#showcase">Showcase</a></li>
-              <li><a href="#comparison">Compare</a></li>
-              <li>
-                <a
-                  href="https://github.com/ClearanceClarence/VoidForge-CMS/blob/main/CHANGELOG.md"
-                  >Changelog</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="footer-links">
-            <h4>Resources</h4>
-            <ul>
-              <li><a href="docs/plugin-development.html">Plugin Docs</a></li>
-              <li><a href="docs/theme-development.html">Theme Docs</a></li>
-              <li>
-                <a
-                  href="https://github.com/ClearanceClarence/VoidForge-CMS/blob/main/README.md"
-                  >Readme</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="footer-links">
-            <h4>Community</h4>
-            <ul>
-              <li>
-                <a href="https://github.com/ClearanceClarence/VoidForge-CMS"
-                  >GitHub</a
-                >
-              </li>
-            </ul>
-          </div>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="logo">
+                        <div class="logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg></div>
+                        <span class="logo-text">VoidForge</span>
+                    </a>
+                    <p>A modern, lightweight CMS built with pure PHP. No frameworks, no bloat — just powerful features and elegant architecture.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#showcase">Showcase</a></li>
+                        <li><a href="#comparison">Compare</a></li>
+                        <li><a href="https://github.com/ClearanceClarence/VoidForge-CMS/blob/main/CHANGELOG.md">Changelog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="docs/plugin-development.html">Plugin Docs</a></li>
+                        <li><a href="docs/theme-development.html">Theme Docs</a></li>
+                        <li><a href="https://github.com/ClearanceClarence/VoidForge-CMS/blob/main/README.md">Readme</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/ClearanceClarence/VoidForge-CMSs">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 VoidForge CMS v0.1.4 — MIT License</p>
+                <div class="footer-social">
+                    <a href="https://github.com/ClearanceClarence/VoidForge-CMS" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+                </div>
+            </div>
         </div>
-        <div class="footer-bottom">
-          <p class="footer-copyright">
-            © 2025 VoidForge CMS v0.1.4 — MIT License
-          </p>
-          <div class="footer-social">
-            <a
-              href="https://github.com/ClearanceClarence/VoidForge-CMS"
-              aria-label="GitHub"
-              ><svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                /></svg
-            ></a>
-            <a href="#" aria-label="Twitter"
-              ><svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                /></svg
-            ></a>
-          </div>
-        </div>
-      </div>
     </footer>
 
     <script>
-      // Header scroll effect
-      const header = document.getElementById("header");
-      window.addEventListener("scroll", () =>
-        header.classList.toggle("scrolled", window.scrollY > 50)
-      );
+        // Header scroll effect
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 50));
 
-      // Animate chart bars
-      document.addEventListener("DOMContentLoaded", () => {
-        const bars = document.querySelectorAll(".chart-bar");
-        const heights = [40, 65, 45, 80, 55, 90, 70];
-        bars.forEach((bar, i) => {
-          bar.style.height = "0%";
-          setTimeout(
-            () => (bar.style.height = heights[i] + "%"),
-            300 + i * 100
-          );
+        // Animate chart bars
+        document.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.chart-bar');
+            const heights = [40, 65, 45, 80, 55, 90, 70];
+            bars.forEach((bar, i) => {
+                bar.style.height = '0%';
+                setTimeout(() => bar.style.height = heights[i] + '%', 300 + (i * 100));
+            });
         });
-      });
 
-      // Smooth scroll
-      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-        anchor.addEventListener("click", function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute("href"));
-          if (target)
-            target.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
         });
-      });
 
-      // Intersection Observer for animations
-      const observerOptions = {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px",
-      };
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = "1";
-            entry.target.style.transform = "translateY(0)";
-          }
-        });
-      }, observerOptions);
+        // Intersection Observer for animations
+        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
 
-      document
-        .querySelectorAll(".feature-card, .bento-card")
-        .forEach((card) => {
-          card.style.opacity = "0";
-          card.style.transform = "translateY(30px)";
-          card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-          observer.observe(card);
+        document.querySelectorAll('.feature-card, .bento-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
         });
     </script>
-  </body>
+</body>
 </html>
