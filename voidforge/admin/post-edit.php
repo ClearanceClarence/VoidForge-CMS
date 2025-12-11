@@ -11,8 +11,10 @@ require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
+require_once CMS_ROOT . '/includes/taxonomy.php';
 
 Post::init();
+Taxonomy::init();
 
 User::startSession();
 User::requireLogin();
@@ -118,6 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
             }
         }
         
+        // Save taxonomy terms
+        $postTaxonomies = Taxonomy::getForPostType($postType);
+        foreach ($postTaxonomies as $taxSlug => $tax) {
+            $termIds = $_POST['tax_' . $taxSlug] ?? [];
+            if (!is_array($termIds)) {
+                $termIds = array_filter(array_map('intval', explode(',', $termIds)));
+            }
+            Taxonomy::setPostTerms($savedPostId, $taxSlug, $termIds);
+        }
+        
         redirect(ADMIN_URL . '/post-edit.php?id=' . $savedPostId);
     }
 }
@@ -136,6 +148,15 @@ if ($post && $post['featured_image_id']) {
 $customFieldsDefs = get_post_type_fields($postType);
 $customFieldsValues = [];
 if ($post && $post['id']) {
+
+// Get taxonomies for this post type
+$postTaxonomies = Taxonomy::getForPostType($postType);
+$postTermsData = [];
+if ($post && $post['id']) {
+    foreach ($postTaxonomies as $taxSlug => $tax) {
+        $postTermsData[$taxSlug] = Taxonomy::getPostTermIds($post['id'], $taxSlug);
+    }
+}
     $customFieldsValues = get_all_custom_fields($post['id']);
 }
 
@@ -681,6 +702,50 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </div>
             <?php endif; ?>
+            
+            <?php foreach ($postTaxonomies as $taxSlug => $tax): 
+                $allTerms = Taxonomy::getTerms($taxSlug);
+                $selectedTerms = $postTermsData[$taxSlug] ?? [];
+            ?>
+            <div class="sidebar-card">
+                <div class="sidebar-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <?= esc($tax['label']) ?>
+                    <a href="terms.php?taxonomy=<?= esc($taxSlug) ?>" style="font-size: 0.6875rem; color: var(--text-muted); text-decoration: none;">+ Add New</a>
+                </div>
+                <div class="sidebar-card-body" style="max-height: 200px; overflow-y: auto;">
+                    <?php if (empty($allTerms)): ?>
+                    <p style="color: var(--text-muted); font-size: 0.8125rem; margin: 0;">No <?= esc(strtolower($tax['label'])) ?> yet. <a href="terms.php?taxonomy=<?= esc($taxSlug) ?>">Create one</a>.</p>
+                    <?php elseif ($tax['hierarchical']): ?>
+                    <?php 
+                    $termsTree = Taxonomy::getTermsTree($taxSlug);
+                    function renderTermCheckboxes($terms, $taxSlug, $selected, $depth = 0) {
+                        foreach ($terms as $term): 
+                    ?>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; padding-left: <?= $depth * 1.25 ?>rem; cursor: pointer;">
+                        <input type="checkbox" name="tax_<?= esc($taxSlug) ?>[]" value="<?= $term['id'] ?>" <?= in_array($term['id'], $selected) ? 'checked' : '' ?> style="accent-color: var(--forge-primary);">
+                        <span style="font-size: 0.8125rem; color: var(--text-primary);"><?= esc($term['name']) ?></span>
+                    </label>
+                    <?php 
+                        if (!empty($term['children'])) {
+                            renderTermCheckboxes($term['children'], $taxSlug, $selected, $depth + 1);
+                        }
+                        endforeach;
+                    }
+                    renderTermCheckboxes($termsTree, $taxSlug, $selectedTerms);
+                    ?>
+                    <?php else: ?>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                        <?php foreach ($allTerms as $term): ?>
+                        <label style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: <?= in_array($term['id'], $selectedTerms) ? 'rgba(99,102,241,0.15)' : 'var(--bg-card-header)' ?>; border: 1px solid <?= in_array($term['id'], $selectedTerms) ? 'var(--forge-primary)' : 'var(--border-color)' ?>; border-radius: 100px; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.borderColor='var(--forge-primary)'" onmouseout="this.style.borderColor=this.querySelector('input').checked?'var(--forge-primary)':'var(--border-color)'">
+                            <input type="checkbox" name="tax_<?= esc($taxSlug) ?>[]" value="<?= $term['id'] ?>" <?= in_array($term['id'], $selectedTerms) ? 'checked' : '' ?> style="display: none;" onchange="this.parentElement.style.background=this.checked?'rgba(99,102,241,0.15)':'var(--bg-card-header)'; this.parentElement.style.borderColor=this.checked?'var(--forge-primary)':'var(--border-color)';">
+                            <span style="font-size: 0.75rem; color: var(--text-primary);"><?= esc($term['name']) ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
             
             <?php if (!empty($customFieldsDefs)): ?>
             <div class="sidebar-card">

@@ -7,6 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.5] - 2025-12-11
+
+### 🏷️ Taxonomies System
+
+A complete taxonomy management system for organizing content with categories, tags, and custom taxonomies.
+
+#### Core Features
+- **Built-in Taxonomies** — Categories (hierarchical) and Tags (flat) for posts out of the box
+- **Custom Taxonomies** — Create unlimited taxonomies for any post type
+- **Hierarchical Support** — Parent/child relationships for category-like taxonomies
+- **Flat Taxonomies** — Tag-like flat structure for simple grouping
+- **Multi Post Type** — Assign taxonomies to multiple post types
+
+#### Admin Interface
+- **Taxonomies Page** — Manage all built-in and custom taxonomies
+- **Terms Management** — Add, edit, delete terms with AJAX for smooth UX
+- **Post Editor Integration** — Taxonomy selectors in post sidebar
+- **Hierarchical Checkboxes** — Nested checkbox tree for categories
+- **Tag-Style Pills** — Compact pill UI for flat taxonomies
+
+#### Taxonomy Class API
+- `Taxonomy::register()` — Register custom taxonomies
+- `Taxonomy::getForPostType()` — Get taxonomies for a post type
+- `Taxonomy::createTerm()` / `updateTerm()` / `deleteTerm()` — Term CRUD
+- `Taxonomy::getTerms()` — Get all terms for a taxonomy
+- `Taxonomy::getTermsTree()` — Get hierarchical term tree
+- `Taxonomy::setPostTerms()` — Set terms for a post
+- `Taxonomy::getPostTerms()` — Get terms assigned to a post
+- `Taxonomy::getTermPosts()` — Get posts with a specific term
+
+### 🧭 Menu Builder Improvements
+
+#### Bug Fixes
+- **AJAX Save/Delete** — Fixed Database method signatures causing save and delete errors
+- **Post::permalink()** — Fixed undefined method error in `Menu::getItemUrl()`
+- **Duplicate Prevention** — Menu items can no longer be added twice (except custom links)
+- **Delete Modal** — Replaced JavaScript `confirm()` with styled modal dialog
+
+#### Frontend Integration
+- **Theme Support** — Both default and flavor themes now use the Menu system
+- **Location Assignment** — Menus must be assigned to "Primary Navigation" location to display
+- **Fallback** — Themes fall back to showing pages if no menu is assigned
+
+#### UI Enhancements
+- **Save Feedback** — Button shows "Saving..." with spinner, then success toast
+- **Improved Toasts** — Larger, more visible notifications with gradient backgrounds
+- **CPT Individual Posts** — Custom post types now show individual posts instead of archives
+
+### 🎨 Admin Navigation Redesign
+
+Compact, user-friendly sidebar navigation:
+
+- **Smaller Sidebar** — Width reduced from 260px to 220px
+- **Inline Icons** — Removed bulky icon boxes, icons now inline at 18-20px
+- **Reduced Spacing** — More compact padding and gaps throughout
+- **Cleaner Active State** — Simple colored icon instead of gradient box
+- **Thinner Scrollbar** — 4px width with hover effects
+- **Updated Spacing Settings** — Compact/Medium/Comfortable options refined
+
+### 📁 New Files
+
+```
+includes/
+└── taxonomy.php          # Taxonomy management class
+
+admin/
+├── taxonomies.php        # Taxonomies list page
+├── taxonomy-edit.php     # Create/edit taxonomy
+└── terms.php             # Terms management page
+```
+
+### 📁 Modified Files
+
+```
+includes/
+├── config.php            — Version updated to 0.1.5
+├── migrations.php        — Added taxonomy tables
+├── menu.php              — Fixed Database method calls, permalink method
+└── install.php           — Added taxonomy tables
+
+admin/
+├── menus.php             — Fixed AJAX, improved UI, delete modal
+├── post-edit.php         — Added taxonomy selectors in sidebar
+├── assets/css/admin.css  — Compact navigation styles
+└── includes/sidebar.php  — Added Taxonomies link, smaller logo
+
+index.php                 — Added Menu class for frontend
+
+themes/
+├── default/header.php    — Uses Menu system with fallback
+└── flavor/functions.php  — flavor_nav_menu() uses Menu system
+```
+
+### 🎯 Theme Usage Example
+
+```php
+// Get categories for a post
+$categories = Taxonomy::getPostTerms($post['id'], 'category');
+
+// Display as links
+foreach ($categories as $cat) {
+    echo '<a href="' . Taxonomy::getTermUrl($cat) . '">' . esc($cat['name']) . '</a>';
+}
+
+// Display menu in theme (assign to "Primary Navigation" location in admin)
+$menu = Menu::getMenuByLocation('primary');
+if ($menu) {
+    $items = Menu::getItems($menu['id']);
+    foreach ($items as $item) {
+        echo '<a href="' . Menu::getItemUrl($item) . '">' . esc($item['title']) . '</a>';
+    }
+}
+```
+
+---
+
 ## [0.1.4] - 2025-12-09
 
 ### 🧭 Menu Builder System
@@ -403,6 +519,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.1.5 | 2025-12-11 | Taxonomies system, menu builder fixes, compact admin navigation |
 | 0.1.4 | 2025-12-09 | Menu builder system, themes page redesign |
 | 0.1.3 | 2025-12-09 | Post revisions system, publish button fix, field key prefix |
 | 0.1.2 | 2025-12-09 | Theme system, Media/Thumbnails modal redesign, Plugin docs |

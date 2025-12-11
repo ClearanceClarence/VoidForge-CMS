@@ -42,6 +42,8 @@ $adminTheme = getOption('admin_theme', [
     'custom_primary' => '#6366f1',
     'custom_secondary' => '#8b5cf6',
     'custom_sidebar' => '#0f172a',
+    'menu_item_padding' => 'medium',
+    'menu_item_spacing' => 'medium',
 ]);
 
 // Color schemes - all use dark sidebar gradients for good text contrast
@@ -138,6 +140,20 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
     $sidebarFontSize = $fontSizeMap[$adminTheme['font_size_sidebar'] ?? 'medium'] ?? '14px';
     $headerFontSize = $fontSizeMap[$adminTheme['font_size_header'] ?? 'medium'] ?? '14px';
     $contentFontSize = $fontSizeMap[$adminTheme['font_size_content'] ?? 'medium'] ?? '14px';
+    
+    // Menu spacing mapping
+    $paddingMap = [
+        'compact' => '0.375rem',
+        'medium' => '0.5rem',
+        'comfortable' => '0.625rem',
+    ];
+    $spacingMap = [
+        'compact' => '0px',
+        'medium' => '1px',
+        'comfortable' => '3px',
+    ];
+    $menuItemPadding = $paddingMap[$adminTheme['menu_item_padding'] ?? 'medium'] ?? '0.5rem';
+    $menuItemSpacing = $spacingMap[$adminTheme['menu_item_spacing'] ?? 'medium'] ?? '1px';
     ?>
     <style>
         :root {
@@ -153,6 +169,8 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
             --sidebar-font-size: <?= $sidebarFontSize ?>;
             --header-font-size: <?= $headerFontSize ?>;
             --content-font-size: <?= $contentFontSize ?>;
+            --menu-item-padding: <?= $menuItemPadding ?>;
+            --menu-item-spacing: <?= $menuItemSpacing ?>;
         }
         body { 
             font-family: var(--font-family); 

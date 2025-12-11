@@ -20,7 +20,7 @@ $postTypes = Post::getTypes();
         <div class="sidebar-header">
             <a href="<?= ADMIN_URL ?>/" class="sidebar-logo">
                 <div class="logo-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
                         <defs>
                             <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#8b5cf6"/>
@@ -123,6 +123,14 @@ $postTypes = Post::getTypes();
                     </div>
                     <span class="nav-label">Custom Fields</span>
                     <?php if (in_array($currentPage, ['custom-fields', 'custom-field-edit'])): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
+                <a href="<?= ADMIN_URL ?>/taxonomies.php" class="nav-item <?= in_array($currentPage, ['taxonomies', 'taxonomy-edit', 'terms']) ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('tag') ?>
+                    </div>
+                    <span class="nav-label">Taxonomies</span>
+                    <?php if (in_array($currentPage, ['taxonomies', 'taxonomy-edit', 'terms'])): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
             </div>
 

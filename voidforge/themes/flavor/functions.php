@@ -78,7 +78,30 @@ function flavor_is_home(): bool
  */
 function flavor_nav_menu(): array
 {
-    // Get published pages for navigation
+    // Try to get primary menu from Menu system
+    try {
+        $primaryMenu = Menu::getMenuByLocation('primary');
+        if ($primaryMenu) {
+            $menuItems = Menu::getItems($primaryMenu['id']);
+            $menu = [];
+            foreach ($menuItems as $item) {
+                $url = Menu::getItemUrl($item);
+                $menu[] = [
+                    'label' => $item['title'],
+                    'url' => $url,
+                    'target' => $item['target'] ?? '_self',
+                    'active' => false
+                ];
+            }
+            if (!empty($menu)) {
+                return $menu;
+            }
+        }
+    } catch (Exception $e) {
+        // Menu system not ready, fall back to pages
+    }
+    
+    // Fallback: Get published pages for navigation
     $pages = Post::query([
         'type' => 'page',
         'status' => 'published',

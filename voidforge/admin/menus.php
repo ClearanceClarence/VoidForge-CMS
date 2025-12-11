@@ -17,17 +17,16 @@ Plugin::init();
 Menu::init();
 
 User::startSession();
-User::requireRole('admin');
 
-$pageTitle = 'Menus';
-$currentPage = 'menus';
-
-$menuId = (int)($_GET['menu'] ?? 0);
-$currentMenu = $menuId ? Menu::find($menuId) : null;
-
-// AJAX handlers
+// Handle AJAX requests first, before any potential redirects
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
     header('Content-Type: application/json');
+    
+    // Check auth for AJAX
+    if (!User::isLoggedIn() || !User::hasRole('admin')) {
+        echo json_encode(['success' => false, 'error' => 'Not authorized']);
+        exit;
+    }
     
     if (!verifyCsrf($_POST['csrf'] ?? '')) {
         echo json_encode(['success' => false, 'error' => 'Invalid token']);
@@ -35,74 +34,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
     }
     
     $action = $_POST['ajax_action'];
+    $menuId = (int)($_POST['menu_id'] ?? $_GET['menu'] ?? 0);
     
-    switch ($action) {
-        case 'create_menu':
-            $name = trim($_POST['name'] ?? '');
-            if (empty($name)) {
-                echo json_encode(['success' => false, 'error' => 'Menu name is required']);
+    try {
+        switch ($action) {
+            case 'create_menu':
+                $name = trim($_POST['name'] ?? '');
+                if (empty($name)) {
+                    echo json_encode(['success' => false, 'error' => 'Menu name is required']);
+                    exit;
+                }
+                $id = Menu::create(['name' => $name]);
+                echo json_encode(['success' => true, 'id' => $id]);
                 exit;
-            }
-            $id = Menu::create(['name' => $name]);
-            echo json_encode(['success' => true, 'id' => $id]);
-            exit;
-            
-        case 'update_menu':
-            $id = (int)$_POST['id'];
-            $name = trim($_POST['name'] ?? '');
-            $location = $_POST['location'] ?? '';
-            Menu::update($id, ['name' => $name, 'location' => $location]);
-            echo json_encode(['success' => true]);
-            exit;
-            
-        case 'delete_menu':
-            $id = (int)$_POST['id'];
-            Menu::delete($id);
-            echo json_encode(['success' => true]);
-            exit;
-            
-        case 'add_item':
-            $menuId = (int)$_POST['menu_id'];
-            $itemId = Menu::addItem($menuId, [
-                'title' => $_POST['title'] ?? 'Menu Item',
-                'type' => $_POST['type'] ?? 'custom',
-                'object_id' => $_POST['object_id'] ?? null,
-                'url' => $_POST['url'] ?? '',
-                'target' => $_POST['target'] ?? '_self',
-            ]);
-            $table = Database::table('menu_items');
-            $item = Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$itemId]);
-            echo json_encode(['success' => true, 'item' => $item]);
-            exit;
-            
-        case 'update_item':
-            $id = (int)$_POST['id'];
-            Menu::updateItem($id, [
-                'title' => $_POST['title'] ?? '',
-                'url' => $_POST['url'] ?? '',
-                'target' => $_POST['target'] ?? '_self',
-                'css_class' => $_POST['css_class'] ?? '',
-            ]);
-            echo json_encode(['success' => true]);
-            exit;
-            
-        case 'delete_item':
-            $id = (int)$_POST['id'];
-            Menu::deleteItem($id);
-            echo json_encode(['success' => true]);
-            exit;
-            
-        case 'save_order':
-            $menuId = (int)$_POST['menu_id'];
-            $items = json_decode($_POST['items'] ?? '[]', true);
-            Menu::saveOrder($menuId, $items);
-            echo json_encode(['success' => true]);
-            exit;
+                
+            case 'update_menu':
+                $id = (int)$_POST['id'];
+                $name = trim($_POST['name'] ?? '');
+                $location = $_POST['location'] ?? '';
+                Menu::update($id, ['name' => $name, 'location' => $location]);
+                echo json_encode(['success' => true]);
+                exit;
+                
+            case 'delete_menu':
+                $id = (int)$_POST['id'];
+                Menu::delete($id);
+                echo json_encode(['success' => true]);
+                exit;
+                
+            case 'add_item':
+                $type = $_POST['type'] ?? 'custom';
+                $objectId = $_POST['object_id'] ?? null;
+                
+                // Check for duplicates (except custom links)
+                if ($type !== 'custom' && $objectId && Menu::itemExists($menuId, $type, $objectId)) {
+                    echo json_encode(['success' => false, 'error' => 'This item is already in the menu']);
+                    exit;
+                }
+                
+                $itemId = Menu::addItem($menuId, [
+                    'title' => $_POST['title'] ?? 'Menu Item',
+                    'type' => $type,
+                    'object_id' => $objectId,
+                    'url' => $_POST['url'] ?? '',
+                    'target' => $_POST['target'] ?? '_self',
+                ]);
+                $table = Database::table('menu_items');
+                $item = Database::queryOne("SELECT * FROM {$table} WHERE id = ?", [$itemId]);
+                echo json_encode(['success' => true, 'item' => $item]);
+                exit;
+                
+            case 'update_item':
+                $id = (int)$_POST['id'];
+                Menu::updateItem($id, [
+                    'title' => $_POST['title'] ?? '',
+                    'url' => $_POST['url'] ?? '',
+                    'target' => $_POST['target'] ?? '_self',
+                    'css_class' => $_POST['css_class'] ?? '',
+                ]);
+                echo json_encode(['success' => true]);
+                exit;
+                
+            case 'delete_item':
+                $id = (int)$_POST['id'];
+                Menu::deleteItem($id);
+                echo json_encode(['success' => true]);
+                exit;
+                
+            case 'save_order':
+                $items = json_decode($_POST['items'] ?? '[]', true);
+                Menu::saveOrder($menuId, $items);
+                echo json_encode(['success' => true]);
+                exit;
+                
+            default:
+                echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
+                exit;
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
     }
-    
-    echo json_encode(['success' => false, 'error' => 'Unknown action']);
-    exit;
 }
+
+// Normal page load - require admin
+User::requireRole('admin');
+
+$pageTitle = 'Menus';
+$currentPage = 'menus';
+
+$menuId = (int)($_GET['menu'] ?? 0);
+$currentMenu = $menuId ? Menu::find($menuId) : null;
 
 $menus = Menu::getAll();
 $locations = Menu::getLocations();
@@ -812,27 +834,40 @@ include ADMIN_PATH . '/includes/header.php';
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1.25rem;
     background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.625rem;
     z-index: 1001;
-    animation: toastIn 0.2s ease;
-    font-size: 0.8125rem;
+    animation: toastIn 0.3s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
     color: var(--text-primary);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
 }
 
-.toast.success { border-color: var(--forge-success); }
-.toast.error { border-color: var(--forge-danger); }
+.toast.success { 
+    border-color: var(--forge-success); 
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, var(--bg-card) 100%);
+}
+.toast.error { 
+    border-color: var(--forge-danger); 
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-card) 100%);
+}
 
 @keyframes toastIn {
-    from { transform: translateY(0.5rem); opacity: 0; }
+    from { transform: translateY(1rem); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spin { animation: spin 1s linear infinite; }
 
 .sortable-ghost { opacity: 0.4; }
 </style>
@@ -892,25 +927,33 @@ include ADMIN_PATH . '/includes/header.php';
         </div>
 
         <?php if (!empty($availablePostTypes)): ?>
+        <?php foreach ($availablePostTypes as $cptInfo): ?>
         <div class="add-panel-card collapsed">
             <div class="add-panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                <span>Post Type Archives</span>
+                <span><?= esc($cptInfo['name']) ?></span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="add-panel-body">
-                <div class="add-item-list" id="postTypesList">
-                    <?php foreach ($availablePostTypes as $type): ?>
+                <?php if (empty($cptInfo['posts'])): ?>
+                <p style="color:var(--text-muted);font-size:0.75rem;margin:0">No <?= esc(strtolower($cptInfo['name'])) ?> available</p>
+                <?php else: ?>
+                <div class="add-item-list" id="cpt_<?= esc($cptInfo['slug']) ?>_list">
+                    <?php foreach ($cptInfo['posts'] as $cptPost): ?>
                     <div class="add-item-checkbox">
-                        <input type="checkbox" id="pt_<?= $type['slug'] ?>" value="<?= esc($type['slug']) ?>" data-title="<?= esc($type['name']) ?>" data-type="post_type">
-                        <label for="pt_<?= $type['slug'] ?>"><?= esc($type['name']) ?></label>
+                        <input type="checkbox" id="cpt_<?= $cptInfo['slug'] ?>_<?= $cptPost['id'] ?>" value="<?= $cptPost['id'] ?>" data-title="<?= esc($cptPost['title']) ?>" data-type="<?= esc($cptInfo['slug']) ?>">
+                        <label for="cpt_<?= $cptInfo['slug'] ?>_<?= $cptPost['id'] ?>"><?= esc($cptPost['title']) ?></label>
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
+            <?php if (!empty($cptInfo['posts'])): ?>
             <div class="add-panel-footer">
-                <button class="btn-add-to-menu" onclick="addSelectedItems('postTypesList')" <?= !$currentMenu ? 'disabled' : '' ?>>Add to Menu</button>
+                <button class="btn-add-to-menu" onclick="addSelectedItems('cpt_<?= esc($cptInfo['slug']) ?>_list')" <?= !$currentMenu ? 'disabled' : '' ?>>Add to Menu</button>
             </div>
+            <?php endif; ?>
         </div>
+        <?php endforeach; ?>
         <?php endif; ?>
 
         <div class="add-panel-card">
@@ -1012,7 +1055,7 @@ include ADMIN_PATH . '/includes/header.php';
                                 </div>
                                 <div class="menu-item-actions">
                                     <button class="btn-item-save" onclick="saveItem(<?= $item['id'] ?>, this)">Save</button>
-                                    <button class="btn-item-delete" onclick="deleteItem(<?= $item['id'] ?>)">Delete</button>
+                                    <button class="btn-item-delete" onclick="deleteItem(<?= $item['id'] ?>, <?= htmlspecialchars(json_encode($item['title']), ENT_QUOTES, 'UTF-8') ?>)">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -1094,10 +1137,27 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 </div>
 
+<div class="modal-overlay" id="deleteItemModal" onclick="if(event.target===this)closeModal('deleteItemModal')">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Delete Item</h2>
+            <button class="modal-close" onclick="closeModal('deleteItemModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <p style="margin:0;color:var(--text-secondary)">Delete "<strong style="color:var(--text-primary)" id="deleteItemName"></strong>" from the menu?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('deleteItemModal')">Cancel</button>
+            <button class="btn-modal-confirm btn-modal-danger" onclick="confirmDeleteItem()">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 var menuId = <?= $menuId ?: 'null' ?>;
 var csrfToken = '<?= csrfToken() ?>';
+var deleteItemId = null;
 
 function openModal(id) { document.getElementById(id).classList.add('open'); if(id==='newMenuModal') setTimeout(()=>document.getElementById('newMenuName').focus(),100); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -1105,29 +1165,124 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function createMenu() {
     var name = document.getElementById('newMenuName').value.trim();
     if (!name) return showToast('Enter a menu name', 'error');
-    ajaxPost({ ajax_action: 'create_menu', name: name }, d => d.success ? location.href='?menu='+d.id : showToast(d.error||'Error','error'));
+    ajaxPost({ ajax_action: 'create_menu', name: name }, function(d) {
+        if (d && d.success) {
+            location.href = '?menu=' + d.id;
+        } else {
+            showToast(d?.error || 'Error creating menu', 'error');
+        }
+    });
 }
 
 function saveMenu() {
-    var name = document.getElementById('menuName').value.trim();
-    if (!name) return showToast('Menu name required', 'error');
-    saveMenuOrder(() => ajaxPost({ ajax_action: 'update_menu', id: menuId, name: name, location: document.getElementById('menuLocation').value }, d => showToast(d.success?'Menu saved':'Error', d.success?'success':'error')));
+    var nameEl = document.getElementById('menuName');
+    var locationEl = document.getElementById('menuLocation');
+    var saveBtn = document.querySelector('.btn-save-menu');
+    
+    if (!nameEl || !locationEl) {
+        showToast('Error: Form elements not found', 'error');
+        return;
+    }
+    
+    var name = nameEl.value.trim();
+    if (!name) {
+        showToast('Menu name required', 'error');
+        return;
+    }
+    
+    if (!menuId) {
+        showToast('No menu selected', 'error');
+        return;
+    }
+    
+    // Show saving state
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg> Saving...';
+    }
+    
+    // First save the order
+    var itemsEl = document.getElementById('menuItems');
+    var items = itemsEl ? getOrder(itemsEl) : [];
+    
+    ajaxPost({ ajax_action: 'save_order', menu_id: menuId, items: JSON.stringify(items) }, function(orderResult) {
+        if (!orderResult || !orderResult.success) {
+            console.error('Order save failed:', orderResult);
+        }
+        // Then save the menu settings
+        ajaxPost({ 
+            ajax_action: 'update_menu', 
+            id: menuId, 
+            name: name, 
+            location: locationEl.value 
+        }, function(d) {
+            // Restore button
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Save Menu';
+            }
+            
+            if (d && d.success) {
+                showToast('Menu saved successfully!', 'success');
+            } else {
+                showToast(d?.error || 'Error saving menu', 'error');
+                console.error('Menu save failed:', d);
+            }
+        });
+    });
 }
 
 function deleteMenu() {
-    ajaxPost({ ajax_action: 'delete_menu', id: menuId }, d => d.success ? location.href='menus.php' : showToast('Error','error'));
+    ajaxPost({ ajax_action: 'delete_menu', id: menuId }, function(d) {
+        if (d && d.success) {
+            location.href = 'menus.php';
+        } else {
+            showToast(d?.error || 'Error deleting menu', 'error');
+        }
+    });
 }
 
 function addSelectedItems(listId) {
     if (!menuId) return showToast('Select a menu first', 'error');
     var cbs = document.querySelectorAll('#'+listId+' input:checked');
     if (!cbs.length) return showToast('Select items', 'error');
+    
+    var addedCount = 0;
+    var skippedCount = 0;
+    var total = cbs.length;
+    var processed = 0;
+    
     cbs.forEach(cb => {
-        var data = { ajax_action: 'add_item', menu_id: menuId, title: cb.dataset.title, type: cb.dataset.type };
-        data[cb.dataset.type==='post_type'?'url':'object_id'] = cb.value;
-        ajaxPost(data, r => { if(r.success) addItemToUI(r.item); cb.checked=false; });
+        var data = { 
+            ajax_action: 'add_item', 
+            menu_id: menuId, 
+            title: cb.dataset.title, 
+            type: cb.dataset.type,
+            object_id: cb.value
+        };
+        
+        ajaxPost(data, function(r) { 
+            processed++;
+            if (r && r.success) { 
+                addItemToUI(r.item); 
+                addedCount++;
+                cb.checked = false;
+            } else {
+                skippedCount++;
+            }
+            
+            // Show result after all processed
+            if (processed === total) {
+                if (addedCount > 0 && skippedCount > 0) {
+                    showToast(addedCount + ' added, ' + skippedCount + ' already in menu', 'success');
+                } else if (addedCount > 0) {
+                    showToast(addedCount + ' item' + (addedCount > 1 ? 's' : '') + ' added', 'success');
+                } else {
+                    showToast('Items already in menu', 'error');
+                }
+            }
+        });
     });
-    setTimeout(() => showToast('Items added', 'success'), 300);
 }
 
 function addCustomLink() {
@@ -1135,28 +1290,59 @@ function addCustomLink() {
     var url = document.getElementById('customLinkUrl').value.trim();
     var text = document.getElementById('customLinkText').value.trim();
     if (!url || !text) return showToast('Enter URL and text', 'error');
-    ajaxPost({ ajax_action: 'add_item', menu_id: menuId, title: text, type: 'custom', url: url }, d => {
-        if (d.success) { addItemToUI(d.item); document.getElementById('customLinkUrl').value='https://'; document.getElementById('customLinkText').value=''; showToast('Link added','success'); }
+    ajaxPost({ ajax_action: 'add_item', menu_id: menuId, title: text, type: 'custom', url: url }, function(d) {
+        if (d && d.success) { 
+            addItemToUI(d.item); 
+            document.getElementById('customLinkUrl').value='https://'; 
+            document.getElementById('customLinkText').value=''; 
+            showToast('Link added','success'); 
+        } else {
+            showToast(d?.error || 'Failed to add link', 'error');
+        }
     });
 }
 
 function addItemToUI(item) {
     var e = document.getElementById('menuEmpty'); if(e) e.style.display='none';
     var li = document.createElement('li'); li.className='menu-item'; li.dataset.id=item.id;
-    li.innerHTML = `<div class="menu-item-content"><div class="menu-item-header"><span class="menu-item-drag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span><span class="menu-item-title">${esc(item.title)}</span><span class="menu-item-type">${item.type.charAt(0).toUpperCase()+item.type.slice(1)}</span><button class="menu-item-toggle" onclick="this.closest('.menu-item-content').classList.toggle('expanded')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button></div><div class="menu-item-details"><div class="menu-item-field"><label>Navigation Label</label><input type="text" class="item-title" value="${esc(item.title)}"></div>${item.type==='custom'?'<div class="menu-item-field"><label>URL</label><input type="url" class="item-url" value="'+esc(item.url||'')+'"></div>':''}<div class="menu-item-field"><label>Open In</label><select class="item-target"><option value="_self">Same Tab</option><option value="_blank">New Tab</option></select></div><div class="menu-item-field"><label>CSS Class</label><input type="text" class="item-css" value="" placeholder="optional"></div><div class="menu-item-actions"><button class="btn-item-save" onclick="saveItem(${item.id},this)">Save</button><button class="btn-item-delete" onclick="deleteItem(${item.id})">Delete</button></div></div></div>`;
+    var safeTitle = JSON.stringify(item.title || '');
+    li.innerHTML = `<div class="menu-item-content"><div class="menu-item-header"><span class="menu-item-drag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span><span class="menu-item-title">${esc(item.title)}</span><span class="menu-item-type">${item.type.charAt(0).toUpperCase()+item.type.slice(1)}</span><button class="menu-item-toggle" onclick="this.closest('.menu-item-content').classList.toggle('expanded')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button></div><div class="menu-item-details"><div class="menu-item-field"><label>Navigation Label</label><input type="text" class="item-title" value="${esc(item.title)}"></div>${item.type==='custom'?'<div class="menu-item-field"><label>URL</label><input type="url" class="item-url" value="'+esc(item.url||'')+'"></div>':''}<div class="menu-item-field"><label>Open In</label><select class="item-target"><option value="_self">Same Tab</option><option value="_blank">New Tab</option></select></div><div class="menu-item-field"><label>CSS Class</label><input type="text" class="item-css" value="" placeholder="optional"></div><div class="menu-item-actions"><button class="btn-item-save" onclick="saveItem(${item.id},this)">Save</button><button class="btn-item-delete" onclick="deleteItem(${item.id},${safeTitle})">Delete</button></div></div></div>`;
     document.getElementById('menuItems').appendChild(li);
+    initSortable(document.getElementById('menuItems'));
 }
 
 function saveItem(id, btn) {
     var c = btn.closest('.menu-item-content');
     var data = { ajax_action: 'update_item', id: id, title: c.querySelector('.item-title').value, target: c.querySelector('.item-target').value, css_class: c.querySelector('.item-css').value };
     var u = c.querySelector('.item-url'); if(u) data.url = u.value;
-    ajaxPost(data, r => { if(r.success) { c.querySelector('.menu-item-title').textContent=data.title; showToast('Saved','success'); } });
+    ajaxPost(data, function(r) { 
+        if(r && r.success) { 
+            c.querySelector('.menu-item-title').textContent=data.title; 
+            showToast('Saved','success'); 
+        } else {
+            showToast(r?.error || 'Failed to save', 'error');
+        }
+    });
 }
 
-function deleteItem(id) {
-    if (!confirm('Delete this item?')) return;
-    ajaxPost({ ajax_action: 'delete_item', id: id }, d => { if(d.success) { document.querySelector('.menu-item[data-id="'+id+'"]')?.remove(); showToast('Deleted','success'); } });
+function deleteItem(id, title) {
+    deleteItemId = id;
+    document.getElementById('deleteItemName').textContent = title || 'this item';
+    openModal('deleteItemModal');
+}
+
+function confirmDeleteItem() {
+    if (!deleteItemId) return;
+    ajaxPost({ ajax_action: 'delete_item', id: deleteItemId }, function(d) { 
+        if(d && d.success) { 
+            document.querySelector('.menu-item[data-id="'+deleteItemId+'"]')?.remove(); 
+            showToast('Deleted','success'); 
+        } else {
+            showToast(d?.error || 'Failed to delete', 'error');
+        }
+        closeModal('deleteItemModal');
+        deleteItemId = null;
+    });
 }
 
 function saveMenuOrder(cb) {
@@ -1170,18 +1356,39 @@ function getOrder(ul) {
 }
 
 function initSortable(el) {
-    if(!el) return;
-    new Sortable(el, { group:'menu-items', animation:150, handle:'.menu-item-drag', ghostClass:'sortable-ghost', fallbackOnBody:true, swapThreshold:0.65, onEnd:()=>saveMenuOrder() });
+    if(!el || el.sortableInitialized) return;
+    el.sortableInitialized = true;
+    new Sortable(el, { group:'menu-items', animation:150, handle:'.menu-item-drag', ghostClass:'sortable-ghost', fallbackOnBody:true, swapThreshold:0.65, onEnd:function(){} });
 }
 document.querySelectorAll('.menu-items').forEach(initSortable);
 
 function ajaxPost(data, cb) {
     data.csrf = csrfToken;
     var fd = new FormData(); for(var k in data) fd.append(k, data[k]);
-    fetch('menus.php',{method:'POST',body:fd}).then(r=>r.json()).then(cb).catch(()=>showToast('Error','error'));
+    fetch('menus.php', {method:'POST', body:fd})
+        .then(r => {
+            if (!r.ok) {
+                throw new Error('HTTP ' + r.status);
+            }
+            return r.text();
+        })
+        .then(text => {
+            console.log('Response:', text.substring(0, 200));
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('Invalid JSON. Full response:', text);
+                throw new Error('Server error');
+            }
+        })
+        .then(cb)
+        .catch(e => {
+            console.error('AJAX Error:', e);
+            showToast('Error: ' + e.message, 'error');
+        });
 }
 
-function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function esc(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 function showToast(msg, type) {
     document.querySelector('.toast')?.remove();

@@ -82,7 +82,7 @@ class Menu
             $updateData['location'] = $data['location'] ?: null;
         }
         
-        return Database::update($table, $updateData, ['id' => $id]);
+        return Database::update($table, $updateData, "id = ?", [$id]) > 0;
     }
 
     /**
@@ -97,7 +97,7 @@ class Menu
         Database::query("DELETE FROM {$itemsTable} WHERE menu_id = ?", [$id]);
         
         // Delete the menu
-        return Database::delete($menusTable, ['id' => $id]);
+        return Database::delete($menusTable, "id = ?", [$id]) > 0;
     }
 
     /**
@@ -161,7 +161,7 @@ class Menu
         if (isset($data['parent_id'])) $updateData['parent_id'] = $data['parent_id'];
         if (isset($data['position'])) $updateData['position'] = $data['position'];
         
-        return Database::update($table, $updateData, ['id' => $id]);
+        return Database::update($table, $updateData, "id = ?", [$id]) > 0;
     }
 
     /**
@@ -182,7 +182,7 @@ class Menu
         }
         
         // Delete the item
-        return Database::delete($table, ['id' => $id]);
+        return Database::delete($table, "id = ?", [$id]) > 0;
     }
 
     /**
@@ -239,7 +239,7 @@ class Menu
             Database::update($table, [
                 'parent_id' => $parentId,
                 'position' => $position,
-            ], ['id' => $item['id'], 'menu_id' => $menuId]);
+            ], "id = ? AND menu_id = ?", [$item['id'], $menuId]);
             
             if (!empty($item['children'])) {
                 self::saveOrder($menuId, $item['children'], $item['id']);
@@ -261,7 +261,7 @@ class Menu
                 if ($item['object_id']) {
                     $post = Post::find($item['object_id']);
                     if ($post) {
-                        return Post::getPermalink($post);
+                        return Post::permalink($post);
                     }
                 }
                 return '#';
@@ -279,6 +279,13 @@ class Menu
                 return '#';
                 
             default:
+                // For custom post types, try to get the post permalink
+                if ($item['object_id']) {
+                    $post = Post::find($item['object_id']);
+                    if ($post) {
+                        return Post::permalink($post);
+                    }
+                }
                 return $item['url'] ?: '#';
         }
     }
@@ -429,26 +436,60 @@ class Menu
     }
 
     /**
-     * Get available custom post types for menu
+     * Get available custom post types for menu (individual posts)
      */
     public static function getAvailablePostTypes(): array
     {
         $types = [];
         $allTypes = Post::getTypes();
+        $postsTable = Database::table('posts');
         
         foreach ($allTypes as $slug => $config) {
-            // Skip built-in types, only show custom post types with archives
+            // Skip built-in types
             if (in_array($slug, ['post', 'page'])) continue;
             
-            if ($config['has_archive'] ?? false) {
-                $types[] = [
-                    'slug' => $slug,
-                    'name' => $config['label'] ?? $config['singular'] ?? ucfirst($slug),
-                ];
+            if ($config['public'] ?? true) {
+                // Get published posts of this type
+                $posts = Database::query(
+                    "SELECT id, title, slug FROM {$postsTable} WHERE post_type = ? AND status = 'published' ORDER BY title ASC LIMIT 50",
+                    [$slug]
+                );
+                
+                if (!empty($posts)) {
+                    $types[] = [
+                        'slug' => $slug,
+                        'name' => $config['label'] ?? ucfirst($slug),
+                        'singular' => $config['singular'] ?? ucfirst($slug),
+                        'posts' => $posts,
+                    ];
+                }
             }
         }
         
         return $types;
+    }
+
+    /**
+     * Check if item already exists in menu
+     */
+    public static function itemExists(int $menuId, string $type, $objectId = null, ?string $url = null): bool
+    {
+        $table = Database::table('menu_items');
+        
+        if ($type === 'custom') {
+            // Custom links can be duplicated, so always allow
+            return false;
+        }
+        
+        if ($objectId) {
+            $exists = Database::queryOne(
+                "SELECT id FROM {$table} WHERE menu_id = ? AND type = ? AND object_id = ?",
+                [$menuId, $type, $objectId]
+            );
+            return $exists !== null;
+        }
+        
+        return false;
     }
 
     /**

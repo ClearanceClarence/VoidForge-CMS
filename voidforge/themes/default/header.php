@@ -8,6 +8,14 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 $siteTitle = getOption('site_title', 'My Site');
 $siteDescription = getOption('site_description', '');
 $customCss = getOption('custom_frontend_css', '');
+
+// Get primary menu
+$primaryMenu = null;
+try {
+    $primaryMenu = Menu::getMenuByLocation('primary');
+} catch (Exception $e) {
+    // Menu system not ready
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,26 +45,38 @@ $customCss = getOption('custom_frontend_css', '');
                     <span><?= esc($siteTitle) ?></span>
                 </a>
                 <div class="nav-links">
-                    <a href="<?= SITE_URL ?>">Home</a>
-                    <?php
-                    try {
-                        $pages = Post::query([
-                            'post_type' => 'page',
-                            'status' => 'published',
-                            'orderby' => 'menu_order',
-                            'order' => 'ASC',
-                            'limit' => 5
-                        ]);
-                        foreach ($pages as $navPage):
-                            $permalink = Post::permalink($navPage);
-                    ?>
-                        <a href="<?= esc($permalink) ?>"><?= esc($navPage['title'] ?? 'Untitled') ?></a>
-                    <?php 
-                        endforeach;
-                    } catch (Exception $e) {
-                        // Silently fail if database not ready
-                    }
-                    ?>
+                    <?php if ($primaryMenu): ?>
+                        <?php 
+                        $menuItems = Menu::getItems($primaryMenu['id']);
+                        foreach ($menuItems as $item): 
+                            $url = Menu::getItemUrl($item);
+                            $target = $item['target'] ?? '_self';
+                            $classes = $item['css_class'] ?? '';
+                        ?>
+                        <a href="<?= esc($url) ?>"<?= $target !== '_self' ? ' target="' . esc($target) . '"' : '' ?><?= $classes ? ' class="' . esc($classes) . '"' : '' ?>><?= esc($item['title']) ?></a>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <a href="<?= SITE_URL ?>">Home</a>
+                        <?php
+                        try {
+                            $pages = Post::query([
+                                'post_type' => 'page',
+                                'status' => 'published',
+                                'orderby' => 'menu_order',
+                                'order' => 'ASC',
+                                'limit' => 5
+                            ]);
+                            foreach ($pages as $navPage):
+                                $permalink = Post::permalink($navPage);
+                        ?>
+                            <a href="<?= esc($permalink) ?>"><?= esc($navPage['title'] ?? 'Untitled') ?></a>
+                        <?php 
+                            endforeach;
+                        } catch (Exception $e) {
+                            // Silently fail if database not ready
+                        }
+                        ?>
+                    <?php endif; ?>
                     <a href="<?= ADMIN_URL ?>" class="btn btn-primary btn-sm">Dashboard</a>
                 </div>
             </div>

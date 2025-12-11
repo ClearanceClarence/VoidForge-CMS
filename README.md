@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.4-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.5-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -20,10 +20,10 @@ No frameworks. No bloat. Just powerful features and elegant code.
 ## ✨ Features
 
 ### Content Management
-
 - **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
 - **Custom Fields** — 14+ field types including text, WYSIWYG, images, files, colors, dates, and more
 - **Field Groups** — Create reusable field groups and assign them to any post type or users
+- **Taxonomies** — Categories, tags, and custom taxonomies with hierarchical or flat structure
 - **Menu Builder** — Visual drag-and-drop menu management with nested items and multiple locations
 - **Post Revisions** — Automatic revision history with compare and restore functionality
 - **Media Library** — Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads
@@ -31,7 +31,6 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
 
 ### Theme System
-
 - **Multiple Themes** — Ships with Default (dark gradient) and Flavor (light minimal) themes
 - **Theme Settings** — Per-theme customization with colors, sections, features, stats, and CTAs
 - **Unique Landing Pages** — Each theme has its own distinctive landing page design
@@ -39,7 +38,6 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Live Preview** — Real-time preview of theme changes
 
 ### Administration
-
 - **Modern Admin Interface** — Beautiful dark sidebar with customizable color schemes
 - **Admin Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
 - **Live CSS Editor** — Real-time styling with instant preview for admin and frontend
@@ -47,13 +45,11 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **80+ Admin Icons** — Extensive icon library for post types and navigation
 
 ### User Management
-
 - **Role-Based Permissions** — Admin, Editor, and Subscriber roles
 - **User Profiles** — Gravatar support and customizable profile fields
 - **Secure Authentication** — Password hashing, CSRF protection, secure sessions
 
 ### Plugin System
-
 - **WordPress-Style Hooks** — Actions and filters for extending functionality
 - **Shortcodes** — `[tag]` syntax for dynamic content
 - **Settings API** — Persistent plugin settings storage
@@ -65,7 +61,6 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Included Plugins** — Starter Shortcodes and Social Share examples
 
 ### Developer Features
-
 - **Theme Support** — Simple PHP templates with full access to all data
 - **Clean Architecture** — No framework magic, just readable PHP code
 - **Auto Updates** — One-click updates with automatic backups
@@ -73,7 +68,6 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Theme Documentation** — Complete theme creation guide with examples
 
 ### Security
-
 - **CSRF Protection** — Token-based form protection
 - **XSS Prevention** — Output escaping helpers
 - **Secure Sessions** — Properly configured PHP sessions
@@ -102,19 +96,16 @@ No frameworks. No bloat. Just powerful features and elegant code.
 ### Manual Installation
 
 1. Clone or download the repository:
-
    ```bash
-   git clone https://github.com/ClearanceClarence/VoidForge-CMS.git
+   git clone https://github.com/yourusername/voidforge-cms.git
    ```
 
 2. Create a MySQL database:
-
    ```sql
    CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 3. Copy the sample config (if available) or run the installer:
-
    ```bash
    cp includes/config.sample.php includes/config.php
    ```
@@ -193,7 +184,7 @@ get_header();
             <h1><?= esc($settings['hero_title'] ?? 'Welcome') ?></h1>
         </section>
     <?php endif; ?>
-
+    
     <!-- Your theme content -->
 </main>
 
@@ -216,17 +207,26 @@ Themes can define customizable settings that appear in the admin:
 Display navigation menus in your theme:
 
 ```php
-// Register a menu location in functions.php
-Menu::registerLocation('main-menu', 'Main Navigation');
+// Get menu assigned to a location
+$menu = Menu::getMenuByLocation('primary');
+if ($menu) {
+    $items = Menu::getItems($menu['id']);
+    foreach ($items as $item) {
+        $url = Menu::getItemUrl($item);
+        echo '<a href="' . esc($url) . '">' . esc($item['title']) . '</a>';
+    }
+}
 
-// Display the menu in your template
-echo Menu::display('main-menu', [
+// Or use the display helper
+echo Menu::display('primary', [
     'container' => 'nav',
     'container_class' => 'main-navigation',
     'menu_class' => 'nav-menu',
     'submenu_class' => 'dropdown-menu',
 ]);
 ```
+
+**Important:** Menus must be assigned to a location (e.g., "Primary Navigation") in the admin to appear on the frontend. If no menu is assigned, themes fall back to displaying pages.
 
 See `/docs/theme-development.html` for comprehensive documentation.
 
@@ -308,7 +308,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.4');
+define('CMS_VERSION', '0.1.5');
 define('CMS_NAME', 'VoidForge');
 ```
 
@@ -422,6 +422,33 @@ Menu::addItem($menuId, [
 ]);
 ```
 
+### Taxonomies
+
+```php
+// Register a custom taxonomy
+Taxonomy::register('genre', [
+    'label' => 'Genres',
+    'singular' => 'Genre',
+    'hierarchical' => true,
+    'post_types' => ['post', 'movie'],
+]);
+
+// Get terms
+$genres = Taxonomy::getTerms('genre');
+
+// Set post terms
+Taxonomy::setPostTerms($postId, 'genre', [1, 2, 3]);
+
+// Get post terms
+$postGenres = Taxonomy::getPostTerms($postId, 'genre');
+
+// Create a term
+$termId = Taxonomy::createTerm('genre', [
+    'name' => 'Action',
+    'description' => 'Action movies'
+]);
+```
+
 ---
 
 ## 🤝 Contributing
@@ -452,6 +479,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**[VoidForge CMS](https://github.com/ClearanceClarence/VoidForge-CMS)** — Modern Content Management
+**[VoidForge CMS](https://github.com/yourusername/voidforge-cms)** — Modern Content Management
 
 </div>

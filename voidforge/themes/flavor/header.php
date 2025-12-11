@@ -56,7 +56,7 @@
                 <ul class="nav-menu">
                     <?php foreach (flavor_nav_menu() as $item): ?>
                     <li>
-                        <a href="<?= esc($item['url']) ?>" <?= $item['active'] ? 'class="active"' : '' ?>>
+                        <a href="<?= esc($item['url']) ?>" <?= $item['active'] ? 'class="active"' : '' ?><?= isset($item['target']) && $item['target'] !== '_self' ? ' target="' . esc($item['target']) . '"' : '' ?>>
                             <?= esc($item['label']) ?>
                         </a>
                     </li>

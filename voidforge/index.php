@@ -26,11 +26,13 @@ require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/theme.php';
+require_once CMS_ROOT . '/includes/menu.php';
 
 // Initialize
 Post::init();
 Plugin::init();
 Theme::init();
+Menu::init();
 
 // Load active theme functions
 Theme::loadFunctions();

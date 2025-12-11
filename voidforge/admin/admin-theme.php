@@ -77,6 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && !isset($_POST['save
         'icon_style' => $_POST['icon_style'] ?? 'outlined',
         'sidebar_compact' => isset($_POST['sidebar_compact']),
         'animations' => isset($_POST['animations']),
+        'menu_item_padding' => $_POST['menu_item_padding'] ?? 'medium',
+        'menu_item_spacing' => $_POST['menu_item_spacing'] ?? 'medium',
     ];
     
     // Handle custom colors
@@ -104,6 +106,8 @@ $currentTheme = getOption('admin_theme', [
     'custom_primary' => '#6366f1',
     'custom_secondary' => '#8b5cf6',
     'custom_sidebar' => '#0f172a',
+    'menu_item_padding' => 'medium',
+    'menu_item_spacing' => 'medium',
 ]);
 
 // Ensure all keys exist
@@ -119,6 +123,8 @@ $currentTheme = array_merge([
     'custom_primary' => '#6366f1',
     'custom_secondary' => '#8b5cf6',
     'custom_sidebar' => '#0f172a',
+    'menu_item_padding' => 'medium',
+    'menu_item_spacing' => 'medium',
 ], $currentTheme);
 
 // Get saved custom schemes for display
@@ -556,6 +562,93 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
     background: rgba(99, 102, 241, 0.05);
     color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Menu Spacing Options */
+.spacing-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 700px) {
+    .spacing-options-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.spacing-option-group {
+    padding: 1.25rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.spacing-option-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.spacing-option-label svg {
+    color: #64748b;
+}
+
+.spacing-option-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0 0 1rem 0;
+}
+
+.spacing-radio-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.spacing-radio {
+    flex: 1;
+    cursor: pointer;
+}
+
+.spacing-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.spacing-radio-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.spacing-radio:hover .spacing-radio-box {
+    border-color: #cbd5e1;
+}
+
+.spacing-radio input[type="radio"]:checked + .spacing-radio-box {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.spacing-radio-name {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.spacing-radio input[type="radio"]:checked + .spacing-radio-box .spacing-radio-name {
+    color: #6366f1;
 }
 
 /* Save Scheme Box */
@@ -1198,6 +1291,80 @@ $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $f
                         </div>
                     </div>
                     <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu Spacing -->
+        <div class="theme-section">
+            <div class="theme-section-header">
+                <div class="theme-section-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="21" y1="10" x2="3" y2="10"></line>
+                        <line x1="21" y1="6" x2="3" y2="6"></line>
+                        <line x1="21" y1="14" x2="3" y2="14"></line>
+                        <line x1="21" y1="18" x2="3" y2="18"></line>
+                    </svg>
+                </div>
+                <div class="theme-section-title">
+                    <h3>Menu Spacing</h3>
+                    <p>Adjust padding and spacing for sidebar menu items</p>
+                </div>
+            </div>
+            <div class="theme-section-body">
+                <?php 
+                $spacingSizes = [
+                    'compact' => ['name' => 'Compact', 'desc' => 'Minimal spacing'],
+                    'medium' => ['name' => 'Medium', 'desc' => 'Default'],
+                    'comfortable' => ['name' => 'Comfortable', 'desc' => 'More breathing room'],
+                ];
+                ?>
+                
+                <div class="spacing-options-grid">
+                    <div class="spacing-option-group">
+                        <label class="spacing-option-label">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <path d="M9 9h6v6H9z"></path>
+                            </svg>
+                            Item Padding
+                        </label>
+                        <p class="spacing-option-desc">Space inside each menu item</p>
+                        <div class="spacing-radio-group">
+                            <?php foreach ($spacingSizes as $sizeKey => $sizeOption): ?>
+                            <label class="spacing-radio">
+                                <input type="radio" name="menu_item_padding" value="<?= $sizeKey ?>" 
+                                       <?= ($currentTheme['menu_item_padding'] ?? 'medium') === $sizeKey ? 'checked' : '' ?>>
+                                <span class="spacing-radio-box">
+                                    <span class="spacing-radio-name"><?= $sizeOption['name'] ?></span>
+                                </span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="spacing-option-group">
+                        <label class="spacing-option-label">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 3v18"></path>
+                                <path d="M8 6l4-3 4 3"></path>
+                                <path d="M8 18l4 3 4-3"></path>
+                            </svg>
+                            Item Spacing
+                        </label>
+                        <p class="spacing-option-desc">Gap between menu items</p>
+                        <div class="spacing-radio-group">
+                            <?php foreach ($spacingSizes as $sizeKey => $sizeOption): ?>
+                            <label class="spacing-radio">
+                                <input type="radio" name="menu_item_spacing" value="<?= $sizeKey ?>" 
+                                       <?= ($currentTheme['menu_item_spacing'] ?? 'medium') === $sizeKey ? 'checked' : '' ?>>
+                                <span class="spacing-radio-box">
+                                    <span class="spacing-radio-name"><?= $sizeOption['name'] ?></span>
+                                </span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -207,6 +207,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INDEX `idx_position` (`position`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}taxonomies` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `name` VARCHAR(255) NOT NULL,
+                    `slug` VARCHAR(100) NOT NULL,
+                    `singular` VARCHAR(255) DEFAULT NULL,
+                    `description` TEXT,
+                    `hierarchical` TINYINT(1) NOT NULL DEFAULT 0,
+                    `post_types` TEXT,
+                    `created_at` DATETIME NOT NULL,
+                    UNIQUE INDEX `idx_slug` (`slug`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}terms` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `taxonomy` VARCHAR(100) NOT NULL,
+                    `name` VARCHAR(255) NOT NULL,
+                    `slug` VARCHAR(255) NOT NULL,
+                    `description` TEXT,
+                    `parent_id` INT UNSIGNED NOT NULL DEFAULT 0,
+                    `count` INT UNSIGNED NOT NULL DEFAULT 0,
+                    `created_at` DATETIME NOT NULL,
+                    INDEX `idx_taxonomy` (`taxonomy`),
+                    INDEX `idx_slug` (`slug`),
+                    INDEX `idx_parent` (`parent_id`),
+                    UNIQUE INDEX `idx_taxonomy_slug` (`taxonomy`, `slug`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}term_relationships` (
+                    `post_id` INT UNSIGNED NOT NULL,
+                    `term_id` INT UNSIGNED NOT NULL,
+                    PRIMARY KEY (`post_id`, `term_id`),
+                    INDEX `idx_term_id` (`term_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
                 // Create admin user
                 $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}users` (username, email, password, display_name, role) VALUES (?, ?, ?, ?, 'admin')");
