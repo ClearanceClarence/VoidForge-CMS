@@ -632,6 +632,7 @@ button, input[type="button"], input[type="submit"], input[type="reset"] {
 .status-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; }
 .status-published { background: rgba(16, 185, 129, 0.1); color: #059669; }
 .status-draft { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.status-scheduled { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
 .status-trash { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
 
 /* ==========================================================================

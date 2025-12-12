@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.5-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.6-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -26,6 +26,9 @@ No frameworks. No bloat. Just powerful features and elegant code.
 - **Taxonomies** — Categories, tags, and custom taxonomies with hierarchical or flat structure
 - **Menu Builder** — Visual drag-and-drop menu management with nested items and multiple locations
 - **Post Revisions** — Automatic revision history with compare and restore functionality
+- **Admin Columns** — Fully customizable column management for post listings with drag-to-resize
+- **Scheduled Publishing** — Schedule posts to publish automatically at a future date and time
+- **Enhanced Trash** — 30-day retention with days remaining display and automatic cleanup
 - **Media Library** — Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads
 - **Thumbnail Manager** — View, regenerate, and manage all image sizes with modal preview
 - **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
@@ -308,7 +311,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.5');
+define('CMS_VERSION', '0.1.6');
 define('CMS_NAME', 'VoidForge');
 ```
 

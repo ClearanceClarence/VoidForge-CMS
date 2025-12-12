@@ -9,13 +9,18 @@ class Post
 {
     public const STATUS_DRAFT = 'draft';
     public const STATUS_PUBLISHED = 'published';
+    public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_TRASH = 'trash';
 
     public const STATUS_LABELS = [
         'draft' => 'Draft',
         'published' => 'Published',
+        'scheduled' => 'Scheduled',
         'trash' => 'Trash',
     ];
+    
+    /** @var int Days before trashed items are permanently deleted */
+    public const TRASH_RETENTION_DAYS = 30;
 
     // Registered post types
     /** @var array */
@@ -395,13 +400,38 @@ class Post
     public static function delete(int $id, bool $permanent = false): bool
     {
         if ($permanent) {
-            // Delete meta first
+            // Delete taxonomy terms
+            if (class_exists('Taxonomy')) {
+                try {
+                    Taxonomy::deletePostTerms($id);
+                } catch (Exception $e) {
+                    // Taxonomy tables might not exist
+                }
+            }
+            // Delete meta
             Database::delete(Database::table('postmeta'), 'post_id = ?', [$id]);
             // Delete revisions
             self::deleteRevisions($id);
             return Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
         }
 
+        // Soft delete: set status to trash and record trashed_at timestamp
+        $table = Database::table('posts');
+        
+        // Check if trashed_at column exists (for backward compatibility)
+        try {
+            $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'trashed_at'");
+            if (!empty($columns)) {
+                return Database::execute(
+                    "UPDATE {$table} SET status = ?, trashed_at = NOW(), updated_at = NOW() WHERE id = ?",
+                    [self::STATUS_TRASH, $id]
+                ) > 0;
+            }
+        } catch (Exception $e) {
+            // Fall through to simple update
+        }
+        
+        // Fallback for databases without trashed_at column
         return self::update($id, ['status' => self::STATUS_TRASH]);
     }
 
@@ -410,7 +440,304 @@ class Post
      */
     public static function restore(int $id): bool
     {
+        $table = Database::table('posts');
+        
+        // Check if trashed_at column exists (for backward compatibility)
+        try {
+            $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'trashed_at'");
+            if (!empty($columns)) {
+                return Database::execute(
+                    "UPDATE {$table} SET status = ?, trashed_at = NULL, updated_at = NOW() WHERE id = ?",
+                    [self::STATUS_DRAFT, $id]
+                ) > 0;
+            }
+        } catch (Exception $e) {
+            // Fall through to simple update
+        }
+        
+        // Fallback for databases without trashed_at column
         return self::update($id, ['status' => self::STATUS_DRAFT]);
+    }
+
+    /**
+     * Empty all items from trash (permanent delete)
+     * @param string|null $postType Optionally limit to a specific post type
+     * @return int Number of items deleted
+     */
+    public static function emptyTrash(?string $postType = null): int
+    {
+        $table = Database::table('posts');
+        
+        // Get IDs of all trashed posts
+        $sql = "SELECT id FROM {$table} WHERE status = ?";
+        $params = [self::STATUS_TRASH];
+        
+        if ($postType) {
+            $sql .= " AND post_type = ?";
+            $params[] = $postType;
+        }
+        
+        $posts = Database::query($sql, $params);
+        $count = 0;
+        
+        foreach ($posts as $post) {
+            if (self::delete($post['id'], true)) {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Clean up trashed items older than retention period
+     * @return int Number of items permanently deleted
+     */
+    public static function cleanupOldTrash(): int
+    {
+        $table = Database::table('posts');
+        $retentionDays = self::TRASH_RETENTION_DAYS;
+        
+        // Check if trashed_at column exists
+        try {
+            $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'trashed_at'");
+            if (empty($columns)) {
+                return 0; // Column doesn't exist yet
+            }
+        } catch (Exception $e) {
+            return 0;
+        }
+        
+        // Get IDs of expired trashed posts
+        $posts = Database::query(
+            "SELECT id FROM {$table} WHERE status = ? AND trashed_at IS NOT NULL AND trashed_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
+            [self::STATUS_TRASH, $retentionDays]
+        );
+        
+        $count = 0;
+        foreach ($posts as $post) {
+            if (self::delete($post['id'], true)) {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Get days remaining before a trashed post is permanently deleted
+     */
+    public static function getDaysUntilDeletion(array $post): ?int
+    {
+        if ($post['status'] !== self::STATUS_TRASH) {
+            return null;
+        }
+        
+        // Check if trashed_at exists and has a value
+        if (empty($post['trashed_at'])) {
+            return null; // Column doesn't exist or no value
+        }
+        
+        $trashedAt = strtotime($post['trashed_at']);
+        $deleteAt = $trashedAt + (self::TRASH_RETENTION_DAYS * 86400);
+        $remaining = ceil(($deleteAt - time()) / 86400);
+        
+        return max(0, (int)$remaining);
+    }
+
+    /**
+     * Get count of trashed items
+     */
+    public static function getTrashCount(?string $postType = null): int
+    {
+        $table = Database::table('posts');
+        
+        if ($postType) {
+            return (int) Database::queryValue(
+                "SELECT COUNT(*) FROM {$table} WHERE status = ? AND post_type = ?",
+                [self::STATUS_TRASH, $postType]
+            );
+        }
+        
+        return (int) Database::queryValue(
+            "SELECT COUNT(*) FROM {$table} WHERE status = ?",
+            [self::STATUS_TRASH]
+        );
+    }
+
+    // =====================================================
+    // SCHEDULED PUBLISHING
+    // =====================================================
+
+    /**
+     * Schedule a post for future publication
+     */
+    public static function schedule(int $id, string $datetime): bool
+    {
+        $table = Database::table('posts');
+        
+        // Check if scheduled_at column exists
+        try {
+            $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'scheduled_at'");
+            if (empty($columns)) {
+                // Column doesn't exist, just set as draft
+                return self::update($id, ['status' => self::STATUS_DRAFT]);
+            }
+        } catch (Exception $e) {
+            return false;
+        }
+        
+        return Database::execute(
+            "UPDATE {$table} SET status = ?, scheduled_at = ?, updated_at = NOW() WHERE id = ?",
+            [self::STATUS_SCHEDULED, $datetime, $id]
+        ) > 0;
+    }
+
+    /**
+     * Publish all scheduled posts that are due
+     * Call this on page load or via cron
+     * @return int Number of posts published
+     */
+    public static function publishScheduledPosts(): int
+    {
+        $table = Database::table('posts');
+        
+        // Check if scheduled_at column exists
+        try {
+            $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'scheduled_at'");
+            if (empty($columns)) {
+                return 0; // Column doesn't exist yet
+            }
+        } catch (Exception $e) {
+            return 0;
+        }
+        
+        // Get all scheduled posts that are due
+        $posts = Database::query(
+            "SELECT id FROM {$table} WHERE status = ? AND scheduled_at IS NOT NULL AND scheduled_at <= NOW()",
+            [self::STATUS_SCHEDULED]
+        );
+        
+        $count = 0;
+        foreach ($posts as $post) {
+            $result = Database::execute(
+                "UPDATE {$table} SET status = ?, published_at = scheduled_at, scheduled_at = NULL, updated_at = NOW() WHERE id = ?",
+                [self::STATUS_PUBLISHED, $post['id']]
+            );
+            if ($result > 0) {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Get scheduled posts
+     */
+    public static function getScheduledPosts(?string $postType = null, int $limit = 50): array
+    {
+        $table = Database::table('posts');
+        
+        $sql = "SELECT * FROM {$table} WHERE status = ?";
+        $params = [self::STATUS_SCHEDULED];
+        
+        if ($postType) {
+            $sql .= " AND post_type = ?";
+            $params[] = $postType;
+        }
+        
+        $sql .= " ORDER BY scheduled_at ASC LIMIT ?";
+        $params[] = $limit;
+        
+        return Database::query($sql, $params);
+    }
+
+    /**
+     * Get count of scheduled posts
+     */
+    public static function getScheduledCount(?string $postType = null): int
+    {
+        $table = Database::table('posts');
+        
+        if ($postType) {
+            return (int) Database::queryValue(
+                "SELECT COUNT(*) FROM {$table} WHERE status = ? AND post_type = ?",
+                [self::STATUS_SCHEDULED, $postType]
+            );
+        }
+        
+        return (int) Database::queryValue(
+            "SELECT COUNT(*) FROM {$table} WHERE status = ?",
+            [self::STATUS_SCHEDULED]
+        );
+    }
+
+    /**
+     * Duplicate a post with all its meta and taxonomy terms
+     * @return int|false New post ID or false on failure
+     */
+    public static function duplicate(int $id)
+    {
+        $post = self::find($id);
+        if (!$post) {
+            return false;
+        }
+        
+        // Prepare new post data
+        $newTitle = $post['title'] . ' (Copy)';
+        $newSlug = uniqueSlug(slugify($newTitle), $post['post_type']);
+        
+        // Create the duplicate post
+        $newId = Database::insert(Database::table('posts'), [
+            'post_type' => $post['post_type'],
+            'title' => $newTitle,
+            'slug' => $newSlug,
+            'content' => $post['content'],
+            'excerpt' => $post['excerpt'] ?? '',
+            'status' => self::STATUS_DRAFT, // Always create as draft
+            'author_id' => User::current()['id'] ?? $post['author_id'],
+            'parent_id' => $post['parent_id'],
+            'menu_order' => $post['menu_order'],
+            'featured_image_id' => $post['featured_image_id'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+            'published_at' => null, // Don't copy published date
+        ]);
+        
+        if (!$newId) {
+            return false;
+        }
+        
+        // Copy all meta data (custom fields)
+        $meta = self::getMeta($id);
+        if (!empty($meta)) {
+            foreach ($meta as $key => $value) {
+                self::setMeta($newId, $key, $value);
+            }
+        }
+        
+        // Copy taxonomy terms if Taxonomy class is available
+        if (class_exists('Taxonomy')) {
+            try {
+                // Get all taxonomies for this post type
+                $taxonomies = Taxonomy::getForPostType($post['post_type']);
+                
+                foreach ($taxonomies as $taxSlug => $taxonomy) {
+                    // Get terms assigned to original post
+                    $termIds = Taxonomy::getPostTermIds($id, $taxSlug);
+                    
+                    if (!empty($termIds)) {
+                        // Assign same terms to new post
+                        Taxonomy::setPostTerms($newId, $taxSlug, $termIds);
+                    }
+                }
+            } catch (Exception $e) {
+                // Taxonomy tables might not exist, continue without copying terms
+            }
+        }
+        
+        return $newId;
     }
 
     /**

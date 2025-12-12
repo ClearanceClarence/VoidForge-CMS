@@ -6,6 +6,17 @@
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+// Auto-run migrations if version mismatch (runs once per version update)
+$dbVersion = getOption('cms_version', '0.0.0');
+if (version_compare($dbVersion, CMS_VERSION, '<')) {
+    try {
+        $pdo = Database::getInstance();
+        require_once CMS_ROOT . '/includes/migrations.php';
+    } catch (Exception $e) {
+        // Migration failed, continue anyway
+    }
+}
+
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 $currentUser = User::current();
 

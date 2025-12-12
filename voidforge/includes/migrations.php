@@ -6,6 +6,9 @@
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+// Ensure $pdo is available for all migrations
+$pdo = Database::getInstance();
+
 $postsTable = Database::table('posts');
 $foldersTable = Database::table('media_folders');
 $mediaTable = Database::table('media');
@@ -209,6 +212,35 @@ try {
     // Table might already exist
 }
 
+// v0.1.6: Add trashed_at column for trash retention tracking
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'trashed_at'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$postsTable} ADD COLUMN trashed_at DATETIME DEFAULT NULL AFTER published_at");
+        Database::execute("ALTER TABLE {$postsTable} ADD INDEX idx_trashed_at (trashed_at)");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+// v0.1.6: Add scheduled_at column for scheduled publishing
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'scheduled_at'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$postsTable} ADD COLUMN scheduled_at DATETIME DEFAULT NULL AFTER trashed_at");
+        Database::execute("ALTER TABLE {$postsTable} ADD INDEX idx_scheduled_at (scheduled_at)");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+// v0.1.6: Update status enum to include 'scheduled'
+try {
+    Database::execute("ALTER TABLE {$postsTable} MODIFY COLUMN status ENUM('draft','published','scheduled','trash') DEFAULT 'draft'");
+} catch (Exception $e) {
+    // Enum might already be updated
+}
+
 // Update version in options
-setOption('cms_version', '0.1.5');
+setOption('cms_version', '0.1.6');
 setOption('last_update', date('Y-m-d H:i:s'));

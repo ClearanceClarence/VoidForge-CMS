@@ -57,13 +57,29 @@ if (isset($_GET['restore_revision']) && $post && verifyCsrf($_GET['csrf'] ?? '')
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
+    $saveAction = $_POST['save_action'] ?? 'draft';
+    $scheduleDate = trim($_POST['schedule_date'] ?? '');
+    $scheduleTime = trim($_POST['schedule_time'] ?? '');
+    
+    // Determine status based on save action
+    if ($saveAction === 'schedule' && $scheduleDate && $scheduleTime) {
+        $scheduledAt = $scheduleDate . ' ' . $scheduleTime . ':00';
+        $status = 'scheduled';
+    } elseif ($saveAction === 'publish') {
+        $status = 'published';
+        $scheduledAt = null;
+    } else {
+        $status = 'draft';
+        $scheduledAt = null;
+    }
+    
     $data = [
         'post_type' => $postType,
         'title' => trim($_POST['title'] ?? ''),
         'slug' => trim($_POST['slug'] ?? ''),
         'content' => $_POST['content'] ?? '',
         'excerpt' => trim($_POST['excerpt'] ?? ''),
-        'status' => ($_POST['save_action'] ?? 'draft') === 'publish' ? 'published' : 'draft',
+        'status' => $status,
         'featured_image_id' => !empty($_POST['featured_image_id']) ? (int)$_POST['featured_image_id'] : null,
     ];
 
@@ -96,11 +112,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
             }
             Post::update($post['id'], $data);
             $savedPostId = $post['id'];
-            setFlash('success', $typeConfig['singular'] . ' updated successfully.');
+            
+            // Handle scheduled_at
+            if ($status === 'scheduled' && !empty($scheduledAt)) {
+                Post::schedule($savedPostId, $scheduledAt);
+            } elseif (($post['status'] ?? '') === 'scheduled' && $status !== 'scheduled') {
+                // Clear scheduled_at if no longer scheduled
+                try {
+                    Database::execute(
+                        "UPDATE " . Database::table('posts') . " SET scheduled_at = NULL WHERE id = ?",
+                        [$savedPostId]
+                    );
+                } catch (Exception $e) {
+                    // Column might not exist yet
+                }
+            }
+            
+            $message = $status === 'scheduled' 
+                ? $typeConfig['singular'] . ' scheduled for ' . formatDate($scheduledAt, 'M j, Y g:i a') . '.'
+                : $typeConfig['singular'] . ' updated successfully.';
+            setFlash('success', $message);
         } else {
             $data['slug'] = uniqueSlug($data['slug'], $postType);
             $savedPostId = Post::create($data);
-            setFlash('success', $typeConfig['singular'] . ' created successfully.');
+            
+            // Handle scheduled_at for new posts
+            if ($status === 'scheduled' && !empty($scheduledAt)) {
+                Post::schedule($savedPostId, $scheduledAt);
+            }
+            
+            $message = $status === 'scheduled' 
+                ? $typeConfig['singular'] . ' scheduled for ' . formatDate($scheduledAt, 'M j, Y g:i a') . '.'
+                : $typeConfig['singular'] . ' created successfully.';
+            setFlash('success', $message);
         }
         
         // Save custom fields
@@ -532,16 +576,33 @@ include ADMIN_PATH . '/includes/header.php';
             <div class="sidebar-card">
                 <div class="sidebar-card-header">Publish</div>
                 <div class="sidebar-card-body">
+                    <?php 
+                    $currentStatus = $post['status'] ?? 'draft';
+                    $statusColors = [
+                        'draft' => '#f59e0b',
+                        'published' => '#22c55e',
+                        'scheduled' => '#6366f1',
+                        'trash' => '#dc2626',
+                    ];
+                    ?>
                     <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem;">
                         <strong>Status:</strong> 
-                        <span style="color: <?= ($post['status'] ?? 'draft') === 'published' ? '#22c55e' : '#f59e0b' ?>;">
-                            <?= ($post['status'] ?? 'draft') === 'published' ? 'Published' : 'Draft' ?>
+                        <span style="color: <?= $statusColors[$currentStatus] ?? '#6b7280' ?>;">
+                            <?= Post::STATUS_LABELS[$currentStatus] ?? ucfirst($currentStatus) ?>
                         </span>
                     </div>
                     
                     <?php if ($post): ?>
                     <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
-                        <?php if ($post['published_at']): ?>
+                        <?php if ($currentStatus === 'scheduled' && !empty($post['scheduled_at'])): ?>
+                        <div style="color: #6366f1;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; vertical-align: -2px; margin-right: 0.25rem;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Scheduled: <?= formatDate($post['scheduled_at'], 'M j, Y g:i a') ?>
+                        </div>
+                        <?php elseif ($post['published_at']): ?>
                         <div>Published: <?= formatDate($post['published_at'], 'M j, Y g:i a') ?></div>
                         <?php endif; ?>
                         <?php if ($post['updated_at'] && $post['updated_at'] !== $post['created_at']): ?>
@@ -551,22 +612,62 @@ include ADMIN_PATH . '/includes/header.php';
                     </div>
                     <?php endif; ?>
                     
+                    <!-- Schedule Options (for draft or scheduled posts) -->
+                    <?php if (!$post || $currentStatus !== 'published'): ?>
+                    <div id="scheduleSection" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-card-header); border-radius: var(--border-radius);">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer; margin-bottom: 0.75rem;">
+                            <input type="checkbox" id="scheduleToggle" <?= $currentStatus === 'scheduled' ? 'checked' : '' ?> style="accent-color: var(--forge-primary);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Schedule for later
+                        </label>
+                        <div id="scheduleFields" style="display: <?= $currentStatus === 'scheduled' ? 'flex' : 'none' ?>; gap: 0.5rem;">
+                            <input type="date" name="schedule_date" id="scheduleDate" class="form-input" style="flex: 1; font-size: 0.8125rem; padding: 0.5rem;"
+                                   value="<?= $currentStatus === 'scheduled' && !empty($post['scheduled_at']) ? date('Y-m-d', strtotime($post['scheduled_at'])) : date('Y-m-d', strtotime('+1 day')) ?>"
+                                   min="<?= date('Y-m-d') ?>">
+                            <input type="time" name="schedule_time" id="scheduleTime" class="form-input" style="width: 100px; font-size: 0.8125rem; padding: 0.5rem;"
+                                   value="<?= $currentStatus === 'scheduled' && !empty($post['scheduled_at']) ? date('H:i', strtotime($post['scheduled_at'])) : '09:00' ?>">
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Action Buttons -->
                     <div style="display: flex; gap: 0.5rem;">
-                        <?php if (!$post || $post['status'] !== 'published'): ?>
+                        <?php if (!$post || $currentStatus !== 'published'): ?>
                         <button type="submit" name="save_action" value="draft" class="btn btn-secondary" style="flex: 1;">
                             Save Draft
                         </button>
-                        <?php endif; ?>
-                        <button type="submit" name="save_action" value="publish" class="btn btn-primary" style="flex: 1;">
-                            <?= ($post && $post['status'] === 'published') ? 'Update' : 'Publish' ?>
+                        <button type="submit" name="save_action" value="publish" id="publishBtn" class="btn btn-primary" style="flex: 1; <?= $currentStatus === 'scheduled' ? 'display: none;' : '' ?>">
+                            Publish
                         </button>
+                        <button type="submit" name="save_action" value="schedule" id="scheduleBtn" class="btn btn-primary" style="flex: 1; <?= $currentStatus === 'scheduled' ? '' : 'display: none;' ?>">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Schedule
+                        </button>
+                        <?php else: ?>
+                        <button type="submit" name="save_action" value="publish" class="btn btn-primary" style="flex: 1;">
+                            Update
+                        </button>
+                        <?php endif; ?>
                     </div>
-                    <?php if ($post && $post['status'] === 'published'): ?>
+                    
+                    <?php if ($post && $currentStatus === 'published'): ?>
                     <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
                         <button type="submit" name="save_action" value="draft" class="btn btn-secondary" style="flex: 1; font-size: 0.75rem;">
                             Revert to Draft
                         </button>
                         <a href="<?= esc(Post::permalink($post)) ?>" target="_blank" class="btn btn-secondary" style="flex: 1; font-size: 0.75rem; text-align: center;">View <?= esc($typeConfig['singular']) ?></a>
+                    </div>
+                    <?php elseif ($post && $currentStatus === 'scheduled'): ?>
+                    <div style="margin-top: 0.5rem;">
+                        <button type="submit" name="save_action" value="publish" class="btn btn-secondary" style="width: 100%; font-size: 0.75rem;">
+                            Publish Now
+                        </button>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -1141,6 +1242,28 @@ function restoreRevision(revisionId, revisionNumber) {
         window.location.href = 'post-edit.php?id=<?= $post['id'] ?? 0 ?>&restore_revision=' + revisionId + '&csrf=' + encodeURIComponent(csrfToken);
     }
 }
+
+// Schedule toggle functionality
+(function() {
+    var scheduleToggle = document.getElementById('scheduleToggle');
+    var scheduleFields = document.getElementById('scheduleFields');
+    var publishBtn = document.getElementById('publishBtn');
+    var scheduleBtn = document.getElementById('scheduleBtn');
+    
+    if (scheduleToggle) {
+        scheduleToggle.addEventListener('change', function() {
+            if (this.checked) {
+                scheduleFields.style.display = 'flex';
+                if (publishBtn) publishBtn.style.display = 'none';
+                if (scheduleBtn) scheduleBtn.style.display = 'flex';
+            } else {
+                scheduleFields.style.display = 'none';
+                if (publishBtn) publishBtn.style.display = 'flex';
+                if (scheduleBtn) scheduleBtn.style.display = 'none';
+            }
+        });
+    }
+})();
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

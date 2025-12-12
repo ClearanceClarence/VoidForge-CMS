@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     `slug` VARCHAR(255) NOT NULL,
                     `content` LONGTEXT,
                     `excerpt` TEXT,
-                    `status` ENUM('draft','published','trash') DEFAULT 'draft',
+                    `status` ENUM('draft','published','scheduled','trash') DEFAULT 'draft',
                     `post_type` VARCHAR(50) DEFAULT 'post',
                     `author_id` INT,
                     `parent_id` INT DEFAULT NULL,
@@ -90,11 +90,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     `published_at` DATETIME,
+                    `trashed_at` DATETIME DEFAULT NULL,
+                    `scheduled_at` DATETIME DEFAULT NULL,
                     UNIQUE KEY `slug` (`slug`),
                     KEY `status` (`status`),
                     KEY `post_type` (`post_type`),
                     KEY `author_id` (`author_id`),
-                    KEY `parent_id` (`parent_id`)
+                    KEY `parent_id` (`parent_id`),
+                    KEY `trashed_at` (`trashed_at`),
+                    KEY `scheduled_at` (`scheduled_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 
                 $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}postmeta` (

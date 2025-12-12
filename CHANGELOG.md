@@ -7,7 +7,142 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.6] - 2025-12-12
+
+### 📊 Admin Columns
+
+Fully customizable column management for post listings, similar to Admin Columns plugin.
+
+#### Features
+- **Choose Columns** — Select which columns appear in each post type's listing
+- **Column Types** — Built-in columns (ID, Title, Author, Status, Date, Slug, Featured Image, Word Count)
+- **Taxonomy Columns** — Display categories, tags, and custom taxonomies as columns
+- **Custom Field Columns** — Show any custom field as a column with smart formatting
+- **Custom Labels** — Override default column labels with your own text
+- **Adjustable Widths** — Set pixel, percentage, or auto width for each column
+- **Drag-to-Resize** — Resize columns directly on the posts page by dragging column borders
+- **Drag & Drop Ordering** — Reorder columns by dragging in the settings
+- **Per Post Type** — Different configurations for posts, pages, and custom post types
+- **Live Preview** — See how columns will look before saving
+- **Enable/Disable** — Temporarily hide columns without removing them
+- **Persistent Widths** — Column widths adjusted on the posts page are saved automatically
+
+#### Column Rendering
+- **Images** — Thumbnail preview for image fields and featured images  
+- **Colors** — Color swatch for color picker fields
+- **Checkboxes** — Checkmark or dash display
+- **URLs** — Clickable truncated links
+- **Long Text** — Truncated with ellipsis
+- **Dates** — Formatted date display
+- **Taxonomies** — Comma-separated term names
+
+#### Technical Implementation
+- Uses `<colgroup>` for independent column width control
+- Table layout fixed ensures columns don't shift during resize
+- Width changes applied via `<col>` elements, not `<th>` styles
+- Smooth resize without layout recalculation jumps
+
+#### Usage
+1. Go to any post list (Posts, Pages, or custom post types)
+2. Click the "Columns" button in the header
+3. Add columns from the available list (includes all custom fields!)
+4. Set custom labels, drag to reorder, set widths, enable/disable
+5. Save and return to the post list
+6. On the posts page, drag column borders to resize on-the-fly
+
+### 🎨 Column Settings UI Redesign
+
+Complete visual overhaul of the column management interface.
+
+#### Panel Styling
+- **Section Headers** — Colored accent bars (purple for Active, green for Available, orange for Preview)
+- **Card Shadows** — Subtle box shadows for depth and separation
+- **Gradient Backgrounds** — Subtle gradient overlays on headers
+- **Sticky Sidebar** — Available columns panel stays visible while scrolling
+
+#### Interactive Elements
+- **Column Count Badge** — Shows number of enabled columns, updates in real-time
+- **Column Item Hover** — Lift animation with colored border highlight
+- **Type Badges** — Enhanced with borders and gradients for each type
+- **Add Button** — Green gradient with hover lift effect
+- **Remove Button** — Scales up on hover with red highlight
+
+#### Preview Table
+- **Thicker Header Border** — 2px bottom border for visual weight
+- **Row Hover States** — Subtle purple tint on hover
+- **Status Badges** — Gradient backgrounds with border accents
+- **Info Tip** — Styled footer with info icon
+
+#### Action Buttons
+- **Larger Save Button** — More padding with shadow
+- **Hover Effects** — Lift animation with enhanced shadow
+- **Section Divider** — Border above action buttons
+
+### 🗑️ Enhanced Trash System
+
+Soft delete with 30-day retention and automatic cleanup.
+
+#### Features
+- **30-Day Retention** — Trashed items are kept for 30 days before automatic permanent deletion
+- **Days Remaining Display** — Trash view shows how many days until each item is deleted (with red warning when ≤7 days)
+- **Empty Trash Button** — One-click button to permanently delete all items in trash
+- **Automatic Cleanup** — Old trashed items are cleaned up automatically on page load
+- **Trashed Timestamp** — Records when items were moved to trash for accurate retention tracking
+
+#### Usage
+- Trash items as normal (they're now soft-deleted with a timestamp)
+- View trash to see items and their days remaining
+- Click "Empty Trash" to permanently delete all trashed items at once
+- Items older than 30 days are automatically removed
+
+### ⏰ Scheduled Publishing
+
+Schedule posts to publish automatically at a future date and time.
+
+#### Features
+- **Schedule Toggle** — Checkbox in publish panel to enable scheduling
+- **Date & Time Pickers** — Native date and time inputs for precise scheduling
+- **Auto-Publish** — Scheduled posts automatically publish when their time arrives
+- **Scheduled Status** — New purple "Scheduled" status badge with clock icon
+- **Scheduled Filter** — Filter posts list to show only scheduled items
+- **Flexible Options** — "Publish Now" button to immediately publish scheduled posts
+
+#### Usage
+1. In the post editor, check "Schedule for later" in the Publish panel
+2. Set the date and time for publication
+3. Click "Schedule" button
+4. Post will automatically publish at the scheduled time
+
+#### Technical Details
+- Auto-publish runs on every page load (pseudo-cron)
+- Scheduled posts show their publish date in the posts list
+- Can reschedule or publish immediately at any time
+
+### 🐛 Bug Fixes
+
+- **Column Settings Fatal Error** — Fixed `Post::find()` being called with array instead of `Post::query()`
+- **Column Resize Jumping** — Fixed columns shifting/jumping when clicking resize handle
+- **Independent Column Widths** — Columns now resize independently without affecting others
+
+---
+
 ## [0.1.5] - 2025-12-11
+
+### 📋 Duplicate Post Feature
+
+One-click post duplication with full content preservation.
+
+#### Features
+- **Clone Any Content** — Duplicate posts, pages, and custom post type entries
+- **Complete Copy** — Copies title (with "Copy" suffix), content, excerpt, featured image
+- **Custom Fields** — All meta data / custom field values are duplicated
+- **Taxonomy Terms** — Categories, tags, and custom taxonomy assignments are preserved
+- **Draft Status** — Duplicates are always created as drafts for review before publishing
+- **Instant Edit** — Redirects to the new post editor immediately after duplication
+
+#### Usage
+- Click the copy icon button in the post list actions
+- The duplicate opens in the editor ready to customize
 
 ### 🏷️ Taxonomies System
 
@@ -519,7 +654,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.1.5 | 2025-12-11 | Taxonomies system, menu builder fixes, compact admin navigation |
+| 0.1.6 | 2025-12-12 | Admin columns manager, column settings UI redesign, enhanced trash (30-day retention), scheduled publishing, column resize fix |
+| 0.1.5 | 2025-12-11 | Duplicate post, taxonomies system, menu builder fixes, compact admin navigation |
 | 0.1.4 | 2025-12-09 | Menu builder system, themes page redesign |
 | 0.1.3 | 2025-12-09 | Post revisions system, publish button fix, field key prefix |
 | 0.1.2 | 2025-12-09 | Theme system, Media/Thumbnails modal redesign, Plugin docs |
