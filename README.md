@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.6.1-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.6.2-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -46,6 +46,7 @@ No frameworks. No bloat. Just powerful features and elegant code.
 ### Administration
 - **Modern Admin Interface** — Beautiful dark sidebar with customizable color schemes
 - **Admin Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
+- **Login Screen Editor** — Visual editor with 80+ settings, 12 presets, pattern backgrounds, and live preview
 - **Live CSS Editor** — Real-time styling with instant preview for admin and frontend
 - **Granular Font Sizes** — Separate font size controls for sidebar, header, and content areas
 - **80+ Admin Icons** — Extensive icon library for post types and navigation
@@ -136,6 +137,7 @@ voidforge-cms/
 │   ├── thumbnails.php     # Thumbnail manager
 │   ├── themes.php         # Theme management
 │   ├── theme-settings.php # Per-theme customization
+│   ├── login-editor.php   # Login screen visual editor
 │   ├── plugins.php        # Plugin management
 │   └── ...
 ├── docs/                  # Documentation
@@ -283,6 +285,32 @@ See `/docs/plugin-development.html` for comprehensive documentation.
 
 ---
 
+## 🔐 Login Screen Editor
+
+Customize your admin login page with a powerful visual editor:
+
+### Background Options
+- **4 Types** — Solid color, gradient, image, or pattern
+- **5 Patterns** — Dots, grid, diagonal, crosses, waves
+- **Pattern Settings** — Customizable color (rgba) and size (10-50px)
+- **Image Support** — Background images with optional overlay
+
+### Card & Form Styling
+- **Card Dimensions** — Width, padding, border radius, shadow
+- **Glassmorphism** — Backdrop blur effect (0-30px)
+- **Typography** — Title/subtitle text, colors, sizes, font weights
+- **Input Fields** — Background, border, text color, padding, focus states
+- **Button** — Gradient or solid, custom label, shadow, full-width toggle
+
+### Presets & Animation
+- **12 Presets** — Default, Aurora, Minimal, Ocean, Nature, Rose, Soft, Corporate, Sunset, Lavender, Slate, Fresh
+- **5 Animations** — None, fade, slide, scale, bounce
+- **Live Preview** — See changes in real-time as you edit
+
+Access via **Design → Login Screen** in the admin sidebar.
+
+---
+
 ## 🖼️ Media Library
 
 The media library features a modern interface with:
@@ -314,7 +342,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.6');
+define('CMS_VERSION', '0.1.6.2');
 define('CMS_NAME', 'VoidForge');
 ```
 

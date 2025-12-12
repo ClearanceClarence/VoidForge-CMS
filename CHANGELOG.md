@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.6.2] - 2025-12-12
+
+### 🔐 Login Screen Editor
+
+A comprehensive visual editor for customizing the admin login page with live preview.
+
+#### Core Features
+- **Full-Screen Editor** — Standalone editor following the customize.php design pattern
+- **Live Preview** — Real-time preview in iframe as you adjust settings
+- **12 Visual Presets** — One-click application of pre-designed themes
+- **80+ Settings** — Complete control over every aspect of the login page
+
+#### Background Options
+- **4 Background Types** — Solid color, gradient, image, or pattern
+- **5 Pattern Styles** — Dots, grid, diagonal, crosses, waves
+- **Pattern Customization** — Adjustable pattern color (rgba) and size (10-50px)
+- **Image Backgrounds** — URL-based with optional dark overlay
+
+#### Card Styling
+- **Dimensions** — Width (300-600px), padding (20-60px), border radius
+- **Border Control** — Color and width (0-5px)
+- **Backdrop Blur** — Glassmorphism effect (0-30px)
+- **Shadow** — Toggleable with customizable color
+
+#### Typography
+- **Title** — Text, color, size (16-48px), weight (400-700)
+- **Subtitle** — Text, color, size (10-24px)
+- **Labels** — Color, size (10-18px)
+- **Placeholder Color** — Customizable input placeholder text
+
+#### Form Controls
+- **Input Styling** — Background, border, text color, radius, padding, focus color
+- **Button Options** — Solid or gradient, customizable colors, angle (0-360°), shadow, full-width toggle
+- **Button Label** — Customizable button text (default: "Sign In")
+- **Form Labels** — Customize "Remember me", "Forgot password?", "Sign up" text
+
+#### Animation
+- **5 Animation Types** — None, fade, slide, scale, bounce
+- **Duration Control** — 200-1500ms
+
+#### Logo Options
+- **Default Logo** — VoidForge branding with gradient text
+- **Custom Logo** — URL-based image with adjustable width (80-300px)
+- **No Logo** — Option to hide logo entirely
+- **Bottom Margin** — 0-60px spacing below logo
+
+#### Presets
+12 professional presets with clean text-based buttons in 3-column grid:
+- Default, Aurora, Minimal, Ocean, Nature, Rose
+- Soft, Corporate, Sunset, Lavender, Slate, Fresh
+
+### 📁 New Files
+
+```
+admin/
+└── login-editor.php      # Login screen visual editor (1,000+ lines)
+```
+
+### 📁 Modified Files
+
+```
+admin/
+├── login.php             — Updated to use all 80+ saved settings
+└── includes/sidebar.php  — Added "Login Screen" link under Design section
+```
+
+### 🎯 Access
+
+Navigate to **Design → Login Screen** in the admin sidebar to open the editor.
+
+---
+
 ## [0.1.6.1] - 2025-12-12
 
 ### 🔁 Repeater & Group Fields
@@ -706,6 +778,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.1.6.2 | 2025-12-12 | Login screen editor with 80+ settings, 12 presets, pattern backgrounds, live preview |
+| 0.1.6.1 | 2025-12-12 | Repeater & group fields, sub-field modal, field key prefixing, radio buttons |
 | 0.1.6 | 2025-12-12 | Admin columns manager, column settings UI redesign, enhanced trash (30-day retention), scheduled publishing, column resize fix |
 | 0.1.5 | 2025-12-11 | Duplicate post, taxonomies system, menu builder fixes, compact admin navigation |
 | 0.1.4 | 2025-12-09 | Menu builder system, themes page redesign |

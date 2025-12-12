@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin Login - VoidForge CMS
- * Light mode design
+ * Uses customizable settings from Login Editor
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -74,6 +74,130 @@ $siteName = CMS_NAME;
 try {
     $siteName = getOption('site_name', CMS_NAME);
 } catch (Exception $e) {}
+
+// Get login settings - Light theme defaults
+$defaults = [
+    'bg_type' => 'gradient',
+    'bg_color' => '#f8fafc',
+    'bg_gradient_start' => '#f8fafc',
+    'bg_gradient_end' => '#e2e8f0',
+    'bg_gradient_angle' => 180,
+    'bg_image' => '',
+    'bg_overlay' => false,
+    'bg_overlay_color' => 'rgba(0,0,0,0.5)',
+    'bg_pattern' => 'dots',
+    'bg_pattern_color' => 'rgba(0,0,0,0.08)',
+    'bg_pattern_size' => 20,
+    'logo_type' => 'default',
+    'logo_image' => '',
+    'logo_width' => 180,
+    'logo_margin_bottom' => 32,
+    'card_bg' => '#ffffff',
+    'card_border' => '#e2e8f0',
+    'card_border_width' => 1,
+    'card_radius' => 16,
+    'card_shadow' => true,
+    'card_shadow_color' => 'rgba(0,0,0,0.15)',
+    'card_backdrop_blur' => 0,
+    'card_width' => 400,
+    'card_padding' => 40,
+    'title_text' => 'Welcome Back',
+    'title_color' => '#1e293b',
+    'title_size' => 28,
+    'title_weight' => 700,
+    'subtitle_text' => 'Sign in to continue',
+    'subtitle_color' => '#64748b',
+    'subtitle_size' => 14,
+    'label_color' => '#475569',
+    'label_size' => 13,
+    'input_bg' => '#f8fafc',
+    'input_border' => '#e2e8f0',
+    'input_text' => '#1e293b',
+    'input_placeholder' => '#94a3b8',
+    'input_radius' => 10,
+    'input_padding' => 12,
+    'input_focus_color' => '#8b5cf6',
+    'button_label' => 'Sign In',
+    'button_bg_type' => 'gradient',
+    'button_solid_color' => '#8b5cf6',
+    'button_gradient_start' => '#8b5cf6',
+    'button_gradient_end' => '#06b6d4',
+    'button_gradient_angle' => 135,
+    'button_text' => '#ffffff',
+    'button_radius' => 10,
+    'button_padding' => 14,
+    'button_shadow' => true,
+    'button_full_width' => true,
+    'show_remember' => true,
+    'show_forgot' => false,
+    'show_register' => false,
+    'remember_label' => 'Remember me',
+    'forgot_label' => 'Forgot password?',
+    'register_text' => "Don't have an account?",
+    'register_label' => 'Sign up',
+    'custom_css' => '',
+    'footer_text' => '',
+    'animation_type' => 'fade',
+    'animation_duration' => 500,
+];
+
+$loginSettings = [];
+try {
+    $loginSettings = getOption('login_settings', []);
+} catch (Exception $e) {}
+
+$s = array_merge($defaults, $loginSettings);
+
+// Build styles
+$bgStyle = '';
+switch ($s['bg_type']) {
+    case 'color':
+        $bgStyle = "background: {$s['bg_color']};";
+        break;
+    case 'gradient':
+        $bgStyle = "background: linear-gradient({$s['bg_gradient_angle']}deg, {$s['bg_gradient_start']}, {$s['bg_gradient_end']});";
+        break;
+    case 'image':
+        $bgStyle = "background: url('{$s['bg_image']}') center/cover no-repeat;";
+        break;
+    case 'pattern':
+        $patternColor = $s['bg_pattern_color'] ?? 'rgba(0,0,0,0.08)';
+        $patternSize = (int)($s['bg_pattern_size'] ?? 20);
+        switch ($s['bg_pattern']) {
+            case 'dots':
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: radial-gradient({$patternColor} 1px, transparent 1px); background-size: {$patternSize}px {$patternSize}px;";
+                break;
+            case 'grid':
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: linear-gradient({$patternColor} 1px, transparent 1px), linear-gradient(90deg, {$patternColor} 1px, transparent 1px); background-size: {$patternSize}px {$patternSize}px;";
+                break;
+            case 'diagonal':
+                $half = $patternSize / 2;
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: repeating-linear-gradient(45deg, transparent, transparent {$half}px, {$patternColor} {$half}px, {$patternColor} {$patternSize}px);";
+                break;
+            case 'crosses':
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: linear-gradient({$patternColor} 2px, transparent 2px), linear-gradient(90deg, {$patternColor} 2px, transparent 2px); background-size: {$patternSize}px {$patternSize}px; background-position: center center;";
+                break;
+            case 'waves':
+                $half = $patternSize / 2;
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: repeating-linear-gradient(0deg, transparent, transparent {$half}px, {$patternColor} {$half}px, {$patternColor} " . ($half + 1) . "px);";
+                break;
+            default:
+                $bgStyle = "background-color: {$s['bg_color']}; background-image: radial-gradient({$patternColor} 1px, transparent 1px); background-size: {$patternSize}px {$patternSize}px;";
+        }
+        break;
+}
+
+$cardBlur = $s['card_backdrop_blur'] > 0 ? "backdrop-filter: blur({$s['card_backdrop_blur']}px); -webkit-backdrop-filter: blur({$s['card_backdrop_blur']}px);" : '';
+$cardShadow = $s['card_shadow'] ? "box-shadow: 0 25px 50px -12px {$s['card_shadow_color']};" : '';
+
+$buttonBg = $s['button_bg_type'] === 'gradient' 
+    ? "background: linear-gradient({$s['button_gradient_angle']}deg, {$s['button_gradient_start']}, {$s['button_gradient_end']});"
+    : "background: {$s['button_solid_color']};";
+$buttonShadow = $s['button_shadow'] ? "box-shadow: 0 4px 15px {$s['button_gradient_start']}40;" : '';
+$buttonWidth = $s['button_full_width'] ? 'width: 100%;' : '';
+
+$animClass = $s['animation_type'] !== 'none' ? 'anim-' . $s['animation_type'] : '';
+$animDuration = (int)$s['animation_duration'] / 1000;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,466 +208,347 @@ try {
     <link rel="icon" type="image/svg+xml" href="<?= ADMIN_URL ?>/assets/img/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --accent: #a855f7;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8fafc;
+            font-family: 'Inter', system-ui, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            <?= $bgStyle ?>
             overflow: hidden;
         }
         
-        .bg-decoration {
+        .login-overlay {
             position: fixed;
             inset: 0;
-            z-index: 0;
-            overflow: hidden;
-        }
-        
-        .bg-decoration::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
-        }
-        
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.5;
-        }
-        
-        .shape-1 {
-            width: 600px;
-            height: 600px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
-            top: -200px;
-            right: -200px;
-            animation: float 20s ease-in-out infinite;
-        }
-        
-        .shape-2 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%);
-            bottom: -150px;
-            left: -150px;
-            animation: float 25s ease-in-out infinite reverse;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -30px) scale(1.05); }
-        }
-        
-        .grid-pattern {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background: <?= $s['bg_overlay_color'] ?>;
             z-index: 1;
         }
         
-        .login-container {
+        .login-card {
             position: relative;
             z-index: 10;
+            width: <?= (int)$s['card_width'] ?>px;
+            max-width: 90vw;
+            padding: <?= (int)$s['card_padding'] ?>px;
+            background: <?= $s['card_bg'] ?>;
+            border: <?= (int)$s['card_border_width'] ?>px solid <?= $s['card_border'] ?>;
+            border-radius: <?= (int)$s['card_radius'] ?>px;
+            <?= $cardBlur ?>
+            <?= $cardShadow ?>
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: <?= (int)$s['logo_margin_bottom'] ?>px;
+        }
+        
+        .login-logo-default {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .login-logo-default span {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .login-logo-custom {
+            max-width: <?= (int)$s['logo_width'] ?>px;
+            height: auto;
+        }
+        
+        .login-title {
+            font-size: <?= (int)$s['title_size'] ?>px;
+            font-weight: <?= (int)$s['title_weight'] ?>;
+            color: <?= $s['title_color'] ?>;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .login-subtitle {
+            font-size: <?= (int)$s['subtitle_size'] ?>px;
+            color: <?= $s['subtitle_color'] ?>;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: <?= (int)$s['label_size'] ?>px;
+            font-weight: 500;
+            color: <?= $s['label_color'] ?>;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
             width: 100%;
-            max-width: 440px;
-            padding: 2rem;
+            padding: <?= (int)$s['input_padding'] ?>px 16px;
+            background: <?= $s['input_bg'] ?>;
+            border: 1px solid <?= $s['input_border'] ?>;
+            border-radius: <?= (int)$s['input_radius'] ?>px;
+            color: <?= $s['input_text'] ?>;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
         }
         
-        .login-card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 24px;
-            padding: 3rem;
-            box-shadow: 
-                0 1px 3px rgba(0, 0, 0, 0.04),
-                0 6px 16px rgba(0, 0, 0, 0.04),
-                0 24px 48px rgba(0, 0, 0, 0.06);
-            animation: cardSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .form-group input::placeholder {
+            color: <?= $s['input_placeholder'] ?>;
         }
         
-        @keyframes cardSlide {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .form-group input:focus {
+            outline: none;
+            border-color: <?= $s['input_focus_color'] ?>;
+            box-shadow: 0 0 0 3px <?= $s['input_focus_color'] ?>20;
         }
         
-        .logo-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-        }
-        
-        .logo {
-            width: 72px;
-            height: 72px;
-            border-radius: 20px;
+        .form-options {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 13px;
         }
         
-        .logo svg {
-            width: 64px;
-            height: 64px;
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: <?= $s['label_color'] ?>;
         }
         
-        .login-header {
+        .remember-me input {
+            width: 16px;
+            height: 16px;
+            accent-color: <?= $s['input_focus_color'] ?>;
+        }
+        
+        .forgot-link {
+            color: <?= $s['input_focus_color'] ?>;
+            text-decoration: none;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .login-btn {
+            <?= $buttonWidth ?>
+            padding: <?= (int)$s['button_padding'] ?>px 24px;
+            <?= $buttonBg ?>
+            color: <?= $s['button_text'] ?>;
+            border: none;
+            border-radius: <?= (int)$s['button_radius'] ?>px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            <?= $buttonShadow ?>
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-footer {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-top: 24px;
+            font-size: 13px;
+            color: <?= $s['subtitle_color'] ?>;
         }
         
-        .login-header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
+        .login-footer a {
+            color: <?= $s['input_focus_color'] ?>;
+            text-decoration: none;
         }
         
-        .login-header p {
-            color: #94a3b8;
-            font-size: 0.9375rem;
+        .login-footer a:hover {
+            text-decoration: underline;
         }
         
         .error-alert {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            animation: shake 0.4s ease;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            margin-bottom: 24px;
+            color: #fca5a5;
+            font-size: 14px;
         }
         
         .error-alert svg {
-            width: 20px;
-            height: 20px;
-            color: #dc2626;
+            width: 18px;
+            height: 18px;
             flex-shrink: 0;
         }
         
-        .error-alert span {
-            font-size: 0.875rem;
-            color: #dc2626;
-            font-weight: 500;
-        }
-        
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-        
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
-        }
-        
-        .input-group {
-            position: relative;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 0.875rem 1rem 0.875rem 3rem;
-            font-size: 0.9375rem;
-            font-family: inherit;
-            color: #0f172a;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            outline: none;
-            transition: all 0.2s;
-        }
-        
-        .form-input:hover {
-            border-color: #cbd5e1;
-        }
-        
-        .form-input:focus {
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-        
-        .form-input::placeholder {
-            color: #94a3b8;
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            color: #94a3b8;
-            pointer-events: none;
-            transition: color 0.2s;
-        }
-        
-        .form-input:focus + .input-icon {
-            color: var(--primary);
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #94a3b8;
-            padding: 0.25rem;
-            display: flex;
-            transition: color 0.2s;
-        }
-        
-        .password-toggle:hover {
-            color: #475569;
-        }
-        
-        .password-toggle svg {
-            width: 20px;
-            height: 20px;
-        }
-        
-        .btn-submit {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            margin-top: 0.5rem;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            font-family: inherit;
-            color: #fff;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-        
-        .btn-submit svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.2s;
-        }
-        
-        .btn-submit:hover svg {
-            transform: translateX(4px);
-        }
-        
-        .login-footer {
-            margin-top: 2rem;
-            text-align: center;
-        }
-        
-        .login-footer a {
-            color: #94a3b8;
+        .back-link {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            color: <?= $s['subtitle_color'] ?>;
             text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: inline-flex;
+            font-size: 13px;
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 6px;
             transition: color 0.2s;
         }
         
-        .login-footer a:hover {
-            color: var(--primary);
+        .back-link:hover {
+            color: <?= $s['input_focus_color'] ?>;
         }
         
-        .login-footer a svg {
+        .back-link svg {
             width: 16px;
             height: 16px;
-            transition: transform 0.2s;
         }
         
-        .login-footer a:hover svg {
-            transform: translateX(-3px);
+        /* Animations */
+        .anim-fade { animation: fadeIn <?= $animDuration ?>s ease; }
+        .anim-slide { animation: slideIn <?= $animDuration ?>s ease; }
+        .anim-scale { animation: scaleIn <?= $animDuration ?>s ease; }
+        .anim-bounce { animation: bounceIn <?= $animDuration ?>s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
-        .page-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem;
-            text-align: center;
-            z-index: 10;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .page-footer span {
-            font-size: 0.75rem;
-            color: #94a3b8;
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
         
-        @media (max-width: 480px) {
-            .login-container { padding: 1rem; }
-            .login-card { padding: 2rem 1.5rem; border-radius: 20px; }
-            .logo { width: 60px; height: 60px; border-radius: 16px; }
-            .logo svg { width: 30px; height: 30px; }
-            .login-header h1 { font-size: 1.5rem; }
+        @keyframes bounceIn {
+            from { opacity: 0; transform: scale(0.3); }
+            to { opacity: 1; transform: scale(1); }
         }
+        
+        /* Custom CSS from editor */
+        <?= $s['custom_css'] ?? '' ?>
     </style>
 </head>
 <body>
-    <div class="bg-decoration">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-    </div>
-    <div class="grid-pattern"></div>
+    <?php if ($s['bg_overlay']): ?>
+    <div class="login-overlay"></div>
+    <?php endif; ?>
     
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo-wrapper">
-                <div class="logo">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <defs>
-                            <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#8b5cf6"></stop>
-                                <stop offset="100%" style="stop-color:#06b6d4"></stop>
-                            </linearGradient>
-                            <linearGradient id="sidebarInnerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
-                                <stop offset="0%" style="stop-color:#c4b5fd"></stop>
-                                <stop offset="100%" style="stop-color:#8b5cf6"></stop>
-                            </linearGradient>
-                        </defs>
-                        <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#sidebarLogoGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <circle cx="16" cy="14" r="3.5" fill="url(#sidebarInnerGlow)"></circle>
-                        <circle cx="16" cy="14" r="1.5" fill="#fff" opacity="0.9"></circle>
-                    </svg>
-                </div>
-            </div>
-            
-            <div class="login-header">
-                <h1>Welcome back</h1>
-                <p>Sign in to <?= esc($siteName) ?></p>
-            </div>
-            
-            <?php if ($error): ?>
-            <div class="error-alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    <div class="login-card <?= $animClass ?>">
+        <?php if ($s['logo_type'] === 'default'): ?>
+        <div class="login-logo">
+            <div class="login-logo-default">
+                <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#8b5cf6"/>
+                            <stop offset="100%" style="stop-color:#06b6d4"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#logoGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="16" cy="14" r="3.5" fill="#c4b5fd"/>
                 </svg>
-                <span><?= esc($error) ?></span>
+                <span>VoidForge</span>
+            </div>
+        </div>
+        <?php elseif ($s['logo_type'] === 'custom' && $s['logo_image']): ?>
+        <div class="login-logo">
+            <img src="<?= esc($s['logo_image']) ?>" class="login-logo-custom" alt="Logo">
+        </div>
+        <?php endif; ?>
+        
+        <h1 class="login-title"><?= esc($s['title_text']) ?></h1>
+        <?php if ($s['subtitle_text']): ?>
+        <p class="login-subtitle"><?= esc($s['subtitle_text']) ?></p>
+        <?php endif; ?>
+        
+        <?php if ($error): ?>
+        <div class="error-alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span><?= esc($error) ?></span>
+        </div>
+        <?php endif; ?>
+        
+        <form method="post">
+            <div class="form-group">
+                <label>Username or Email</label>
+                <input type="text" name="username" placeholder="Enter your username" required autofocus value="<?= esc($_POST['username'] ?? '') ?>">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </div>
+            
+            <?php if ($s['show_remember'] || $s['show_forgot']): ?>
+            <div class="form-options">
+                <?php if ($s['show_remember']): ?>
+                <label class="remember-me">
+                    <input type="checkbox" name="remember"> <?= esc($s['remember_label']) ?>
+                </label>
+                <?php else: ?>
+                <span></span>
+                <?php endif; ?>
+                
+                <?php if ($s['show_forgot']): ?>
+                <a href="#" class="forgot-link"><?= esc($s['forgot_label']) ?></a>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
             
-            <form method="post">
-                <div class="form-group">
-                    <label for="username" class="form-label">Username or Email</label>
-                    <div class="input-group">
-                        <input type="text" id="username" name="username" class="form-input" 
-                               placeholder="Enter your username" required autofocus
-                               value="<?= esc($_POST['username'] ?? '') ?>">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="input-group">
-                        <input type="password" id="password" name="password" class="form-input" 
-                               placeholder="Enter your password" required style="padding-right: 3rem;">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-submit">
-                    Sign In
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </button>
-            </form>
+            <button type="submit" class="login-btn"><?= esc($s['button_label']) ?></button>
             
+            <?php if ($s['show_register']): ?>
             <div class="login-footer">
-                <a href="<?= SITE_URL ?>">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Back to site
-                </a>
+                <?= esc($s['register_text']) ?> <a href="#"><?= esc($s['register_label']) ?></a>
             </div>
-        </div>
+            <?php endif; ?>
+            
+            <?php if ($s['footer_text']): ?>
+            <div class="login-footer"><?= $s['footer_text'] ?></div>
+            <?php endif; ?>
+        </form>
     </div>
     
-    <div class="page-footer">
-        <span>Powered by VoidForge CMS</span>
-    </div>
-    
-    <script>
-        function togglePassword() {
-            var input = document.getElementById('password');
-            var icon = document.getElementById('eye-icon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
-            } else {
-                input.type = 'password';
-                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
-            }
-        }
-    </script>
+    <a href="<?= SITE_URL ?>" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to site
+    </a>
 </body>
 </html>

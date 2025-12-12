@@ -143,21 +143,19 @@ $postTypes = Post::getTypes();
                 
                 <!-- Themes with submenu -->
                 <div class="nav-item-group <?= in_array($currentPage, ['themes', 'theme-settings']) ? 'expanded' : '' ?>">
-                    <a href="#" class="nav-item nav-item-parent" onclick="event.preventDefault(); this.parentElement.classList.toggle('expanded');">
+                    <button type="button" class="nav-item nav-item-parent <?= in_array($currentPage, ['themes', 'theme-settings']) ? 'active' : '' ?>" onclick="toggleSubmenu(this)">
                         <div class="nav-icon">
                             <?= getAdminMenuIcon('layers') ?>
                         </div>
                         <span class="nav-label">Themes</span>
                         <svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </a>
+                    </button>
                     <div class="nav-submenu">
-                        <a href="<?= ADMIN_URL ?>/themes.php" class="nav-item <?= $currentPage === 'themes' ? 'active' : '' ?>">
-                            <span class="nav-label">Manage Themes</span>
-                            <?php if ($currentPage === 'themes'): ?><div class="nav-indicator"></div><?php endif; ?>
+                        <a href="<?= ADMIN_URL ?>/themes.php" class="nav-subitem <?= $currentPage === 'themes' ? 'active' : '' ?>">
+                            Manage Themes
                         </a>
-                        <a href="<?= ADMIN_URL ?>/theme-settings.php" class="nav-item <?= $currentPage === 'theme-settings' ? 'active' : '' ?>">
-                            <span class="nav-label">Theme Settings</span>
-                            <?php if ($currentPage === 'theme-settings'): ?><div class="nav-indicator"></div><?php endif; ?>
+                        <a href="<?= ADMIN_URL ?>/theme-settings.php" class="nav-subitem <?= $currentPage === 'theme-settings' ? 'active' : '' ?>">
+                            Theme Settings
                         </a>
                     </div>
                 </div>
@@ -168,6 +166,14 @@ $postTypes = Post::getTypes();
                     </div>
                     <span class="nav-label">Menus</span>
                     <?php if ($currentPage === 'menus'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+                
+                <a href="<?= ADMIN_URL ?>/login-editor.php" class="nav-item <?= $currentPage === 'login-editor' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('lock') ?>
+                    </div>
+                    <span class="nav-label">Login Screen</span>
+                    <?php if ($currentPage === 'login-editor'): ?><div class="nav-indicator"></div><?php endif; ?>
                 </a>
                 
                 <a href="<?= ADMIN_URL ?>/customize.php" class="nav-item nav-item-featured <?= $currentPage === 'customize' ? 'active' : '' ?>">
