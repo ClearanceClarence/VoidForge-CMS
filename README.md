@@ -3,7 +3,7 @@
 <div align="center">
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.6-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.6.1-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -21,7 +21,10 @@ No frameworks. No bloat. Just powerful features and elegant code.
 
 ### Content Management
 - **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
-- **Custom Fields** — 14+ field types including text, WYSIWYG, images, files, colors, dates, and more
+- **Custom Fields** — 16+ field types including text, WYSIWYG, images, files, colors, dates, repeaters, groups, and more
+- **Repeater Fields** — Create dynamic lists of grouped sub-fields (team members, testimonials, FAQs)
+- **Group Fields** — Combine multiple fields into a single logical unit (addresses, SEO settings)
+- **Field Key Prefixing** — Field keys automatically prefixed with post type for unique identification
 - **Field Groups** — Create reusable field groups and assign them to any post type or users
 - **Taxonomies** — Categories, tags, and custom taxonomies with hierarchical or flat structure
 - **Menu Builder** — Visual drag-and-drop menu management with nested items and multiple locations

@@ -509,7 +509,8 @@ include ADMIN_PATH . '/includes/header.php';
 
 .modal-overlay.active { display: flex; }
 
-.modal {
+.modal,
+.modal-content {
     width: 100%;
     max-width: 480px;
     background: #fff;
@@ -580,6 +581,127 @@ include ADMIN_PATH . '/includes/header.php';
     .icon-grid { grid-template-columns: repeat(4, 1fr); }
     .pte-footer { flex-direction: column; gap: 1rem; }
     .pte-footer a, .pte-footer button { width: 100%; text-align: center; }
+}
+
+/* Sub Fields */
+.sub-fields-list {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sub-fields-list:empty::before {
+    content: 'No sub fields defined';
+    display: block;
+    padding: 1rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+}
+
+.sub-field-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.sub-field-item:last-child {
+    border-bottom: none;
+}
+
+.sub-field-item .sub-field-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-field-item .sub-field-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.sub-field-item .sub-field-key {
+    font-size: 0.6875rem;
+    color: #64748b;
+    font-family: monospace;
+}
+
+.sub-field-item .sub-field-type {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+}
+
+.sub-field-item .sub-field-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sub-field-item .sub-field-btn:hover {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.sub-field-item .sub-field-btn.delete:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.btn-add-subfield {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-add-subfield:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #475569;
+}
+
+/* Field type badges for repeater/group */
+.field-type.repeater {
+    background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+    color: #6d28d9;
+}
+
+.field-type.group {
+    background: linear-gradient(135deg, #cffafe, #a5f3fc);
+    color: #0e7490;
+}
+
+.field-subcount {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    margin-left: 0.25rem;
 }
 </style>
 
@@ -765,24 +887,51 @@ include ADMIN_PATH . '/includes/header.php';
             <div class="form-group">
                 <label class="form-label">Field Type</label>
                 <select id="fieldType" class="form-select">
-                    <option value="text">Text</option>
-                    <option value="textarea">Textarea</option>
-                    <option value="number">Number</option>
-                    <option value="email">Email</option>
-                    <option value="url">URL</option>
-                    <option value="date">Date</option>
-                    <option value="datetime">Date & Time</option>
-                    <option value="color">Color</option>
-                    <option value="select">Dropdown Select</option>
-                    <option value="checkbox">Checkbox</option>
-                    <option value="image">Image</option>
-                    <option value="file">File</option>
-                    <option value="wysiwyg">Rich Text Editor</option>
+                    <optgroup label="Basic">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="url">URL</option>
+                    </optgroup>
+                    <optgroup label="Date & Time">
+                        <option value="date">Date</option>
+                        <option value="datetime">Date & Time</option>
+                    </optgroup>
+                    <optgroup label="Choice">
+                        <option value="select">Dropdown Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio Buttons</option>
+                    </optgroup>
+                    <optgroup label="Media">
+                        <option value="color">Color</option>
+                        <option value="image">Image</option>
+                        <option value="file">File</option>
+                    </optgroup>
+                    <optgroup label="Content">
+                        <option value="wysiwyg">Rich Text Editor</option>
+                    </optgroup>
+                    <optgroup label="Layout">
+                        <option value="repeater">Repeater</option>
+                        <option value="group">Group</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="form-group" id="selectOptionsGroup" style="display: none;">
                 <label class="form-label">Options (one per line)</label>
                 <textarea id="fieldOptions" class="form-input" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+            </div>
+            <div class="form-group" id="subFieldsGroup" style="display: none;">
+                <label class="form-label">Sub Fields</label>
+                <div class="sub-fields-list" id="subFieldsList"></div>
+                <button type="button" class="btn-add-subfield" id="btnAddSubField">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Sub Field
+                </button>
+                <div class="form-hint" style="margin-top: 0.5rem;">Define the fields that will appear in each row (repeater) or as a group</div>
             </div>
             <div class="form-group">
                 <label class="checkbox-single">
@@ -798,6 +947,64 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 </div>
 
+<!-- Sub Field Modal -->
+<div class="modal-overlay" id="subFieldModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="subFieldModalTitle">Add Sub Field</h3>
+            <button type="button" class="modal-close" id="subFieldClose">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Label <span class="required">*</span></label>
+                <input type="text" id="subFieldLabel" class="form-input" placeholder="e.g., Name, Description">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Field Key <span class="required">*</span></label>
+                <input type="text" id="subFieldKey" class="form-input" placeholder="e.g., name, description">
+                <div class="form-hint">Lowercase with underscores.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Field Type</label>
+                <select id="subFieldType" class="form-select">
+                    <optgroup label="Basic">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="url">URL</option>
+                    </optgroup>
+                    <optgroup label="Date & Time">
+                        <option value="date">Date</option>
+                        <option value="datetime">Date & Time</option>
+                    </optgroup>
+                    <optgroup label="Choice">
+                        <option value="select">Dropdown Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio Buttons</option>
+                    </optgroup>
+                    <optgroup label="Media">
+                        <option value="color">Color</option>
+                        <option value="image">Image</option>
+                        <option value="file">File</option>
+                    </optgroup>
+                    <optgroup label="Content">
+                        <option value="wysiwyg">Rich Text Editor</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group" id="subFieldOptionsGroup" style="display: none;">
+                <label class="form-label">Options (one per line)</label>
+                <textarea id="subFieldOptions" class="form-input" rows="3" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" id="subFieldCancel">Cancel</button>
+            <button type="button" class="btn-modal-save" id="subFieldSave">Save Sub Field</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -805,11 +1012,14 @@ include ADMIN_PATH . '/includes/header.php';
     // State
     let fields = <?= json_encode($data['fields']) ?>;
     let editingFieldIndex = null;
+    let currentSubFields = [];
+    let editingSubFieldIndex = null;
     
     // Elements
     const fieldsList = document.getElementById('fieldsList');
     const fieldsJson = document.getElementById('fieldsJson');
     const fieldModal = document.getElementById('fieldModal');
+    const subFieldModal = document.getElementById('subFieldModal');
     const iconGrid = document.getElementById('iconGrid');
     const iconInput = document.getElementById('iconInput');
     const slugInput = document.getElementById('slugInput');
@@ -858,6 +1068,8 @@ include ADMIN_PATH . '/includes/header.php';
         } else {
             let html = '';
             fields.forEach((field, index) => {
+                const isLayout = field.type === 'repeater' || field.type === 'group';
+                const subCount = isLayout && field.sub_fields ? field.sub_fields.length : 0;
                 html += `
                     <div class="field-item" data-index="${index}">
                         <div class="field-drag">
@@ -872,9 +1084,9 @@ include ADMIN_PATH . '/includes/header.php';
                         </div>
                         <div class="field-info">
                             <div class="field-name">${escapeHtml(field.label)}${field.required ? ' <span style="color:#ef4444">*</span>' : ''}</div>
-                            <div class="field-meta">${escapeHtml(field.key)}</div>
+                            <div class="field-meta">${escapeHtml(field.key)}${isLayout ? ' <span class="field-subcount">(' + subCount + ' sub fields)</span>' : ''}</div>
                         </div>
-                        <span class="field-type">${escapeHtml(field.type)}</span>
+                        <span class="field-type ${field.type}">${escapeHtml(field.type)}</span>
                         <div class="field-actions">
                             <button type="button" class="field-btn edit" data-index="${index}" title="Edit">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -905,31 +1117,74 @@ include ADMIN_PATH . '/includes/header.php';
         return div.innerHTML;
     }
     
+    // Toggle options/subfields visibility based on field type
+    function toggleFieldTypeOptions() {
+        const type = document.getElementById('fieldType').value;
+        document.getElementById('selectOptionsGroup').style.display = (type === 'select' || type === 'radio') ? 'block' : 'none';
+        document.getElementById('subFieldsGroup').style.display = (type === 'repeater' || type === 'group') ? 'block' : 'none';
+    }
+    
+    // Render sub-fields list
+    function renderSubFields() {
+        const list = document.getElementById('subFieldsList');
+        if (currentSubFields.length === 0) {
+            list.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        currentSubFields.forEach((sf, i) => {
+            html += `
+                <div class="sub-field-item">
+                    <div class="sub-field-info">
+                        <div class="sub-field-label">${escapeHtml(sf.label)}</div>
+                        <div class="sub-field-key">${escapeHtml(sf.key)}</div>
+                    </div>
+                    <span class="sub-field-type">${escapeHtml(sf.type)}</span>
+                    <button type="button" class="sub-field-btn" data-action="edit" data-index="${i}" title="Edit">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" class="sub-field-btn delete" data-action="delete" data-index="${i}" title="Remove">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    }
+    
     // Field modal
     function openFieldModal(index = null) {
         editingFieldIndex = index;
+        currentSubFields = [];
         
         document.getElementById('fieldModalTitle').textContent = index !== null ? 'Edit Field' : 'Add Field';
         document.getElementById('fieldLabel').value = '';
         document.getElementById('fieldKey').value = '';
+        document.getElementById('fieldKey').dataset.auto = 'true';
         document.getElementById('fieldType').value = 'text';
         document.getElementById('fieldOptions').value = '';
         document.getElementById('fieldRequired').checked = false;
-        document.getElementById('selectOptionsGroup').style.display = 'none';
         
         if (index !== null && fields[index]) {
             const field = fields[index];
             document.getElementById('fieldLabel').value = field.label || '';
             document.getElementById('fieldKey').value = field.key || '';
+            document.getElementById('fieldKey').dataset.auto = 'false';
             document.getElementById('fieldType').value = field.type || 'text';
             document.getElementById('fieldOptions').value = (field.options || []).join('\n');
             document.getElementById('fieldRequired').checked = field.required || false;
-            
-            if (field.type === 'select') {
-                document.getElementById('selectOptionsGroup').style.display = 'block';
-            }
+            currentSubFields = field.sub_fields ? JSON.parse(JSON.stringify(field.sub_fields)) : [];
         }
         
+        toggleFieldTypeOptions();
+        renderSubFields();
         fieldModal.classList.add('active');
         document.getElementById('fieldLabel').focus();
     }
@@ -937,6 +1192,7 @@ include ADMIN_PATH . '/includes/header.php';
     function closeFieldModal() {
         fieldModal.classList.remove('active');
         editingFieldIndex = null;
+        currentSubFields = [];
     }
     
     function saveField() {
@@ -947,19 +1203,25 @@ include ADMIN_PATH . '/includes/header.php';
         const required = document.getElementById('fieldRequired').checked;
         
         if (!label) {
-            alert('Field label is required');
+            document.getElementById('fieldLabel').focus();
             return;
         }
         
         if (!key) {
-            alert('Field key is required');
+            document.getElementById('fieldKey').focus();
             return;
         }
         
         // Check for duplicate keys
         const existingIndex = fields.findIndex(f => f.key === key);
         if (existingIndex !== -1 && existingIndex !== editingFieldIndex) {
-            alert('A field with this key already exists');
+            document.getElementById('fieldKey').focus();
+            return;
+        }
+        
+        // Require sub-fields for repeater/group
+        if ((type === 'repeater' || type === 'group') && currentSubFields.length === 0) {
+            document.getElementById('subFieldsGroup').scrollIntoView({ behavior: 'smooth' });
             return;
         }
         
@@ -970,8 +1232,12 @@ include ADMIN_PATH . '/includes/header.php';
             required: required
         };
         
-        if (type === 'select' && optionsText) {
+        if ((type === 'select' || type === 'radio') && optionsText) {
             field.options = optionsText.split('\n').map(o => o.trim()).filter(o => o);
+        }
+        
+        if (type === 'repeater' || type === 'group') {
+            field.sub_fields = currentSubFields;
         }
         
         if (editingFieldIndex !== null) {
@@ -984,32 +1250,136 @@ include ADMIN_PATH . '/includes/header.php';
         closeFieldModal();
     }
     
-    // Event listeners
+    // Sub-field modal
+    function openSubFieldModal(index = null) {
+        editingSubFieldIndex = index;
+        
+        document.getElementById('subFieldModalTitle').textContent = index !== null ? 'Edit Sub Field' : 'Add Sub Field';
+        document.getElementById('subFieldLabel').value = '';
+        document.getElementById('subFieldKey').value = '';
+        document.getElementById('subFieldKey').dataset.auto = 'true';
+        document.getElementById('subFieldType').value = 'text';
+        document.getElementById('subFieldOptions').value = '';
+        document.getElementById('subFieldOptionsGroup').style.display = 'none';
+        
+        if (index !== null && currentSubFields[index]) {
+            const sf = currentSubFields[index];
+            document.getElementById('subFieldLabel').value = sf.label || '';
+            document.getElementById('subFieldKey').value = sf.key || '';
+            document.getElementById('subFieldKey').dataset.auto = 'false';
+            document.getElementById('subFieldType').value = sf.type || 'text';
+            document.getElementById('subFieldOptions').value = (sf.options || []).join('\n');
+            
+            if (sf.type === 'select' || sf.type === 'radio') {
+                document.getElementById('subFieldOptionsGroup').style.display = 'block';
+            }
+        }
+        
+        subFieldModal.classList.add('active');
+        document.getElementById('subFieldLabel').focus();
+    }
+    
+    function closeSubFieldModal() {
+        subFieldModal.classList.remove('active');
+        editingSubFieldIndex = null;
+    }
+    
+    function saveSubField() {
+        const label = document.getElementById('subFieldLabel').value.trim();
+        const key = document.getElementById('subFieldKey').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        const type = document.getElementById('subFieldType').value;
+        const optionsText = document.getElementById('subFieldOptions').value.trim();
+        
+        if (!label) {
+            document.getElementById('subFieldLabel').focus();
+            return;
+        }
+        
+        if (!key) {
+            document.getElementById('subFieldKey').focus();
+            return;
+        }
+        
+        const subField = { label, key, type };
+        
+        if ((type === 'select' || type === 'radio') && optionsText) {
+            subField.options = optionsText.split('\n').map(o => o.trim()).filter(o => o);
+        }
+        
+        if (editingSubFieldIndex !== null) {
+            currentSubFields[editingSubFieldIndex] = subField;
+        } else {
+            currentSubFields.push(subField);
+        }
+        
+        renderSubFields();
+        closeSubFieldModal();
+    }
+    
+    // Event listeners - Field modal
     document.getElementById('btnAddField').addEventListener('click', () => openFieldModal());
     document.getElementById('fieldModalClose').addEventListener('click', closeFieldModal);
     document.getElementById('fieldCancel').addEventListener('click', closeFieldModal);
     document.getElementById('fieldSave').addEventListener('click', saveField);
+    document.getElementById('fieldType').addEventListener('change', toggleFieldTypeOptions);
     
     fieldModal.addEventListener('click', function(e) {
         if (e.target === this) closeFieldModal();
     });
     
-    document.getElementById('fieldType').addEventListener('change', function() {
-        document.getElementById('selectOptionsGroup').style.display = this.value === 'select' ? 'block' : 'none';
+    // Event listeners - Sub-field modal
+    document.getElementById('btnAddSubField').addEventListener('click', () => openSubFieldModal());
+    document.getElementById('subFieldClose').addEventListener('click', closeSubFieldModal);
+    document.getElementById('subFieldCancel').addEventListener('click', closeSubFieldModal);
+    document.getElementById('subFieldSave').addEventListener('click', saveSubField);
+    
+    document.getElementById('subFieldType').addEventListener('change', function() {
+        document.getElementById('subFieldOptionsGroup').style.display = (this.value === 'select' || this.value === 'radio') ? 'block' : 'none';
+    });
+    
+    subFieldModal.addEventListener('click', function(e) {
+        if (e.target === this) closeSubFieldModal();
+    });
+    
+    // Sub-field list actions (edit/delete)
+    document.getElementById('subFieldsList').addEventListener('click', function(e) {
+        const btn = e.target.closest('.sub-field-btn');
+        if (!btn) return;
+        
+        const index = parseInt(btn.dataset.index);
+        const action = btn.dataset.action;
+        
+        if (action === 'edit') {
+            openSubFieldModal(index);
+        } else if (action === 'delete') {
+            currentSubFields.splice(index, 1);
+            renderSubFields();
+        }
     });
     
     // Auto-generate key from label (with post type slug prefix)
     document.getElementById('fieldLabel').addEventListener('input', function() {
         const keyInput = document.getElementById('fieldKey');
-        if (!keyInput.value || keyInput.dataset.auto === 'true') {
+        if (keyInput.dataset.auto === 'true') {
             const slug = slugInput.value.trim();
             const fieldKey = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
             keyInput.value = (slug && fieldKey) ? slug + '_' + fieldKey : fieldKey;
-            keyInput.dataset.auto = 'true';
         }
     });
     
     document.getElementById('fieldKey').addEventListener('input', function() {
+        this.dataset.auto = 'false';
+    });
+    
+    // Auto-generate sub-field key from label
+    document.getElementById('subFieldLabel').addEventListener('input', function() {
+        const keyInput = document.getElementById('subFieldKey');
+        if (keyInput.dataset.auto === 'true') {
+            keyInput.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+        }
+    });
+    
+    document.getElementById('subFieldKey').addEventListener('input', function() {
         this.dataset.auto = 'false';
     });
     
@@ -1025,17 +1395,19 @@ include ADMIN_PATH . '/includes/header.php';
         
         if (deleteBtn) {
             const index = parseInt(deleteBtn.dataset.index);
-            if (confirm('Delete this field?')) {
-                fields.splice(index, 1);
-                renderFields();
-            }
+            fields.splice(index, 1);
+            renderFields();
         }
     });
     
-    // Escape key
+    // Escape key - close modals
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && fieldModal.classList.contains('active')) {
-            closeFieldModal();
+        if (e.key === 'Escape') {
+            if (subFieldModal.classList.contains('active')) {
+                closeSubFieldModal();
+            } else if (fieldModal.classList.contains('active')) {
+                closeFieldModal();
+            }
         }
     });
     

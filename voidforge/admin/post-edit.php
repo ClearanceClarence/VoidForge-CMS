@@ -151,14 +151,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
         $customFieldsDefs = get_post_type_fields($postType);
         foreach ($customFieldsDefs as $field) {
             $fieldKey = $field['key'];
-            if (isset($_POST['cf_' . $fieldKey])) {
+            $fieldType = $field['type'];
+            
+            // Handle repeater fields
+            if ($fieldType === 'repeater') {
+                $repeaterData = [];
+                $rowCount = (int)($_POST['cf_' . $fieldKey . '_count'] ?? 0);
+                for ($i = 0; $i < $rowCount; $i++) {
+                    $row = [];
+                    foreach ($field['sub_fields'] ?? [] as $sf) {
+                        $sfKey = 'cf_' . $fieldKey . '_' . $i . '_' . $sf['key'];
+                        $row[$sf['key']] = $_POST[$sfKey] ?? '';
+                    }
+                    $repeaterData[] = $row;
+                }
+                set_custom_field($fieldKey, json_encode($repeaterData), $savedPostId);
+            }
+            // Handle group fields
+            elseif ($fieldType === 'group') {
+                $groupData = [];
+                foreach ($field['sub_fields'] ?? [] as $sf) {
+                    $sfKey = 'cf_' . $fieldKey . '_' . $sf['key'];
+                    $groupData[$sf['key']] = $_POST[$sfKey] ?? '';
+                }
+                set_custom_field($fieldKey, json_encode($groupData), $savedPostId);
+            }
+            // Handle regular fields
+            elseif (isset($_POST['cf_' . $fieldKey])) {
                 $fieldValue = $_POST['cf_' . $fieldKey];
                 // Handle checkbox (unchecked = not sent)
-                if ($field['type'] === 'checkbox') {
+                if ($fieldType === 'checkbox') {
                     $fieldValue = $fieldValue ? '1' : '0';
                 }
                 set_custom_field($fieldKey, $fieldValue, $savedPostId);
-            } elseif ($field['type'] === 'checkbox') {
+            } elseif ($fieldType === 'checkbox') {
                 // Checkbox unchecked
                 set_custom_field($fieldKey, '0', $savedPostId);
             }
@@ -191,16 +217,15 @@ if ($post && $post['featured_image_id']) {
 // Get custom fields for this post type
 $customFieldsDefs = get_post_type_fields($postType);
 $customFieldsValues = [];
-if ($post && $post['id']) {
 
 // Get taxonomies for this post type
 $postTaxonomies = Taxonomy::getForPostType($postType);
 $postTermsData = [];
+
 if ($post && $post['id']) {
     foreach ($postTaxonomies as $taxSlug => $tax) {
         $postTermsData[$taxSlug] = Taxonomy::getPostTermIds($post['id'], $taxSlug);
     }
-}
     $customFieldsValues = get_all_custom_fields($post['id']);
 }
 
@@ -479,6 +504,130 @@ include ADMIN_PATH . '/includes/header.php';
 @media (max-width: 1024px) {
     .editor-layout { grid-template-columns: 1fr; }
     .editor-sidebar { order: -1; }
+}
+
+/* Repeater & Group Fields */
+.cf-repeater, .cf-group {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-card-header);
+}
+
+.cf-group {
+    padding: 0.75rem;
+}
+
+.cf-repeater-rows {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.cf-repeater-row {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.cf-repeater-row:last-child {
+    border-bottom: none;
+}
+
+.cf-repeater-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cf-repeater-row-num {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--border-color);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.cf-repeater-row-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.cf-repeater-row-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--forge-danger);
+}
+
+.cf-repeater-row-fields {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.cf-sub-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cf-sub-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.cf-sub-field .form-input,
+.cf-sub-field .form-select,
+.cf-sub-field .form-textarea {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.5rem;
+}
+
+.cf-repeater-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.625rem;
+    background: transparent;
+    border: none;
+    border-top: 1px dashed var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cf-repeater-add:hover {
+    background: rgba(99, 102, 241, 0.05);
+    color: var(--forge-primary);
+}
+
+.cf-group .cf-sub-field {
+    margin-bottom: 0.5rem;
+}
+
+.cf-group .cf-sub-field:last-child {
+    margin-bottom: 0;
 }
 </style>
 
@@ -921,6 +1070,111 @@ include ADMIN_PATH . '/includes/header.php';
                         <textarea name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-textarea" rows="6" <?= $isRequired ? 'required' : '' ?>><?= esc($fieldValue) ?></textarea>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">HTML allowed</div>
                         
+                        <?php elseif ($field['type'] === 'radio' && !empty($field['options'])): ?>
+                        <div style="display: flex; flex-direction: column; gap: 0.375rem;">
+                            <?php foreach ($field['options'] as $opt): ?>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="radio" name="<?= $fieldId ?>" value="<?= esc($opt) ?>" <?= $fieldValue === $opt ? 'checked' : '' ?>>
+                                <span style="font-size: 0.875rem;"><?= esc($opt) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <?php elseif ($field['type'] === 'repeater' && !empty($field['sub_fields'])): 
+                            $repeaterData = $fieldValue ? json_decode($fieldValue, true) : [];
+                            if (!is_array($repeaterData)) $repeaterData = [];
+                        ?>
+                        <div class="cf-repeater" data-field="<?= $fieldKey ?>" data-subfields='<?= esc(json_encode($field['sub_fields'])) ?>'>
+                            <input type="hidden" name="cf_<?= $fieldKey ?>_count" class="repeater-count" value="<?= count($repeaterData) ?>">
+                            <div class="cf-repeater-rows">
+                                <?php foreach ($repeaterData as $rowIndex => $rowData): ?>
+                                <div class="cf-repeater-row" data-row="<?= $rowIndex ?>">
+                                    <div class="cf-repeater-row-header">
+                                        <span class="cf-repeater-row-num"><?= $rowIndex + 1 ?></span>
+                                        <button type="button" class="cf-repeater-row-remove" onclick="removeRepeaterRow(this)">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        </button>
+                                    </div>
+                                    <div class="cf-repeater-row-fields">
+                                        <?php foreach ($field['sub_fields'] as $sf): 
+                                            $sfName = 'cf_' . $fieldKey . '_' . $rowIndex . '_' . $sf['key'];
+                                            $sfValue = $rowData[$sf['key']] ?? '';
+                                        ?>
+                                        <div class="cf-sub-field">
+                                            <label class="cf-sub-label"><?= esc($sf['label']) ?></label>
+                                            <?php if ($sf['type'] === 'textarea'): ?>
+                                            <textarea name="<?= $sfName ?>" class="form-textarea" rows="2"><?= esc($sfValue) ?></textarea>
+                                            <?php elseif ($sf['type'] === 'select' && !empty($sf['options'])): ?>
+                                            <select name="<?= $sfName ?>" class="form-select">
+                                                <option value="">— Select —</option>
+                                                <?php foreach ($sf['options'] as $opt): ?>
+                                                <option value="<?= esc($opt) ?>" <?= $sfValue === $opt ? 'selected' : '' ?>><?= esc($opt) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <?php elseif ($sf['type'] === 'checkbox'): ?>
+                                            <label style="display: flex; align-items: center; gap: 0.375rem;">
+                                                <input type="checkbox" name="<?= $sfName ?>" value="1" <?= $sfValue ? 'checked' : '' ?>>
+                                                <span style="font-size: 0.75rem;">Yes</span>
+                                            </label>
+                                            <?php elseif ($sf['type'] === 'number'): ?>
+                                            <input type="number" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>" step="any">
+                                            <?php elseif ($sf['type'] === 'date'): ?>
+                                            <input type="date" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>">
+                                            <?php elseif ($sf['type'] === 'color'): ?>
+                                            <input type="color" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue ?: '#000000') ?>" style="height: 32px; padding: 0.125rem;">
+                                            <?php else: ?>
+                                            <input type="text" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>">
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="button" class="cf-repeater-add" onclick="addRepeaterRow(this)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Row
+                            </button>
+                        </div>
+                        
+                        <?php elseif ($field['type'] === 'group' && !empty($field['sub_fields'])): 
+                            $groupData = $fieldValue ? json_decode($fieldValue, true) : [];
+                            if (!is_array($groupData)) $groupData = [];
+                        ?>
+                        <div class="cf-group" data-field="<?= $fieldKey ?>">
+                            <?php foreach ($field['sub_fields'] as $sf): 
+                                $sfName = 'cf_' . $fieldKey . '_' . $sf['key'];
+                                $sfValue = $groupData[$sf['key']] ?? '';
+                            ?>
+                            <div class="cf-sub-field">
+                                <label class="cf-sub-label"><?= esc($sf['label']) ?></label>
+                                <?php if ($sf['type'] === 'textarea'): ?>
+                                <textarea name="<?= $sfName ?>" class="form-textarea" rows="2"><?= esc($sfValue) ?></textarea>
+                                <?php elseif ($sf['type'] === 'select' && !empty($sf['options'])): ?>
+                                <select name="<?= $sfName ?>" class="form-select">
+                                    <option value="">— Select —</option>
+                                    <?php foreach ($sf['options'] as $opt): ?>
+                                    <option value="<?= esc($opt) ?>" <?= $sfValue === $opt ? 'selected' : '' ?>><?= esc($opt) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php elseif ($sf['type'] === 'checkbox'): ?>
+                                <label style="display: flex; align-items: center; gap: 0.375rem;">
+                                    <input type="checkbox" name="<?= $sfName ?>" value="1" <?= $sfValue ? 'checked' : '' ?>>
+                                    <span style="font-size: 0.75rem;">Yes</span>
+                                </label>
+                                <?php elseif ($sf['type'] === 'number'): ?>
+                                <input type="number" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>" step="any">
+                                <?php elseif ($sf['type'] === 'date'): ?>
+                                <input type="date" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>">
+                                <?php elseif ($sf['type'] === 'color'): ?>
+                                <input type="color" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue ?: '#000000') ?>" style="height: 32px; padding: 0.125rem;">
+                                <?php else: ?>
+                                <input type="text" name="<?= $sfName ?>" class="form-input" value="<?= esc($sfValue) ?>">
+                                <?php endif; ?>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        
                         <?php else: ?>
                         <input type="text" name="<?= $fieldId ?>" id="<?= $fieldId ?>" class="form-input" value="<?= esc($fieldValue) ?>" <?= $isRequired ? 'required' : '' ?>>
                         <?php endif; ?>
@@ -1264,6 +1518,97 @@ function restoreRevision(revisionId, revisionNumber) {
         });
     }
 })();
+
+// Repeater field functions
+function addRepeaterRow(btn) {
+    const repeater = btn.closest('.cf-repeater');
+    const fieldKey = repeater.dataset.field;
+    const subFields = JSON.parse(repeater.dataset.subfields);
+    const container = repeater.querySelector('.cf-repeater-rows');
+    const countInput = repeater.querySelector('.repeater-count');
+    
+    const rowIndex = parseInt(countInput.value);
+    countInput.value = rowIndex + 1;
+    
+    const row = document.createElement('div');
+    row.className = 'cf-repeater-row';
+    row.dataset.row = rowIndex;
+    
+    let fieldsHtml = '';
+    subFields.forEach(sf => {
+        const sfName = 'cf_' + fieldKey + '_' + rowIndex + '_' + sf.key;
+        let inputHtml = '';
+        
+        if (sf.type === 'textarea') {
+            inputHtml = '<textarea name="' + sfName + '" class="form-textarea" rows="2"></textarea>';
+        } else if (sf.type === 'select' && sf.options) {
+            inputHtml = '<select name="' + sfName + '" class="form-select"><option value="">— Select —</option>';
+            sf.options.forEach(opt => {
+                inputHtml += '<option value="' + escapeHtmlAttr(opt) + '">' + escapeHtml(opt) + '</option>';
+            });
+            inputHtml += '</select>';
+        } else if (sf.type === 'checkbox') {
+            inputHtml = '<label style="display:flex;align-items:center;gap:0.375rem;"><input type="checkbox" name="' + sfName + '" value="1"><span style="font-size:0.75rem;">Yes</span></label>';
+        } else if (sf.type === 'number') {
+            inputHtml = '<input type="number" name="' + sfName + '" class="form-input" step="any">';
+        } else if (sf.type === 'date') {
+            inputHtml = '<input type="date" name="' + sfName + '" class="form-input">';
+        } else if (sf.type === 'color') {
+            inputHtml = '<input type="color" name="' + sfName + '" class="form-input" value="#000000" style="height:32px;padding:0.125rem;">';
+        } else {
+            inputHtml = '<input type="text" name="' + sfName + '" class="form-input">';
+        }
+        
+        fieldsHtml += '<div class="cf-sub-field"><label class="cf-sub-label">' + escapeHtml(sf.label) + '</label>' + inputHtml + '</div>';
+    });
+    
+    row.innerHTML = '<div class="cf-repeater-row-header">' +
+        '<span class="cf-repeater-row-num">' + (rowIndex + 1) + '</span>' +
+        '<button type="button" class="cf-repeater-row-remove" onclick="removeRepeaterRow(this)">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+        '</button></div><div class="cf-repeater-row-fields">' + fieldsHtml + '</div>';
+    
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+}
+
+function removeRepeaterRow(btn) {
+    const row = btn.closest('.cf-repeater-row');
+    const repeater = row.closest('.cf-repeater');
+    const countInput = repeater.querySelector('.repeater-count');
+    
+    row.remove();
+    
+    // Renumber remaining rows
+    const rows = repeater.querySelectorAll('.cf-repeater-row');
+    const fieldKey = repeater.dataset.field;
+    
+    rows.forEach((r, idx) => {
+        r.dataset.row = idx;
+        r.querySelector('.cf-repeater-row-num').textContent = idx + 1;
+        
+        // Update input names
+        r.querySelectorAll('[name]').forEach(input => {
+            const oldName = input.name;
+            const match = oldName.match(/^cf_(.+?)_\d+_(.+)$/);
+            if (match) {
+                input.name = 'cf_' + match[1] + '_' + idx + '_' + match[2];
+            }
+        });
+    });
+    
+    countInput.value = rows.length;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function escapeHtmlAttr(text) {
+    return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

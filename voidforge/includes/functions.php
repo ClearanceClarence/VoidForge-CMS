@@ -774,6 +774,8 @@ function get_post_type_fields(string $postType): array
     $typeFields = $config['fields'] ?? [];
     foreach ($typeFields as $field) {
         $field['source'] = 'post_type';
+        // Prefix key with post type
+        $field['key'] = $postType . '_' . $field['key'];
         $fields[] = $field;
     }
     
@@ -785,6 +787,8 @@ function get_post_type_fields(string $postType): array
                 $field['source'] = 'field_group';
                 $field['group_id'] = $groupId;
                 $field['group_title'] = $group['title'];
+                // Prefix key with post type
+                $field['key'] = $postType . '_' . $field['key'];
                 $fields[] = $field;
             }
         }

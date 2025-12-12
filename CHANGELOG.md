@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.6.1] - 2025-12-12
+
+### 🔁 Repeater & Group Fields
+
+Powerful nested field types for complex content structures.
+
+#### Repeater Fields
+- **Multiple Rows** — Add unlimited rows of the same field structure
+- **Sub Field Types** — Text, textarea, number, email, URL, date, datetime, color, select, checkbox, image, file, WYSIWYG, radio
+- **Add/Remove Rows** — Dynamic row management with intuitive +/× buttons
+- **Row Numbering** — Automatic numbering updates when rows are reordered
+- **Scrollable Container** — Max height with scroll for many rows
+- **JSON Storage** — Data stored as JSON array in database
+
+#### Group Fields
+- **Structured Data** — Combine multiple fields into a single logical unit
+- **Same Sub Field Types** — All the same field types available as repeaters
+- **Compact Display** — Sub fields displayed together in the sidebar
+- **JSON Storage** — Data stored as JSON object in database
+
+#### Use Cases
+- **Repeaters** — Team members, testimonials, FAQ items, price tables, galleries, features list
+- **Groups** — Address fields, social links, SEO settings, contact info, dimensions
+
+#### Field Type Selector Improvements
+- **Organized Categories** — Field types grouped by purpose (Basic, Date & Time, Choice, Media, Content, Layout)
+- **Radio Buttons** — New radio button field type for single-choice options
+- **Visual Distinction** — Layout types (repeater/group) have colored badges
+
+#### Post Type Editor Support
+- **Repeater & Group in Post Types** — Full support for defining repeater and group fields directly in post type editor
+- **Sub-field Modal** — Add, edit, and remove sub-fields with a clean modal interface
+- **Consistent Experience** — Same field types and options as custom field groups
+
+#### Field Key Prefixing
+- **Auto-prefixed Keys** — Field keys are automatically prefixed with post type slug
+- **Example** — A `price` field on `product` post type becomes `product_price`
+- **Prevents Conflicts** — Ensures unique field keys across different post types
+
+#### Technical Details
+- Sub fields defined in the field group editor with inline add UI
+- Repeater data format: `[{sub_key: value, ...}, ...]`
+- Group data format: `{sub_key: value, ...}`
+- Proper input name generation: `cf_{posttype}_{field}_{row}_{subfield}` for repeaters
+- Row count tracking via hidden input for proper save processing
+
+#### Bug Fixes
+- Fixed undefined `$postTaxonomies` error when creating new posts on custom post types
+- Fixed missing `.modal-content` CSS class in post type editor
+
+---
+
 ## [0.1.6] - 2025-12-12
 
 ### 📊 Admin Columns

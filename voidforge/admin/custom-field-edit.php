@@ -478,6 +478,147 @@ include ADMIN_PATH . '/includes/header.php';
     display: block;
 }
 
+.sub-fields-group {
+    display: none;
+}
+
+.sub-fields-group.visible {
+    display: block;
+}
+
+.sub-fields-list {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sub-fields-list:empty::before {
+    content: 'No sub fields defined';
+    display: block;
+    padding: 1rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+}
+
+.sub-field-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.sub-field-item:last-child {
+    border-bottom: none;
+}
+
+.sub-field-item .sub-field-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-field-item .sub-field-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.sub-field-item .sub-field-key {
+    font-size: 0.6875rem;
+    color: #64748b;
+    font-family: monospace;
+}
+
+.sub-field-item .sub-field-type {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+}
+
+.sub-field-item .sub-field-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sub-field-item .sub-field-remove:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.sub-field-item .sub-field-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sub-field-item .sub-field-edit:hover {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.btn-add-subfield {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-add-subfield:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #475569;
+}
+
+/* Field type badges for repeater/group */
+.field-type.repeater {
+    background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+    color: #6d28d9;
+}
+
+.field-type.group {
+    background: linear-gradient(135deg, #cffafe, #a5f3fc);
+    color: #0e7490;
+}
+
+.field-subcount {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    margin-left: 0.25rem;
+}
+
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -625,25 +766,52 @@ include ADMIN_PATH . '/includes/header.php';
             <div class="form-group">
                 <label class="form-label">Type</label>
                 <select id="fieldType" class="form-select" onchange="toggleOptionsField()">
-                    <option value="text">Text</option>
-                    <option value="textarea">Textarea</option>
-                    <option value="number">Number</option>
-                    <option value="email">Email</option>
-                    <option value="url">URL</option>
-                    <option value="date">Date</option>
-                    <option value="datetime">Date & Time</option>
-                    <option value="color">Color</option>
-                    <option value="select">Dropdown Select</option>
-                    <option value="checkbox">Checkbox</option>
-                    <option value="image">Image</option>
-                    <option value="file">File</option>
-                    <option value="wysiwyg">Rich Text Editor</option>
+                    <optgroup label="Basic">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="url">URL</option>
+                    </optgroup>
+                    <optgroup label="Date & Time">
+                        <option value="date">Date</option>
+                        <option value="datetime">Date & Time</option>
+                    </optgroup>
+                    <optgroup label="Choice">
+                        <option value="select">Dropdown Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio Buttons</option>
+                    </optgroup>
+                    <optgroup label="Media">
+                        <option value="color">Color</option>
+                        <option value="image">Image</option>
+                        <option value="file">File</option>
+                    </optgroup>
+                    <optgroup label="Content">
+                        <option value="wysiwyg">Rich Text Editor</option>
+                    </optgroup>
+                    <optgroup label="Layout">
+                        <option value="repeater">Repeater</option>
+                        <option value="group">Group</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="form-group options-group" id="optionsGroup">
                 <label class="form-label">Options</label>
                 <textarea id="fieldOptions" class="form-input" rows="3" placeholder="One option per line"></textarea>
                 <div class="form-help">Enter each option on a new line</div>
+            </div>
+            <div class="form-group sub-fields-group" id="subFieldsGroup">
+                <label class="form-label">Sub Fields</label>
+                <div class="sub-fields-list" id="subFieldsList"></div>
+                <button type="button" class="btn-add-subfield" onclick="addSubField()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Sub Field
+                </button>
+                <div class="form-help" style="margin-top: 0.5rem;">Define the fields that will appear in each row (repeater) or as a group</div>
             </div>
             <div class="form-group">
                 <label class="checkbox-label">
@@ -659,9 +827,74 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 </div>
 
+<!-- Sub Field Modal -->
+<div class="modal-overlay" id="subFieldModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="subFieldModalTitle">Add Sub Field</h3>
+            <button type="button" class="modal-close" onclick="closeSubFieldModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Label</label>
+                <input type="text" id="subFieldLabel" class="form-input" placeholder="e.g., Name, Description">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Field Key</label>
+                <input type="text" id="subFieldKey" class="form-input" placeholder="e.g., name, description" style="font-family: monospace;">
+                <div class="form-help">Unique identifier used in code. Lowercase with underscores.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type</label>
+                <select id="subFieldType" class="form-select" onchange="toggleSubFieldOptions()">
+                    <optgroup label="Basic">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="url">URL</option>
+                    </optgroup>
+                    <optgroup label="Date & Time">
+                        <option value="date">Date</option>
+                        <option value="datetime">Date & Time</option>
+                    </optgroup>
+                    <optgroup label="Choice">
+                        <option value="select">Dropdown Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio Buttons</option>
+                    </optgroup>
+                    <optgroup label="Media">
+                        <option value="color">Color</option>
+                        <option value="image">Image</option>
+                        <option value="file">File</option>
+                    </optgroup>
+                    <optgroup label="Content">
+                        <option value="wysiwyg">Rich Text Editor</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group options-group" id="subFieldOptionsGroup">
+                <label class="form-label">Options</label>
+                <textarea id="subFieldOptions" class="form-input" rows="3" placeholder="One option per line"></textarea>
+                <div class="form-help">Enter each option on a new line</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeSubFieldModal()">Cancel</button>
+            <button type="button" class="btn-save" onclick="saveSubField()">Save Sub Field</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let fields = <?= json_encode($data['fields']) ?>;
 let editingFieldIndex = null;
+let currentSubFields = [];
 
 const fieldsList = document.getElementById('fieldsList');
 const fieldsJson = document.getElementById('fieldsJson');
@@ -694,6 +927,8 @@ function renderFields() {
     } else {
         let html = '';
         fields.forEach((field, index) => {
+            const isLayout = field.type === 'repeater' || field.type === 'group';
+            const subCount = isLayout && field.sub_fields ? field.sub_fields.length : 0;
             html += `
                 <div class="field-item" data-index="${index}">
                     <div class="field-drag">
@@ -708,9 +943,9 @@ function renderFields() {
                     </div>
                     <div class="field-info">
                         <div class="field-name">${escapeHtml(field.label)}${field.required ? ' <span style="color:#ef4444">*</span>' : ''}</div>
-                        <div class="field-meta">${escapeHtml(field.key)}</div>
+                        <div class="field-meta">${escapeHtml(field.key)}${isLayout ? ' <span class="field-subcount">(' + subCount + ' sub fields)</span>' : ''}</div>
                     </div>
-                    <span class="field-type">${escapeHtml(field.type)}</span>
+                    <span class="field-type ${field.type}">${escapeHtml(field.type)}</span>
                     <div class="field-actions">
                         <button type="button" class="field-btn edit" onclick="editField(${index})" title="Edit">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -743,7 +978,129 @@ function escapeHtml(text) {
 function toggleOptionsField() {
     const type = document.getElementById('fieldType').value;
     const optionsGroup = document.getElementById('optionsGroup');
-    optionsGroup.classList.toggle('visible', type === 'select');
+    const subFieldsGroup = document.getElementById('subFieldsGroup');
+    
+    optionsGroup.classList.toggle('visible', type === 'select' || type === 'radio');
+    subFieldsGroup.classList.toggle('visible', type === 'repeater' || type === 'group');
+}
+
+function renderSubFields() {
+    const list = document.getElementById('subFieldsList');
+    if (currentSubFields.length === 0) {
+        list.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    currentSubFields.forEach((sf, i) => {
+        html += `
+            <div class="sub-field-item">
+                <div class="sub-field-info">
+                    <div class="sub-field-label">${escapeHtml(sf.label)}</div>
+                    <div class="sub-field-key">${escapeHtml(sf.key)}</div>
+                </div>
+                <span class="sub-field-type">${escapeHtml(sf.type)}</span>
+                <button type="button" class="sub-field-edit" onclick="editSubField(${i})" title="Edit">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <button type="button" class="sub-field-remove" onclick="removeSubField(${i})" title="Remove">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        `;
+    });
+    list.innerHTML = html;
+}
+
+let editingSubFieldIndex = null;
+
+function addSubField() {
+    openSubFieldModal();
+}
+
+function editSubField(index) {
+    openSubFieldModal(index);
+}
+
+function openSubFieldModal(index = null) {
+    editingSubFieldIndex = index;
+    
+    document.getElementById('subFieldModalTitle').textContent = index !== null ? 'Edit Sub Field' : 'Add Sub Field';
+    document.getElementById('subFieldLabel').value = '';
+    document.getElementById('subFieldKey').value = '';
+    document.getElementById('subFieldType').value = 'text';
+    document.getElementById('subFieldOptions').value = '';
+    
+    if (index !== null && currentSubFields[index]) {
+        const sf = currentSubFields[index];
+        document.getElementById('subFieldLabel').value = sf.label || '';
+        document.getElementById('subFieldKey').value = sf.key || '';
+        document.getElementById('subFieldType').value = sf.type || 'text';
+        document.getElementById('subFieldOptions').value = (sf.options || []).join('\n');
+    }
+    
+    toggleSubFieldOptions();
+    document.getElementById('subFieldModal').classList.add('active');
+    document.getElementById('subFieldLabel').focus();
+}
+
+function closeSubFieldModal() {
+    document.getElementById('subFieldModal').classList.remove('active');
+    editingSubFieldIndex = null;
+}
+
+function toggleSubFieldOptions() {
+    const type = document.getElementById('subFieldType').value;
+    const optionsGroup = document.getElementById('subFieldOptionsGroup');
+    optionsGroup.classList.toggle('visible', type === 'select' || type === 'radio');
+}
+
+function saveSubField() {
+    const label = document.getElementById('subFieldLabel').value.trim();
+    const key = document.getElementById('subFieldKey').value.trim();
+    const type = document.getElementById('subFieldType').value;
+    const options = document.getElementById('subFieldOptions').value.split('\n').map(o => o.trim()).filter(o => o);
+    
+    if (!label || !key) {
+        document.getElementById('subFieldLabel').focus();
+        return;
+    }
+    
+    const subField = { label, key, type };
+    
+    if (type === 'select' || type === 'radio') {
+        subField.options = options;
+    }
+    
+    if (editingSubFieldIndex !== null) {
+        currentSubFields[editingSubFieldIndex] = subField;
+    } else {
+        currentSubFields.push(subField);
+    }
+    
+    renderSubFields();
+    closeSubFieldModal();
+}
+
+// Auto-generate key from label for sub-fields
+document.getElementById('subFieldLabel').addEventListener('input', function() {
+    if (editingSubFieldIndex === null) {
+        const key = this.value.toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, '_');
+        document.getElementById('subFieldKey').value = key;
+    }
+});
+
+function removeSubField(index) {
+    currentSubFields.splice(index, 1);
+    renderSubFields();
 }
 
 document.getElementById('btnAddField').addEventListener('click', function() {
@@ -752,6 +1109,7 @@ document.getElementById('btnAddField').addEventListener('click', function() {
 
 function openFieldModal(index = null) {
     editingFieldIndex = index;
+    currentSubFields = [];
     
     document.getElementById('fieldModalTitle').textContent = index !== null ? 'Edit Field' : 'Add Field';
     document.getElementById('fieldLabel').value = '';
@@ -767,9 +1125,11 @@ function openFieldModal(index = null) {
         document.getElementById('fieldType').value = field.type || 'text';
         document.getElementById('fieldOptions').value = (field.options || []).join('\n');
         document.getElementById('fieldRequired').checked = field.required || false;
+        currentSubFields = field.sub_fields ? JSON.parse(JSON.stringify(field.sub_fields)) : [];
     }
     
     toggleOptionsField();
+    renderSubFields();
     document.getElementById('fieldModal').classList.add('active');
     document.getElementById('fieldLabel').focus();
 }
@@ -777,6 +1137,7 @@ function openFieldModal(index = null) {
 function closeFieldModal() {
     document.getElementById('fieldModal').classList.remove('active');
     editingFieldIndex = null;
+    currentSubFields = [];
 }
 
 function editField(index) {
@@ -784,10 +1145,8 @@ function editField(index) {
 }
 
 function deleteField(index) {
-    if (confirm('Delete this field?')) {
-        fields.splice(index, 1);
-        renderFields();
-    }
+    fields.splice(index, 1);
+    renderFields();
 }
 
 function saveField() {
@@ -798,13 +1157,24 @@ function saveField() {
     const required = document.getElementById('fieldRequired').checked;
     
     if (!label || !key) {
-        alert('Label and key are required');
+        document.getElementById('fieldLabel').focus();
+        return;
+    }
+    
+    // Validate sub-fields for repeater/group
+    if ((type === 'repeater' || type === 'group') && currentSubFields.length === 0) {
+        document.getElementById('subFieldsGroup').scrollIntoView({ behavior: 'smooth' });
         return;
     }
     
     const field = { label, key, type, required };
-    if (type === 'select') {
+    
+    if (type === 'select' || type === 'radio') {
         field.options = options;
+    }
+    
+    if (type === 'repeater' || type === 'group') {
+        field.sub_fields = currentSubFields;
     }
     
     if (editingFieldIndex !== null) {
@@ -822,9 +1192,19 @@ document.getElementById('fieldModal').addEventListener('click', function(e) {
     if (e.target === this) closeFieldModal();
 });
 
+document.getElementById('subFieldModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSubFieldModal();
+});
+
 // Close modal on Escape
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeFieldModal();
+    if (e.key === 'Escape') {
+        if (document.getElementById('subFieldModal').classList.contains('active')) {
+            closeSubFieldModal();
+        } else {
+            closeFieldModal();
+        }
+    }
 });
 </script>
 
