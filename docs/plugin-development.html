@@ -1,1912 +1,1045 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plugin Development Guide — VoidForge CMS</title>
-    <meta
-      name="description"
-      content="Complete guide to developing plugins for VoidForge CMS. Learn hooks, filters, shortcodes, AJAX, REST API, and more."
-    />
-    <link rel="icon" href="../favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Development — VoidForge CMS</title>
+    <meta name="description" content="Complete guide to developing plugins for VoidForge CMS. Learn hooks, filters, shortcodes, AJAX, REST API, and more.">
+    <link rel="icon" href="../favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --secondary: #8b5cf6;
-        --accent: #06b6d4;
-        --success: #22c55e;
-        --warning: #eab308;
-        --error: #ef4444;
-        --bg-dark: #0a0a0f;
-        --bg-card: #12121a;
-        --bg-code: #1e1e2e;
-        --text: #f1f5f9;
-        --text-muted: #94a3b8;
-        --border: #27272a;
-      }
-
-      *,
-      *::before,
-      *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-        scroll-padding-top: 100px;
-      }
-
-      body {
-        font-family: "Inter", -apple-system, sans-serif;
-        background: var(--bg-dark);
-        color: var(--text);
-        line-height: 1.7;
-        font-size: 16px;
-      }
-
-      /* Background */
-      .bg-gradient {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(
-            circle at 15% 15%,
-            rgba(99, 102, 241, 0.15) 0%,
-            transparent 40%
-          ),
-          radial-gradient(
-            circle at 85% 85%,
-            rgba(139, 92, 246, 0.1) 0%,
-            transparent 40%
-          );
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      /* Header */
-      .site-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background: rgba(10, 10, 15, 0.85);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--border);
-        padding: 1rem 0;
-      }
-
-      .header-inner {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: var(--text);
-        font-family: "Space Grotesk", sans-serif;
-        font-weight: 700;
-        font-size: 1.25rem;
-      }
-
-      .logo svg {
-        width: 36px;
-        height: 36px;
-      }
-
-      .header-nav {
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      .header-nav a {
-        padding: 0.5rem 1rem;
-        color: var(--text-muted);
-        text-decoration: none;
-        font-weight: 500;
-        border-radius: 8px;
-        transition: all 0.2s;
-      }
-
-      .header-nav a:hover {
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .btn-back {
-        background: linear-gradient(
-          135deg,
-          var(--primary),
-          var(--secondary)
-        ) !important;
-        color: #fff !important;
-      }
-
-      /* Layout */
-      .main-layout {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 6rem 2rem 4rem;
-        gap: 3rem;
-        position: relative;
-        z-index: 1;
-      }
-
-      /* Sidebar */
-      .sidebar {
-        position: sticky;
-        top: 100px;
-        height: fit-content;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-        padding-right: 1rem;
-      }
-
-      .sidebar::-webkit-scrollbar {
-        width: 4px;
-      }
-      .sidebar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .sidebar::-webkit-scrollbar-thumb {
-        background: var(--border);
-        border-radius: 4px;
-      }
-
-      .sidebar-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text-muted);
-        margin-bottom: 1rem;
-      }
-
-      .sidebar-nav {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-
-      .sidebar-link {
-        display: block;
-        padding: 0.625rem 1rem;
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.9375rem;
-        border-radius: 8px;
-        border-left: 2px solid transparent;
-        transition: all 0.15s;
-      }
-
-      .sidebar-link:hover {
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .sidebar-link.active {
-        color: var(--primary);
-        background: rgba(99, 102, 241, 0.1);
-        border-left-color: var(--primary);
-      }
-
-      .sidebar-section {
-        margin-bottom: 2rem;
-      }
-
-      /* Content */
-      .content {
-        min-width: 0;
-      }
-
-      /* Hero */
-      .doc-hero {
-        margin-bottom: 4rem;
-        padding-bottom: 3rem;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .doc-hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        background: rgba(99, 102, 241, 0.15);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 100px;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 1.5rem;
-      }
-
-      .doc-hero h1 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: clamp(2.5rem, 5vw, 3.5rem);
-        font-weight: 700;
-        line-height: 1.1;
-        margin-bottom: 1rem;
-        background: linear-gradient(
-          135deg,
-          var(--text) 0%,
-          var(--text-muted) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .doc-hero p {
-        font-size: 1.25rem;
-        color: var(--text-muted);
-        max-width: 600px;
-      }
-
-      /* Sections */
-      .doc-section {
-        margin-bottom: 4rem;
-        scroll-margin-top: 100px;
-      }
-
-      .doc-section h2 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.875rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      .doc-section h2 .icon {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .doc-section h2 .icon svg {
-        width: 18px;
-        height: 18px;
-        color: #fff;
-      }
-
-      .doc-section h3 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 2rem 0 1rem;
-        color: var(--text);
-      }
-
-      .doc-section h4 {
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 1.5rem 0 0.75rem;
-        color: var(--text);
-      }
-
-      .doc-section p {
-        color: var(--text-muted);
-        margin-bottom: 1rem;
-      }
-
-      .doc-section ul,
-      .doc-section ol {
-        color: var(--text-muted);
-        margin: 1rem 0 1.5rem 1.5rem;
-      }
-
-      .doc-section li {
-        margin-bottom: 0.5rem;
-      }
-
-      .doc-section a {
-        color: var(--primary);
-        text-decoration: none;
-      }
-
-      .doc-section a:hover {
-        text-decoration: underline;
-      }
-
-      /* Code blocks */
-      pre {
-        background: var(--bg-code);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        overflow-x: auto;
-        margin: 1rem 0 1.5rem;
-        position: relative;
-      }
-
-      pre code {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875rem;
-        line-height: 1.6;
-        color: #e2e8f0;
-      }
-
-      code {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875em;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 0.125rem 0.375rem;
-        border-radius: 4px;
-        color: var(--accent);
-      }
-
-      pre code {
-        background: none;
-        padding: 0;
-      }
-
-      /* Syntax highlighting */
-      .token-keyword {
-        color: #c792ea;
-      }
-      .token-function {
-        color: #82aaff;
-      }
-      .token-string {
-        color: #c3e88d;
-      }
-      .token-comment {
-        color: #676e95;
-        font-style: italic;
-      }
-      .token-variable {
-        color: #f78c6c;
-      }
-      .token-number {
-        color: #f78c6c;
-      }
-      .token-operator {
-        color: #89ddff;
-      }
-      .token-class {
-        color: #ffcb6b;
-      }
-      .token-tag {
-        color: #f07178;
-      }
-      .token-attr {
-        color: #c792ea;
-      }
-      .token-punct {
-        color: #89ddff;
-      }
-
-      /* Code header */
-      .code-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.625rem 1rem;
-        background: rgba(0, 0, 0, 0.3);
-        border-bottom: 1px solid var(--border);
-        margin: -1.25rem -1.5rem 1rem;
-        border-radius: 11px 11px 0 0;
-      }
-
-      .code-lang {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        letter-spacing: 0.5px;
-      }
-
-      .code-copy {
-        padding: 0.25rem 0.75rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-
-      .code-copy:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--text);
-      }
-
-      /* Info boxes */
-      .info-box {
-        padding: 1.25rem 1.5rem;
-        border-radius: 12px;
-        margin: 1.5rem 0;
-        display: flex;
-        gap: 1rem;
-      }
-
-      .info-box-icon {
-        flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-      }
-
-      .info-box-content h4 {
-        margin: 0 0 0.375rem 0;
-        font-weight: 600;
-      }
-
-      .info-box-content p {
-        margin: 0;
-        font-size: 0.9375rem;
-      }
-
-      .info-box.tip {
-        background: rgba(34, 197, 94, 0.1);
-        border: 1px solid rgba(34, 197, 94, 0.2);
-      }
-
-      .info-box.tip .info-box-icon {
-        color: var(--success);
-      }
-      .info-box.tip h4 {
-        color: var(--success);
-      }
-
-      .info-box.warning {
-        background: rgba(234, 179, 8, 0.1);
-        border: 1px solid rgba(234, 179, 8, 0.2);
-      }
-
-      .info-box.warning .info-box-icon {
-        color: var(--warning);
-      }
-      .info-box.warning h4 {
-        color: var(--warning);
-      }
-
-      .info-box.note {
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-      }
-
-      .info-box.note .info-box-icon {
-        color: var(--primary);
-      }
-      .info-box.note h4 {
-        color: var(--primary);
-      }
-
-      /* Tables */
-      .table-wrapper {
-        overflow-x: auto;
-        margin: 1.5rem 0;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9375rem;
-      }
-
-      th,
-      td {
-        padding: 0.875rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-      }
-
-      th {
-        background: rgba(255, 255, 255, 0.03);
-        font-weight: 600;
-        color: var(--text);
-        font-size: 0.8125rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      td {
-        color: var(--text-muted);
-      }
-
-      td code {
-        background: rgba(99, 102, 241, 0.15);
-        color: var(--primary);
-      }
-
-      /* Feature cards */
-      .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin: 2rem 0;
-      }
-
-      .feature-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1.5rem;
-        transition: all 0.2s;
-      }
-
-      .feature-card:hover {
-        border-color: var(--primary);
-        transform: translateY(-2px);
-      }
-
-      .feature-card h4 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 0 0 0.5rem 0;
-        color: var(--text);
-      }
-
-      .feature-card p {
-        font-size: 0.875rem;
-        color: var(--text-muted);
-        margin: 0;
-      }
-
-      /* Footer */
-      .doc-footer {
-        margin-top: 4rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
-      }
-
-      .doc-footer p {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-      }
-
-      .doc-footer a {
-        color: var(--primary);
-        text-decoration: none;
-      }
-
-      /* Mobile */
-      @media (max-width: 900px) {
-        .main-layout {
-          grid-template-columns: 1fr;
+        :root {
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            --purple-dark: #7c3aed;
+            --cyan: #06b6d4;
+            --cyan-light: #22d3ee;
+            
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            
+            --white: #ffffff;
+            --gray-50: #fafafa;
+            --gray-100: #f4f4f5;
+            --gray-200: #e4e4e7;
+            --gray-300: #d4d4d8;
+            --gray-400: #a1a1aa;
+            --gray-500: #71717a;
+            --gray-600: #52525b;
+            --gray-700: #3f3f46;
+            --gray-800: #27272a;
+            --gray-900: #18181b;
+            --gray-950: #09090b;
         }
-
-        .sidebar {
-          position: relative;
-          top: 0;
-          max-height: none;
-          padding: 1.5rem;
-          background: var(--bg-card);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          margin-bottom: 2rem;
-        }
-
-        .header-nav {
-          display: none;
-        }
-      }
-
-      /* Print */
-      @media print {
-        .sidebar,
-        .site-header,
-        .bg-gradient {
-          display: none;
-        }
-        .main-layout {
-          grid-template-columns: 1fr;
-        }
-        body {
-          background: #fff;
-          color: #000;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="bg-gradient"></div>
-
-    <header class="site-header">
-      <div class="header-inner">
-        <a
-          href="https://clearanceclarence.github.io/VoidForge-CMS/"
-          class="logo"
-        >
-          <svg viewBox="0 0 36 36" fill="none">
-            <defs>
-              <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1" />
-                <stop offset="100%" stop-color="#06b6d4" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M6 6L18 30L30 6"
-              stroke="url(#lg)"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="18" cy="15" r="3" fill="url(#lg)" />
-          </svg>
-          VoidForge Docs
-        </a>
-        <nav class="header-nav">
-          <a href="theme-development.html">Themes</a>
-          <a
-            href="https://clearanceclarence.github.io/VoidForge-CMS/"
-            class="btn-back"
-            >Landing</a
-          >
-        </nav>
-      </div>
-    </header>
-
-    <main class="main-layout">
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-title">Getting Started</div>
-          <nav class="sidebar-nav">
-            <a href="#introduction" class="sidebar-link">Introduction</a>
-            <a href="#plugin-structure" class="sidebar-link"
-              >Plugin Structure</a
-            >
-            <a href="#plugin-header" class="sidebar-link">Plugin Header</a>
-            <a href="#your-first-plugin" class="sidebar-link"
-              >Your First Plugin</a
-            >
-          </nav>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title">Core Concepts</div>
-          <nav class="sidebar-nav">
-            <a href="#hooks-actions" class="sidebar-link">Hooks & Actions</a>
-            <a href="#filters" class="sidebar-link">Filters</a>
-            <a href="#shortcodes" class="sidebar-link">Shortcodes</a>
-            <a href="#admin-pages" class="sidebar-link">Admin Pages</a>
-          </nav>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title">Advanced Features</div>
-          <nav class="sidebar-nav">
-            <a href="#settings-api" class="sidebar-link">Settings API</a>
-            <a href="#ajax-handlers" class="sidebar-link">AJAX Handlers</a>
-            <a href="#rest-api" class="sidebar-link">REST API</a>
-            <a href="#scheduled-tasks" class="sidebar-link">Scheduled Tasks</a>
-            <a href="#widgets" class="sidebar-link">Widgets</a>
-            <a href="#assets" class="sidebar-link">Assets (CSS/JS)</a>
-            <a href="#database" class="sidebar-link">Database Helpers</a>
-          </nav>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title">Reference</div>
-          <nav class="sidebar-nav">
-            <a href="#available-hooks" class="sidebar-link">Available Hooks</a>
-            <a href="#helper-functions" class="sidebar-link"
-              >Helper Functions</a
-            >
-            <a href="#best-practices" class="sidebar-link">Best Practices</a>
-          </nav>
-        </div>
-      </aside>
-
-      <div class="content">
-        <!-- Hero -->
-        <div class="doc-hero">
-          <div class="doc-hero-badge">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-              />
-            </svg>
-            Plugin Development
-          </div>
-          <h1>Build Powerful Plugins for VoidForge CMS</h1>
-          <p>
-            Learn how to extend VoidForge CMS with custom functionality using
-            our comprehensive plugin API.
-          </p>
-        </div>
-
-        <!-- Introduction -->
-        <section class="doc-section" id="introduction">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" /></svg
-            ></span>
-            Introduction
-          </h2>
-          <p>
-            VoidForge CMS features a powerful plugin system inspired by
-            WordPress, making it familiar and easy to use while providing modern
-            PHP 8+ capabilities. Plugins can extend every aspect of the CMS,
-            from adding simple shortcodes to creating complex admin interfaces.
-          </p>
-
-          <div class="feature-grid">
-            <div class="feature-card">
-              <h4>🎣 Hooks & Filters</h4>
-              <p>
-                Tap into core functionality at specific points and modify data
-                as it flows through the system.
-              </p>
-            </div>
-            <div class="feature-card">
-              <h4>📝 Shortcodes</h4>
-              <p>
-                Create reusable content blocks that users can insert with simple
-                [shortcode] syntax.
-              </p>
-            </div>
-            <div class="feature-card">
-              <h4>⚙️ Settings API</h4>
-              <p>
-                Store and retrieve plugin settings with automatic form
-                generation and validation.
-              </p>
-            </div>
-            <div class="feature-card">
-              <h4>🔌 REST API</h4>
-              <p>
-                Register custom API endpoints for headless integrations and AJAX
-                operations.
-              </p>
-            </div>
-            <div class="feature-card">
-              <h4>⏰ Scheduled Tasks</h4>
-              <p>
-                Run background jobs on custom intervals (hourly, daily, weekly).
-              </p>
-            </div>
-            <div class="feature-card">
-              <h4>🎨 Admin Pages</h4>
-              <p>
-                Add custom pages to the admin dashboard with full styling
-                support.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Plugin Structure -->
-        <section class="doc-section" id="plugin-structure">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                /></svg
-            ></span>
-            Plugin Structure
-          </h2>
-          <p>
-            Plugins live in the <code>/plugins</code> directory. Each plugin has
-            its own folder containing at minimum a main PHP file with the same
-            name as the folder.
-          </p>
-
-          <pre><code><span class="token-comment">// Basic plugin structure</span>
-plugins/
-└── my-plugin/
-    └── my-plugin.php       <span class="token-comment">// Required: Main plugin file</span>
-
-<span class="token-comment">// Advanced plugin structure</span>
-plugins/
-└── my-plugin/
-    ├── my-plugin.php       <span class="token-comment">// Main plugin file</span>
-    ├── includes/           <span class="token-comment">// PHP classes and functions</span>
-    │   ├── class-api.php
-    │   └── helpers.php
-    ├── assets/             <span class="token-comment">// CSS, JS, images</span>
-    │   ├── css/
-    │   └── js/
-    ├── templates/          <span class="token-comment">// HTML templates</span>
-    └── readme.md           <span class="token-comment">// Documentation</span></code></pre>
-        </section>
-
-        <!-- Plugin Header -->
-        <section class="doc-section" id="plugin-header">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                />
-                <polyline points="14 2 14 8 20 8" /></svg
-            ></span>
-            Plugin Header
-          </h2>
-          <p>
-            Every plugin must include a header comment in its main file. This
-            provides metadata that VoidForge uses to display plugin information
-            in the admin area.
-          </p>
-
-          <pre><code><span class="token-tag">&lt;?php</span>
-<span class="token-comment">/**
- * Plugin Name: My Awesome Plugin
- * Description: A short description of what your plugin does.
- * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yoursite.com
- * Requires PHP: 8.0
- * Requires CMS: 0.1.2
- */</span>
-
-<span class="token-keyword">defined</span>(<span class="token-string">'CMS_ROOT'</span>) <span class="token-keyword">or</span> <span class="token-keyword">die</span>;
-
-<span class="token-comment">// Your plugin code here...</span></code></pre>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Header Field</th>
-                  <th>Required</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>Plugin Name</code></td>
-                  <td>Yes</td>
-                  <td>The display name of your plugin</td>
-                </tr>
-                <tr>
-                  <td><code>Description</code></td>
-                  <td>Yes</td>
-                  <td>Brief description (shown in admin)</td>
-                </tr>
-                <tr>
-                  <td><code>Version</code></td>
-                  <td>Yes</td>
-                  <td>Semantic version number (e.g., 1.0.0)</td>
-                </tr>
-                <tr>
-                  <td><code>Author</code></td>
-                  <td>No</td>
-                  <td>Plugin author name</td>
-                </tr>
-                <tr>
-                  <td><code>Author URI</code></td>
-                  <td>No</td>
-                  <td>Author website URL</td>
-                </tr>
-                <tr>
-                  <td><code>Requires PHP</code></td>
-                  <td>No</td>
-                  <td>Minimum PHP version required</td>
-                </tr>
-                <tr>
-                  <td><code>Requires CMS</code></td>
-                  <td>No</td>
-                  <td>Minimum VoidForge version required</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="info-box warning">
-            <svg
-              class="info-box-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-              />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <div class="info-box-content">
-              <h4>Security First</h4>
-              <p>
-                Always include <code>defined('CMS_ROOT') or die;</code> at the
-                top of your plugin files to prevent direct access.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Your First Plugin -->
-        <section class="doc-section" id="your-first-plugin">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg
-            ></span>
-            Your First Plugin
-          </h2>
-          <p>
-            Let's create a simple "Hello World" plugin that adds a shortcode and
-            an admin page.
-          </p>
-
-          <h3>Step 1: Create the Plugin Folder</h3>
-          <p>
-            Create a new folder called <code>hello-world</code> inside the
-            <code>/plugins</code> directory.
-          </p>
-
-          <h3>Step 2: Create the Main Plugin File</h3>
-          <p>Create <code>hello-world.php</code> inside your new folder:</p>
-
-          <pre><code><span class="token-tag">&lt;?php</span>
-<span class="token-comment">/**
- * Plugin Name: Hello World
- * Description: A simple example plugin.
- * Version: 1.0.0
- * Author: Your Name
- */</span>
-
-<span class="token-keyword">defined</span>(<span class="token-string">'CMS_ROOT'</span>) <span class="token-keyword">or</span> <span class="token-keyword">die</span>;
-
-<span class="token-comment">// Add a shortcode: [hello name="World"]</span>
-<span class="token-function">add_shortcode</span>(<span class="token-string">'hello'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$atts</span>) {
-    <span class="token-variable">$name</span> = <span class="token-variable">$atts</span>[<span class="token-string">'name'</span>] ?? <span class="token-string">'World'</span>;
-    <span class="token-keyword">return</span> <span class="token-string">'&lt;p class="hello-greeting"&gt;Hello, '</span> . <span class="token-function">esc</span>(<span class="token-variable">$name</span>) . <span class="token-string">'!&lt;/p&gt;'</span>;
-});
-
-<span class="token-comment">// Add an admin page</span>
-<span class="token-function">add_admin_page</span>(<span class="token-string">'hello-world'</span>, [
-    <span class="token-string">'title'</span> => <span class="token-string">'Hello World'</span>,
-    <span class="token-string">'menu_title'</span> => <span class="token-string">'Hello World'</span>,
-    <span class="token-string">'icon'</span> => <span class="token-string">'smile'</span>,
-    <span class="token-string">'callback'</span> => <span class="token-keyword">function</span>() {
-        <span class="token-keyword">echo</span> <span class="token-string">'&lt;h1&gt;Hello World Plugin&lt;/h1&gt;'</span>;
-        <span class="token-keyword">echo</span> <span class="token-string">'&lt;p&gt;Use [hello name="Your Name"] in your posts.&lt;/p&gt;'</span>;
-    }
-]);</code></pre>
-
-          <h3>Step 3: Activate the Plugin</h3>
-          <p>
-            Go to <strong>Plugins</strong> in the admin dashboard and click
-            <strong>Activate</strong> on your new plugin.
-          </p>
-
-          <div class="info-box tip">
-            <svg
-              class="info-box-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <div class="info-box-content">
-              <h4>Success!</h4>
-              <p>
-                Your plugin is now active. Use
-                <code>[hello name="VoidForge"]</code> in any post or page to see
-                it in action.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Hooks & Actions -->
-        <section class="doc-section" id="hooks-actions">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
-                />
-                <path
-                  d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
-                /></svg
-            ></span>
-            Hooks & Actions
-          </h2>
-          <p>
-            Hooks allow you to execute code at specific points in VoidForge's
-            execution. Actions are used when you want to
-            <em>do something</em> at a certain point.
-          </p>
-
-          <h3>Adding an Action</h3>
-          <pre><code><span class="token-comment">// Execute code when plugins are loaded</span>
-<span class="token-function">add_action</span>(<span class="token-string">'plugins_loaded'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-comment">// Your code runs after all plugins load</span>
-    <span class="token-function">error_log</span>(<span class="token-string">'My plugin is ready!'</span>);
-});
-
-<span class="token-comment">// With priority (lower = earlier execution)</span>
-<span class="token-function">add_action</span>(<span class="token-string">'init'</span>, <span class="token-string">'my_init_function'</span>, <span class="token-number">5</span>);
-
-<span class="token-comment">// With accepted arguments</span>
-<span class="token-function">add_action</span>(<span class="token-string">'post_saved'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$postId</span>, <span class="token-variable">$postData</span>) {
-    <span class="token-comment">// Access post data when saved</span>
-}, <span class="token-number">10</span>, <span class="token-number">2</span>);</code></pre>
-
-          <h3>Triggering Actions</h3>
-          <pre><code><span class="token-comment">// Trigger an action (for plugin developers)</span>
-<span class="token-function">do_action</span>(<span class="token-string">'my_custom_hook'</span>);
-
-<span class="token-comment">// With arguments</span>
-<span class="token-function">do_action</span>(<span class="token-string">'my_custom_hook'</span>, <span class="token-variable">$arg1</span>, <span class="token-variable">$arg2</span>);</code></pre>
-
-          <h3>Removing Actions</h3>
-          <pre><code><span class="token-comment">// Remove a previously added action</span>
-<span class="token-function">remove_action</span>(<span class="token-string">'init'</span>, <span class="token-string">'my_init_function'</span>, <span class="token-number">5</span>);
-
-<span class="token-comment">// Check if action exists</span>
-<span class="token-keyword">if</span> (<span class="token-function">has_action</span>(<span class="token-string">'init'</span>)) {
-    <span class="token-comment">// Action is registered</span>
-}</code></pre>
-        </section>
-
-        <!-- Filters -->
-        <section class="doc-section" id="filters">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polygon
-                  points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
-                /></svg
-            ></span>
-            Filters
-          </h2>
-          <p>
-            Filters allow you to modify data as it passes through the system.
-            Unlike actions, filters always return a value.
-          </p>
-
-          <pre><code><span class="token-comment">// Modify post content before display</span>
-<span class="token-function">add_filter</span>(<span class="token-string">'the_content'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$content</span>) {
-    <span class="token-comment">// Add copyright notice to all posts</span>
-    <span class="token-keyword">return</span> <span class="token-variable">$content</span> . <span class="token-string">'&lt;p class="copyright"&gt;© 2024 My Site&lt;/p&gt;'</span>;
-});
-
-<span class="token-comment">// Modify page title</span>
-<span class="token-function">add_filter</span>(<span class="token-string">'document_title'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$title</span>) {
-    <span class="token-keyword">return</span> <span class="token-variable">$title</span> . <span class="token-string">' | My Site'</span>;
-});
-
-<span class="token-comment">// Apply a filter</span>
-<span class="token-variable">$content</span> = <span class="token-function">apply_filters</span>(<span class="token-string">'the_content'</span>, <span class="token-variable">$rawContent</span>);</code></pre>
-        </section>
-
-        <!-- Shortcodes -->
-        <section class="doc-section" id="shortcodes">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" /></svg
-            ></span>
-            Shortcodes
-          </h2>
-          <p>
-            Shortcodes let users embed dynamic content using simple
-            <code>[shortcode]</code> syntax in posts and pages.
-          </p>
-
-          <h3>Self-Closing Shortcode</h3>
-          <pre><code><span class="token-comment">// Usage: [current_year]</span>
-<span class="token-function">add_shortcode</span>(<span class="token-string">'current_year'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-keyword">return</span> <span class="token-function">date</span>(<span class="token-string">'Y'</span>);
-});</code></pre>
-
-          <h3>Shortcode with Attributes</h3>
-          <pre><code><span class="token-comment">// Usage: [button text="Click Me" url="/page" color="blue"]</span>
-<span class="token-function">add_shortcode</span>(<span class="token-string">'button'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$atts</span>) {
-    <span class="token-comment">// Set defaults</span>
-    <span class="token-variable">$atts</span> = <span class="token-function">array_merge</span>([
-        <span class="token-string">'text'</span> => <span class="token-string">'Click Here'</span>,
-        <span class="token-string">'url'</span> => <span class="token-string">'#'</span>,
-        <span class="token-string">'color'</span> => <span class="token-string">'primary'</span>
-    ], <span class="token-variable">$atts</span> ?? []);
-    
-    <span class="token-keyword">return</span> <span class="token-function">sprintf</span>(
-        <span class="token-string">'&lt;a href="%s" class="btn btn-%s"&gt;%s&lt;/a&gt;'</span>,
-        <span class="token-function">esc</span>(<span class="token-variable">$atts</span>[<span class="token-string">'url'</span>]),
-        <span class="token-function">esc</span>(<span class="token-variable">$atts</span>[<span class="token-string">'color'</span>]),
-        <span class="token-function">esc</span>(<span class="token-variable">$atts</span>[<span class="token-string">'text'</span>])
-    );
-});</code></pre>
-
-          <h3>Enclosing Shortcode (with content)</h3>
-          <pre><code><span class="token-comment">// Usage: [alert type="warning"]Watch out![/alert]</span>
-<span class="token-function">add_shortcode</span>(<span class="token-string">'alert'</span>, <span class="token-keyword">function</span>(<span class="token-variable">$atts</span>, <span class="token-variable">$content</span> = <span class="token-string">''</span>) {
-    <span class="token-variable">$type</span> = <span class="token-variable">$atts</span>[<span class="token-string">'type'</span>] ?? <span class="token-string">'info'</span>;
-    
-    <span class="token-keyword">return</span> <span class="token-function">sprintf</span>(
-        <span class="token-string">'&lt;div class="alert alert-%s"&gt;%s&lt;/div&gt;'</span>,
-        <span class="token-function">esc</span>(<span class="token-variable">$type</span>),
-        <span class="token-function">do_shortcode</span>(<span class="token-variable">$content</span>) <span class="token-comment">// Process nested shortcodes</span>
-    );
-});</code></pre>
-
-          <div class="info-box note">
-            <svg
-              class="info-box-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-            <div class="info-box-content">
-              <h4>Nested Shortcodes</h4>
-              <p>
-                Use <code>do_shortcode($content)</code> inside enclosing
-                shortcodes to allow nested shortcode processing.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Admin Pages -->
-        <section class="doc-section" id="admin-pages">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="9" y1="21" x2="9" y2="9" /></svg
-            ></span>
-            Admin Pages
-          </h2>
-          <p>
-            Add custom pages to the VoidForge admin dashboard for plugin
-            settings and interfaces.
-          </p>
-
-          <pre><code><span class="token-comment">// Add a page under Plugins menu (default)</span>
-<span class="token-function">add_admin_page</span>(<span class="token-string">'my-settings'</span>, [
-    <span class="token-string">'title'</span> => <span class="token-string">'My Plugin Settings'</span>,
-    <span class="token-string">'menu_title'</span> => <span class="token-string">'My Plugin'</span>,
-    <span class="token-string">'icon'</span> => <span class="token-string">'settings'</span>,
-    <span class="token-string">'callback'</span> => <span class="token-string">'render_settings_page'</span>
-]);
-
-<span class="token-comment">// Add a top-level menu item</span>
-<span class="token-function">add_admin_page</span>(<span class="token-string">'my-dashboard'</span>, [
-    <span class="token-string">'title'</span> => <span class="token-string">'My Dashboard'</span>,
-    <span class="token-string">'parent'</span> => <span class="token-keyword">null</span>, <span class="token-comment">// null = top-level</span>
-    <span class="token-string">'icon'</span> => <span class="token-string">'layout'</span>,
-    <span class="token-string">'callback'</span> => <span class="token-keyword">function</span>() {
-        <span class="token-comment">// Your page HTML here</span>
-        <span class="token-tag">?></span>
-        &lt;div class="my-plugin-page"&gt;
-            &lt;h1&gt;My Dashboard&lt;/h1&gt;
-            &lt;p&gt;Welcome to my plugin!&lt;/p&gt;
-        &lt;/div&gt;
-        <span class="token-tag">&lt;?php</span>
-    }
-]);</code></pre>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Option</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>title</code></td>
-                  <td>string</td>
-                  <td>Page title (shown in browser tab)</td>
-                </tr>
-                <tr>
-                  <td><code>menu_title</code></td>
-                  <td>string</td>
-                  <td>Sidebar menu text (defaults to title)</td>
-                </tr>
-                <tr>
-                  <td><code>parent</code></td>
-                  <td>string|null</td>
-                  <td>
-                    <code>'plugins'</code> (default), <code>null</code> for
-                    top-level
-                  </td>
-                </tr>
-                <tr>
-                  <td><code>icon</code></td>
-                  <td>string</td>
-                  <td>Lucide icon name (e.g., 'settings', 'users')</td>
-                </tr>
-                <tr>
-                  <td><code>callback</code></td>
-                  <td>callable</td>
-                  <td>Function that renders the page content</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Settings API -->
-        <section class="doc-section" id="settings-api">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-                /></svg
-            ></span>
-            Settings API
-          </h2>
-          <p>
-            Store and retrieve plugin settings with a simple, type-safe API.
-          </p>
-
-          <h3>Registering Settings</h3>
-          <pre><code><span class="token-comment">// Register settings schema</span>
-<span class="token-function">register_plugin_settings</span>(<span class="token-string">'my-plugin'</span>, [
-    <span class="token-string">'api_key'</span> => [
-        <span class="token-string">'type'</span> => <span class="token-string">'string'</span>,
-        <span class="token-string">'default'</span> => <span class="token-string">''</span>,
-        <span class="token-string">'label'</span> => <span class="token-string">'API Key'</span>
-    ],
-    <span class="token-string">'enabled'</span> => [
-        <span class="token-string">'type'</span> => <span class="token-string">'boolean'</span>,
-        <span class="token-string">'default'</span> => <span class="token-keyword">true</span>,
-        <span class="token-string">'label'</span> => <span class="token-string">'Enable Feature'</span>
-    ],
-    <span class="token-string">'max_items'</span> => [
-        <span class="token-string">'type'</span> => <span class="token-string">'integer'</span>,
-        <span class="token-string">'default'</span> => <span class="token-number">10</span>,
-        <span class="token-string">'label'</span> => <span class="token-string">'Maximum Items'</span>
-    ]
-]);</code></pre>
-
-          <h3>Getting & Setting Values</h3>
-          <pre><code><span class="token-comment">// Get a setting</span>
-<span class="token-variable">$apiKey</span> = <span class="token-function">get_plugin_setting</span>(<span class="token-string">'my-plugin'</span>, <span class="token-string">'api_key'</span>);
-<span class="token-variable">$enabled</span> = <span class="token-function">get_plugin_setting</span>(<span class="token-string">'my-plugin'</span>, <span class="token-string">'enabled'</span>, <span class="token-keyword">true</span>);
-
-<span class="token-comment">// Set a setting</span>
-<span class="token-function">set_plugin_setting</span>(<span class="token-string">'my-plugin'</span>, <span class="token-string">'api_key'</span>, <span class="token-string">'sk-12345'</span>);
-<span class="token-function">set_plugin_setting</span>(<span class="token-string">'my-plugin'</span>, <span class="token-string">'enabled'</span>, <span class="token-keyword">false</span>);</code></pre>
-        </section>
-
-        <!-- AJAX Handlers -->
-        <section class="doc-section" id="ajax-handlers">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"
-                /></svg
-            ></span>
-            AJAX Handlers
-          </h2>
-          <p>Handle asynchronous requests from your plugin's JavaScript.</p>
-
-          <h3>PHP Handler</h3>
-          <pre><code><span class="token-comment">// Register authenticated AJAX handler</span>
-<span class="token-function">register_ajax_handler</span>(<span class="token-string">'my_save_data'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-comment">// Get POST data</span>
-    <span class="token-variable">$data</span> = <span class="token-variable">$_POST</span>[<span class="token-string">'data'</span>] ?? <span class="token-keyword">null</span>;
-    
-    <span class="token-keyword">if</span> (!<span class="token-variable">$data</span>) {
-        <span class="token-function">wp_send_json_error</span>([<span class="token-string">'message'</span> => <span class="token-string">'No data provided'</span>]);
-    }
-    
-    <span class="token-comment">// Process and save...</span>
-    
-    <span class="token-function">wp_send_json_success</span>([<span class="token-string">'message'</span> => <span class="token-string">'Saved!'</span>]);
-});
-
-<span class="token-comment">// Public handler (no login required)</span>
-<span class="token-function">register_ajax_handler</span>(<span class="token-string">'my_public_action'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-function">wp_send_json_success</span>([<span class="token-string">'time'</span> => <span class="token-function">time</span>()]);
-}, <span class="token-keyword">true</span>); <span class="token-comment">// true = nopriv (public)</span></code></pre>
-
-          <h3>JavaScript Request</h3>
-          <pre><code><span class="token-comment">// Make AJAX request</span>
-<span class="token-keyword">fetch</span>(<span class="token-string">'/admin/plugin-ajax.php'</span>, {
-    <span class="token-attr">method</span>: <span class="token-string">'POST'</span>,
-    <span class="token-attr">headers</span>: {
-        <span class="token-string">'Content-Type'</span>: <span class="token-string">'application/x-www-form-urlencoded'</span>
-    },
-    <span class="token-attr">body</span>: <span class="token-keyword">new</span> <span class="token-class">URLSearchParams</span>({
-        <span class="token-attr">action</span>: <span class="token-string">'my_save_data'</span>,
-        <span class="token-attr">data</span>: <span class="token-class">JSON</span>.<span class="token-function">stringify</span>({ <span class="token-attr">key</span>: <span class="token-string">'value'</span> }),
-        <span class="token-attr">csrf_token</span>: document.<span class="token-function">querySelector</span>(<span class="token-string">'[name="csrf_token"]'</span>).value
-    })
-})
-.<span class="token-function">then</span>(<span class="token-variable">r</span> => <span class="token-variable">r</span>.<span class="token-function">json</span>())
-.<span class="token-function">then</span>(<span class="token-variable">data</span> => {
-    <span class="token-keyword">if</span> (<span class="token-variable">data</span>.success) {
-        <span class="token-function">alert</span>(<span class="token-variable">data</span>.data.message);
-    }
-});</code></pre>
-        </section>
-
-        <!-- REST API -->
-        <section class="doc-section" id="rest-api">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                />
-                <polyline points="22,6 12,13 2,6" /></svg
-            ></span>
-            REST API
-          </h2>
-          <p>
-            Create custom REST API endpoints for headless integrations or
-            complex AJAX operations.
-          </p>
-
-          <pre><code><span class="token-comment">// Register a REST route</span>
-<span class="token-comment">// Accessible at: /api/myplugin/items</span>
-<span class="token-function">register_rest_route</span>(<span class="token-string">'myplugin'</span>, <span class="token-string">'items'</span>, [
-    <span class="token-string">'methods'</span> => [<span class="token-string">'GET'</span>, <span class="token-string">'POST'</span>],
-    <span class="token-string">'callback'</span> => <span class="token-keyword">function</span>(<span class="token-variable">$params</span>) {
-        <span class="token-keyword">if</span> (<span class="token-variable">$_SERVER</span>[<span class="token-string">'REQUEST_METHOD'</span>] === <span class="token-string">'GET'</span>) {
-            <span class="token-keyword">return</span> [<span class="token-string">'items'</span> => [<span class="token-string">'a'</span>, <span class="token-string">'b'</span>, <span class="token-string">'c'</span>]];
-        }
-        <span class="token-comment">// POST - create item</span>
-        <span class="token-keyword">return</span> [<span class="token-string">'created'</span> => <span class="token-keyword">true</span>];
-    },
-    <span class="token-string">'permission_callback'</span> => <span class="token-keyword">function</span>() {
-        <span class="token-keyword">return</span> User::<span class="token-function">isLoggedIn</span>();
-    }
-]);
-
-<span class="token-comment">// Route with URL parameters</span>
-<span class="token-comment">// Accessible at: /api/myplugin/items/123</span>
-<span class="token-function">register_rest_route</span>(<span class="token-string">'myplugin'</span>, <span class="token-string">'items/{id}'</span>, [
-    <span class="token-string">'methods'</span> => <span class="token-string">'GET'</span>,
-    <span class="token-string">'callback'</span> => <span class="token-keyword">function</span>(<span class="token-variable">$params</span>) {
-        <span class="token-variable">$id</span> = <span class="token-variable">$params</span>[<span class="token-string">'id'</span>];
-        <span class="token-keyword">return</span> [<span class="token-string">'item'</span> => <span class="token-string">'Item '</span> . <span class="token-variable">$id</span>];
-    }
-]);</code></pre>
-        </section>
-
-        <!-- Scheduled Tasks -->
-        <section class="doc-section" id="scheduled-tasks">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" /></svg
-            ></span>
-            Scheduled Tasks (Cron)
-          </h2>
-          <p>
-            Run background tasks on regular intervals. VoidForge's pseudo-cron
-            runs on page loads.
-          </p>
-
-          <pre><code><span class="token-comment">// Schedule hourly task</span>
-<span class="token-function">schedule_event</span>(<span class="token-string">'my_hourly_task'</span>, <span class="token-string">'hourly'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-comment">// Clean up old data, send notifications, etc.</span>
-    <span class="token-function">error_log</span>(<span class="token-string">'Hourly task ran at '</span> . <span class="token-function">date</span>(<span class="token-string">'Y-m-d H:i:s'</span>));
-});
-
-<span class="token-comment">// Schedule daily task</span>
-<span class="token-function">schedule_event</span>(<span class="token-string">'my_daily_cleanup'</span>, <span class="token-string">'daily'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-comment">// Daily maintenance...</span>
-});
-
-<span class="token-comment">// Available intervals: 'hourly', 'twicedaily', 'daily', 'weekly'</span>
-
-<span class="token-comment">// Unschedule a task</span>
-<span class="token-function">unschedule_event</span>(<span class="token-string">'my_hourly_task'</span>);</code></pre>
-        </section>
-
-        <!-- Widgets -->
-        <section class="doc-section" id="widgets">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" /></svg
-            ></span>
-            Widgets
-          </h2>
-          <p>
-            Register widgets that can be displayed in widget areas defined by
-            themes.
-          </p>
-
-          <pre><code><span class="token-comment">// Register a widget</span>
-<span class="token-function">register_widget</span>(<span class="token-string">'my_recent_posts'</span>, [
-    <span class="token-string">'title'</span> => <span class="token-string">'Recent Posts'</span>,
-    <span class="token-string">'description'</span> => <span class="token-string">'Displays recent posts'</span>,
-    <span class="token-string">'callback'</span> => <span class="token-keyword">function</span>(<span class="token-variable">$args</span>) {
-        <span class="token-variable">$posts</span> = Post::<span class="token-function">query</span>([
-            <span class="token-string">'type'</span> => <span class="token-string">'post'</span>,
-            <span class="token-string">'limit'</span> => <span class="token-variable">$args</span>[<span class="token-string">'count'</span>] ?? <span class="token-number">5</span>
-        ]);
         
-        <span class="token-keyword">echo</span> <span class="token-string">'&lt;ul class="recent-posts"&gt;'</span>;
-        <span class="token-keyword">foreach</span> (<span class="token-variable">$posts</span> <span class="token-keyword">as</span> <span class="token-variable">$post</span>) {
-            <span class="token-keyword">echo</span> <span class="token-string">'&lt;li&gt;'</span> . <span class="token-function">esc</span>(<span class="token-variable">$post</span>[<span class="token-string">'title'</span>]) . <span class="token-string">'&lt;/li&gt;'</span>;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { 
+            scroll-behavior: smooth; 
+            scroll-padding-top: 80px;
         }
-        <span class="token-keyword">echo</span> <span class="token-string">'&lt;/ul&gt;'</span>;
+        
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: 15px;
+            min-height: 100vh;
+        }
+        
+        /* ===== HEADER ===== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--gray-900);
+        }
+        
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .logo span {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        nav a {
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+        
+        nav a:hover {
+            color: var(--gray-900);
+            background: var(--gray-100);
+        }
+        
+        nav a.active {
+            color: var(--purple);
+            background: rgba(139, 92, 246, 0.08);
+        }
+        
+        nav a.btn-primary {
+            background: var(--gray-900);
+            color: white;
+            margin-left: 8px;
+        }
+        
+        nav a.btn-primary:hover {
+            background: var(--gray-700);
+        }
+        
+        /* ===== LAYOUT ===== */
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 64px 24px 0;
+            gap: 48px;
+        }
+        
+        /* ===== SIDEBAR ===== */
+        aside {
+            position: sticky;
+            top: 88px;
+            height: fit-content;
+            max-height: calc(100vh - 104px);
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+        
+        aside::-webkit-scrollbar { width: 0; }
+        
+        .nav-group {
+            margin-bottom: 24px;
+        }
+        
+        .nav-group-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-400);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        
+        .nav-group a {
+            display: block;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 6px;
+            border-left: 2px solid transparent;
+            margin-left: -2px;
+            transition: all 0.15s;
+        }
+        
+        .nav-group a:hover {
+            color: var(--gray-900);
+            background: var(--gray-100);
+        }
+        
+        .nav-group a.active {
+            color: var(--purple);
+            background: rgba(139, 92, 246, 0.06);
+            border-left-color: var(--purple);
+        }
+        
+        /* ===== MAIN CONTENT ===== */
+        main {
+            max-width: 720px;
+            padding: 24px 0 80px;
+        }
+        
+        .page-header {
+            margin-bottom: 48px;
+        }
+        
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+        
+        .page-header p {
+            font-size: 17px;
+            color: var(--gray-500);
+            line-height: 1.6;
+        }
+        
+        /* ===== SECTIONS ===== */
+        section {
+            margin-bottom: 56px;
+        }
+        
+        section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+            letter-spacing: -0.01em;
+        }
+        
+        section h2::before {
+            content: '';
+            display: block;
+            height: 80px;
+            margin-top: -80px;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        section h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin: 28px 0 12px;
+        }
+        
+        section p {
+            color: var(--gray-600);
+            margin-bottom: 16px;
+        }
+        
+        section ul, section ol {
+            color: var(--gray-600);
+            margin-bottom: 16px;
+            padding-left: 20px;
+        }
+        
+        section li {
+            margin-bottom: 6px;
+        }
+        
+        section a {
+            color: var(--purple);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        section a:hover {
+            text-decoration: underline;
+        }
+        
+        /* ===== CODE ===== */
+        code {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.875em;
+        }
+        
+        :not(pre) > code {
+            background: var(--gray-100);
+            color: var(--purple-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        pre {
+            background: var(--gray-900);
+            border-radius: 12px;
+            padding: 20px 24px;
+            overflow-x: auto;
+            margin: 16px 0 24px;
+        }
+        
+        pre code {
+            color: var(--gray-300);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        
+        .c { color: #6b7280; }  /* comment */
+        .k { color: #c084fc; }  /* keyword */
+        .s { color: #86efac; }  /* string */
+        .f { color: #67e8f9; }  /* function */
+        .v { color: #fca5a5; }  /* variable */
+        .n { color: #fdba74; }  /* number */
+        
+        /* ===== TABLES ===== */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--gray-700);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        td {
+            padding: 12px 16px;
+            color: var(--gray-600);
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: top;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        
+        td code { font-size: 12px; }
+        
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge-action {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+        
+        .badge-filter {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--purple-dark);
+        }
+        
+        /* ===== CALLOUTS ===== */
+        .callout {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .callout-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .callout-content strong {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .callout-info {
+            background: rgba(139, 92, 246, 0.06);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+        }
+        .callout-info .callout-icon { color: var(--purple); }
+        
+        .callout-success {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+        .callout-success .callout-icon { color: var(--green); }
+        
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .callout-warning .callout-icon { color: var(--amber); }
+        
+        /* ===== CARDS ===== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        
+        .card:hover {
+            border-color: var(--gray-300);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        
+        .card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+        
+        .card p {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin: 0;
+        }
+        
+        /* ===== FILE TREE ===== */
+        .file-tree {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 13px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+        
+        .file-tree div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            color: var(--gray-600);
+        }
+        
+        .file-tree .indent { padding-left: 20px; }
+        .file-tree .indent-2 { padding-left: 40px; }
+        
+        .file-tree svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        
+        .file-tree .folder { color: var(--amber); }
+        .file-tree .file-php { color: var(--purple); }
+        .file-tree .file { color: var(--gray-400); }
+        
+        /* ===== MOBILE ===== */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--gray-700);
+        }
+        
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+                padding-top: 64px;
+            }
+            
+            aside {
+                display: none;
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: white;
+                padding: 24px;
+                z-index: 99;
+                max-height: none;
+            }
+            
+            aside.open { display: block; }
+            
+            .mobile-toggle { display: block; }
+            
+            nav a:not(.btn-primary) { display: none; }
+            
+            .page-header h1 { font-size: 28px; }
+            
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="../" class="logo">
+                <svg class="logo-mark" viewBox="0 0 32 32" fill="none">
+                    <defs>
+                        <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#8b5cf6"/>
+                            <stop offset="100%" stop-color="#06b6d4"/>
+                        </linearGradient>
+                        <linearGradient id="lg2" x1="50%" y1="0%" x2="50%" y2="100%">
+                            <stop offset="0%" stop-color="#c4b5fd"/>
+                            <stop offset="100%" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#lg1)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="16" cy="14" r="3.5" fill="url(#lg2)"/>
+                    <circle cx="16" cy="14" r="1.5" fill="#fff"/>
+                </svg>
+                <span>VoidForge</span>
+            </a>
+            
+            <nav>
+                <a href="plugin-development.html" class="active">Plugins</a>
+                <a href="theme-development.html">Themes</a>
+                <a href="../admin/" class="btn-primary">Admin Panel</a>
+            </nav>
+            
+            <button class="mobile-toggle" onclick="document.querySelector('aside').classList.toggle('open')">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+    
+    <div class="layout">
+        <aside>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="#introduction" class="active">Introduction</a>
+                <a href="#structure">Plugin Structure</a>
+                <a href="#first-plugin">Your First Plugin</a>
+            </div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Core Concepts</div>
+                <a href="#actions">Actions</a>
+                <a href="#filters">Filters</a>
+                <a href="#shortcodes">Shortcodes</a>
+                <a href="#settings">Settings API</a>
+                <a href="#ajax">AJAX Handlers</a>
+            </div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Advanced</div>
+                <a href="#admin-pages">Admin Pages</a>
+                <a href="#rest-api">REST API</a>
+                <a href="#assets">Styles & Scripts</a>
+                <a href="#database">Database</a>
+            </div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Reference</div>
+                <a href="#hooks">All Hooks</a>
+                <a href="#examples">Examples</a>
+                <a href="#best-practices">Best Practices</a>
+            </div>
+        </aside>
+        
+        <main>
+            <div class="page-header">
+                <h1>Plugin Development</h1>
+                <p>Learn to extend VoidForge CMS with custom plugins. Build powerful features using hooks, filters, shortcodes, and REST APIs.</p>
+            </div>
+            
+            <!-- Introduction -->
+            <section id="introduction">
+                <h2>Introduction</h2>
+                <p>VoidForge CMS features a powerful plugin system that lets you extend functionality without modifying core files. Plugins can add new features, modify behavior, and integrate with external services.</p>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>🪝 Hooks & Filters</h4>
+                        <p>90+ hooks to extend every part of the CMS</p>
+                    </div>
+                    <div class="card">
+                        <h4>⚡ Shortcodes</h4>
+                        <p>Embed dynamic content in posts and pages</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔌 REST API</h4>
+                        <p>Register custom API endpoints easily</p>
+                    </div>
+                    <div class="card">
+                        <h4>⚙️ Settings API</h4>
+                        <p>Built-in configuration management</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Structure -->
+            <section id="structure">
+                <h2>Plugin Structure</h2>
+                <p>Each plugin lives in its own folder within <code>/content/plugins/</code>. The folder name becomes the plugin's unique identifier.</p>
+                
+                <div class="file-tree">
+                    <div>
+                        <svg class="folder" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                        content/plugins/
+                    </div>
+                    <div class="indent">
+                        <svg class="folder" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                        my-plugin/
+                    </div>
+                    <div class="indent-2">
+                        <svg class="file-php" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                        my-plugin.php
+                    </div>
+                    <div class="indent-2">
+                        <svg class="file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                        assets/, includes/ (optional)
+                    </div>
+                </div>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Important</strong>
+                        The main PHP file must match the folder name (e.g., <code>my-plugin/my-plugin.php</code>).
+                    </div>
+                </div>
+            </section>
+            
+            <!-- First Plugin -->
+            <section id="first-plugin">
+                <h2>Your First Plugin</h2>
+                
+                <h3>Step 1: Create the Folder</h3>
+                <p>Create a new folder in <code>/content/plugins/</code>:</p>
+<pre><code>content/plugins/hello-world/</code></pre>
+                
+                <h3>Step 2: Create the Main File</h3>
+                <p>Create <code>hello-world.php</code> with a plugin header:</p>
+<pre><code><span class="k">&lt;?php</span>
+<span class="c">/**
+ * Plugin Name: Hello World
+ * Description: A simple example plugin
+ * Version: 1.0.0
+ * Author: Your Name
+ */</span>
+
+<span class="k">defined</span>(<span class="s">'CMS_ROOT'</span>) <span class="k">or</span> <span class="k">die</span>(<span class="s">'Direct access not allowed'</span>);
+
+<span class="c">// Add a greeting to the footer</span>
+<span class="f">Plugin::addAction</span>(<span class="s">'vf_footer'</span>, <span class="k">function</span>() {
+    <span class="k">echo</span> <span class="s">'&lt;p&gt;Hello from my plugin!&lt;/p&gt;'</span>;
+});</code></pre>
+                
+                <h3>Step 3: Activate</h3>
+                <p>Go to <strong>Admin → Plugins</strong> and click <strong>Activate</strong>.</p>
+                
+                <div class="callout callout-success">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                    <div class="callout-content">
+                        <strong>Done!</strong>
+                        Your plugin is now running and will display a message in the footer.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Actions -->
+            <section id="actions">
+                <h2>Actions</h2>
+                <p>Actions execute custom code at specific points in the CMS lifecycle.</p>
+                
+<pre><code><span class="f">Plugin::addAction</span>(<span class="s">'hook_name'</span>, <span class="v">$callback</span>, <span class="v">$priority</span> = <span class="n">10</span>);
+
+<span class="c">// Example: Send email when post is published</span>
+<span class="f">Plugin::addAction</span>(<span class="s">'post_status_published'</span>, <span class="k">function</span>(<span class="v">$post</span>, <span class="v">$oldStatus</span>) {
+    <span class="f">mail</span>(<span class="s">'admin@site.com'</span>, <span class="s">'New Post'</span>, <span class="v">$post</span>[<span class="s">'title'</span>] . <span class="s">' was published'</span>);
+});</code></pre>
+                
+                <h3>Triggering Actions</h3>
+<pre><code><span class="f">Plugin::doAction</span>(<span class="s">'my_custom_action'</span>, <span class="v">$arg1</span>, <span class="v">$arg2</span>);</code></pre>
+            </section>
+            
+            <!-- Filters -->
+            <section id="filters">
+                <h2>Filters</h2>
+                <p>Filters modify data as it passes through the CMS. Unlike actions, filters must return a value.</p>
+                
+<pre><code><span class="f">Plugin::addFilter</span>(<span class="s">'filter_name'</span>, <span class="v">$callback</span>, <span class="v">$priority</span> = <span class="n">10</span>);
+
+<span class="c">// Example: Add reading time to content</span>
+<span class="f">Plugin::addFilter</span>(<span class="s">'the_content'</span>, <span class="k">function</span>(<span class="v">$content</span>, <span class="v">$post</span>) {
+    <span class="v">$words</span> = <span class="f">str_word_count</span>(<span class="f">strip_tags</span>(<span class="v">$content</span>));
+    <span class="v">$minutes</span> = <span class="f">ceil</span>(<span class="v">$words</span> / <span class="n">200</span>);
+    <span class="k">return</span> <span class="s">"&lt;p&gt;📖 {$minutes} min read&lt;/p&gt;"</span> . <span class="v">$content</span>;
+});</code></pre>
+            </section>
+            
+            <!-- Shortcodes -->
+            <section id="shortcodes">
+                <h2>Shortcodes</h2>
+                <p>Embed dynamic content using simple tags like <code>[shortcode]</code>.</p>
+                
+                <h3>Self-Closing</h3>
+<pre><code><span class="f">Plugin::addShortcode</span>(<span class="s">'year'</span>, <span class="k">function</span>() {
+    <span class="k">return</span> <span class="f">date</span>(<span class="s">'Y'</span>);
+});
+<span class="c">// [year] → 2025</span></code></pre>
+                
+                <h3>With Attributes</h3>
+<pre><code><span class="f">Plugin::addShortcode</span>(<span class="s">'button'</span>, <span class="k">function</span>(<span class="v">$atts</span>) {
+    <span class="v">$atts</span> = <span class="f">array_merge</span>([
+        <span class="s">'url'</span> => <span class="s">'#'</span>,
+        <span class="s">'text'</span> => <span class="s">'Click Me'</span>
+    ], <span class="v">$atts</span>);
+    
+    <span class="k">return</span> <span class="s">"&lt;a href=\"{$atts['url']}\" class=\"btn\"&gt;{$atts['text']}&lt;/a&gt;"</span>;
+});
+<span class="c">// [button url="/signup" text="Sign Up"]</span></code></pre>
+                
+                <h3>Enclosing</h3>
+<pre><code><span class="f">Plugin::addShortcode</span>(<span class="s">'highlight'</span>, <span class="k">function</span>(<span class="v">$atts</span>, <span class="v">$content</span>) {
+    <span class="v">$color</span> = <span class="v">$atts</span>[<span class="s">'color'</span>] ?? <span class="s">'yellow'</span>;
+    <span class="k">return</span> <span class="s">"&lt;mark style=\"background:{$color}\"&gt;{$content}&lt;/mark&gt;"</span>;
+});
+<span class="c">// [highlight color="lime"]Important[/highlight]</span></code></pre>
+            </section>
+            
+            <!-- Settings -->
+            <section id="settings">
+                <h2>Settings API</h2>
+<pre><code><span class="f">Plugin::registerSettings</span>(<span class="s">'my-plugin'</span>, [
+    <span class="s">'api_key'</span> => [
+        <span class="s">'type'</span> => <span class="s">'text'</span>,
+        <span class="s">'label'</span> => <span class="s">'API Key'</span>,
+        <span class="s">'default'</span> => <span class="s">''</span>
+    ],
+    <span class="s">'enabled'</span> => [
+        <span class="s">'type'</span> => <span class="s">'checkbox'</span>,
+        <span class="s">'label'</span> => <span class="s">'Enable Feature'</span>,
+        <span class="s">'default'</span> => <span class="k">true</span>
+    ]
+]);
+
+<span class="c">// Get/Set</span>
+<span class="v">$key</span> = <span class="f">Plugin::getSetting</span>(<span class="s">'my-plugin'</span>, <span class="s">'api_key'</span>);
+<span class="f">Plugin::setSetting</span>(<span class="s">'my-plugin'</span>, <span class="s">'api_key'</span>, <span class="s">'new-value'</span>);</code></pre>
+            </section>
+            
+            <!-- AJAX -->
+            <section id="ajax">
+                <h2>AJAX Handlers</h2>
+<pre><code><span class="f">Plugin::addAjax</span>(<span class="s">'my_action'</span>, <span class="k">function</span>() {
+    <span class="k">if</span> (!<span class="f">verifyCsrf</span>(<span class="v">$_POST</span>[<span class="s">'csrf'</span>] ?? <span class="s">''</span>)) {
+        <span class="f">vf_send_json_error</span>([<span class="s">'message'</span> => <span class="s">'Invalid token'</span>]);
+    }
+    
+    <span class="v">$result</span> = <span class="f">processData</span>(<span class="v">$_POST</span>[<span class="s">'data'</span>]);
+    <span class="f">vf_send_json_success</span>([<span class="s">'result'</span> => <span class="v">$result</span>]);
+}, <span class="k">true</span>); <span class="c">// true = require login</span></code></pre>
+            </section>
+            
+            <!-- Admin Pages -->
+            <section id="admin-pages">
+                <h2>Admin Pages</h2>
+<pre><code><span class="f">Plugin::addAdminPage</span>(<span class="s">'my-settings'</span>, [
+    <span class="s">'page_title'</span> => <span class="s">'My Plugin Settings'</span>,
+    <span class="s">'menu_title'</span> => <span class="s">'My Plugin'</span>,
+    <span class="s">'capability'</span> => <span class="s">'admin'</span>,
+    <span class="s">'icon'</span> => <span class="s">'settings'</span>,
+    <span class="s">'parent'</span> => <span class="s">'plugins'</span>,
+    <span class="s">'callback'</span> => <span class="k">function</span>() {
+        <span class="k">include</span> <span class="f">__DIR__</span> . <span class="s">'/views/settings.php'</span>;
     }
 ]);</code></pre>
-        </section>
+            </section>
+            
+            <!-- REST API -->
+            <section id="rest-api">
+                <h2>REST API</h2>
+<pre><code><span class="f">Plugin::addAction</span>(<span class="s">'rest_api_init'</span>, <span class="k">function</span>() {
+    <span class="f">Plugin::registerRestRoute</span>(<span class="s">'my-plugin/v1'</span>, <span class="s">'items'</span>, [
+        <span class="s">'methods'</span> => <span class="s">'GET'</span>,
+        <span class="s">'callback'</span> => <span class="k">function</span>(<span class="v">$request</span>) {
+            <span class="k">return</span> [<span class="s">'items'</span> => <span class="f">getItems</span>()];
+        },
+        <span class="s">'permission_callback'</span> => <span class="k">function</span>() {
+            <span class="k">return</span> <span class="f">User::isLoggedIn</span>();
+        }
+    ]);
+});
+<span class="c">// GET /api/my-plugin/v1/items</span></code></pre>
+            </section>
+            
+            <!-- Assets -->
+            <section id="assets">
+                <h2>Styles & Scripts</h2>
+<pre><code><span class="c">// Frontend</span>
+<span class="f">Plugin::addAction</span>(<span class="s">'vf_head'</span>, <span class="k">function</span>() {
+    <span class="f">Plugin::enqueueStyle</span>(<span class="s">'my-css'</span>, <span class="f">Plugin::url</span>(<span class="s">'my-plugin'</span>) . <span class="s">'/style.css'</span>);
+});
 
-        <!-- Assets -->
-        <section class="doc-section" id="assets">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" /></svg
-            ></span>
-            Assets (CSS & JavaScript)
-          </h2>
-          <p>Enqueue stylesheets and scripts the proper way.</p>
+<span class="f">Plugin::addAction</span>(<span class="s">'vf_footer'</span>, <span class="k">function</span>() {
+    <span class="f">Plugin::enqueueScript</span>(<span class="s">'my-js'</span>, <span class="f">Plugin::url</span>(<span class="s">'my-plugin'</span>) . <span class="s">'/script.js'</span>);
+});
 
-          <pre><code><span class="token-comment">// Enqueue stylesheet</span>
-<span class="token-function">enqueue_style</span>(
-    <span class="token-string">'my-plugin-style'</span>,                    <span class="token-comment">// Handle</span>
-    PLUGINS_URL . <span class="token-string">'/my-plugin/css/style.css'</span>, <span class="token-comment">// URL</span>
-    [],                                     <span class="token-comment">// Dependencies</span>
-    <span class="token-string">'1.0.0'</span>                                 <span class="token-comment">// Version</span>
-);
-
-<span class="token-comment">// Enqueue script</span>
-<span class="token-function">enqueue_script</span>(
-    <span class="token-string">'my-plugin-script'</span>,                    <span class="token-comment">// Handle</span>
-    PLUGINS_URL . <span class="token-string">'/my-plugin/js/app.js'</span>,   <span class="token-comment">// URL</span>
-    [],                                     <span class="token-comment">// Dependencies</span>
-    <span class="token-string">'1.0.0'</span>,                                <span class="token-comment">// Version</span>
-    <span class="token-keyword">true</span>                                    <span class="token-comment">// In footer</span>
-);
-
-<span class="token-comment">// Enqueue on init hook</span>
-<span class="token-function">add_action</span>(<span class="token-string">'init'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-function">enqueue_style</span>(<span class="token-string">'my-style'</span>, <span class="token-string">'/plugins/my-plugin/style.css'</span>);
+<span class="c">// Admin (page-specific)</span>
+<span class="f">Plugin::addAction</span>(<span class="s">'admin_enqueue_scripts'</span>, <span class="k">function</span>(<span class="v">$page</span>) {
+    <span class="k">if</span> (<span class="v">$page</span> === <span class="s">'plugins'</span>) {
+        <span class="f">Plugin::enqueueScript</span>(<span class="s">'admin-js'</span>, <span class="f">Plugin::url</span>(<span class="s">'my-plugin'</span>) . <span class="s">'/admin.js'</span>);
+    }
 });</code></pre>
-        </section>
+            </section>
+            
+            <!-- Database -->
+            <section id="database">
+                <h2>Database</h2>
+<pre><code><span class="v">$pdo</span> = <span class="f">Database::getInstance</span>();
 
-        <!-- Database -->
-        <section class="doc-section" id="database">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg
-            ></span>
-            Database Helpers
-          </h2>
-          <p>Create and manage custom database tables for your plugin.</p>
+<span class="v">$users</span> = <span class="f">Database::query</span>(
+    <span class="s">"SELECT * FROM "</span> . <span class="f">Database::table</span>(<span class="s">'users'</span>) . <span class="s">" WHERE role = ?"</span>,
+    [<span class="s">'admin'</span>]
+);
 
-          <pre><code><span class="token-comment">// Create a custom table on activation</span>
-<span class="token-function">add_action</span>(<span class="token-string">'activate_my-plugin'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-function">create_plugin_table</span>(<span class="token-string">'my_custom_data'</span>, <span class="token-string">"
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    "</span>);
+<span class="v">$count</span> = <span class="f">Database::queryValue</span>(
+    <span class="s">"SELECT COUNT(*) FROM "</span> . <span class="f">Database::table</span>(<span class="s">'posts'</span>)
+);</code></pre>
+                
+                <div class="callout callout-warning">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4m0 4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Security</strong>
+                        Always use prepared statements. Never interpolate user input directly.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Hooks Reference -->
+            <section id="hooks">
+                <h2>All Hooks</h2>
+                <p>VoidForge provides 90+ hooks. Here are the most commonly used:</p>
+                
+                <h3>Core System</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>init</code></td><td><span class="badge badge-action">Action</span></td><td>After CMS initializes</td></tr>
+                            <tr><td><code>plugins_loaded</code></td><td><span class="badge badge-action">Action</span></td><td>After all plugins load</td></tr>
+                            <tr><td><code>shutdown</code></td><td><span class="badge badge-action">Action</span></td><td>Before script ends</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Content</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>pre_insert_post</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify post before creation</td></tr>
+                            <tr><td><code>post_inserted</code></td><td><span class="badge badge-action">Action</span></td><td>After post created</td></tr>
+                            <tr><td><code>post_updated</code></td><td><span class="badge badge-action">Action</span></td><td>After post updated</td></tr>
+                            <tr><td><code>post_status_changed</code></td><td><span class="badge badge-action">Action</span></td><td>When status changes</td></tr>
+                            <tr><td><code>the_content</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify post content</td></tr>
+                            <tr><td><code>the_title</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify post title</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Users</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>user_logged_in</code></td><td><span class="badge badge-action">Action</span></td><td>After successful login</td></tr>
+                            <tr><td><code>user_login_failed</code></td><td><span class="badge badge-action">Action</span></td><td>After failed login</td></tr>
+                            <tr><td><code>authenticate</code></td><td><span class="badge badge-filter">Filter</span></td><td>Custom auth methods</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Admin</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>admin_init</code></td><td><span class="badge badge-action">Action</span></td><td>When admin loads</td></tr>
+                            <tr><td><code>admin_menu</code></td><td><span class="badge badge-action">Action</span></td><td>When building menu</td></tr>
+                            <tr><td><code>admin_head</code></td><td><span class="badge badge-action">Action</span></td><td>Inside admin head</td></tr>
+                            <tr><td><code>admin_footer</code></td><td><span class="badge badge-action">Action</span></td><td>Before admin body close</td></tr>
+                            <tr><td><code>admin_notices</code></td><td><span class="badge badge-action">Action</span></td><td>Display admin notices</td></tr>
+                            <tr><td><code>admin_enqueue_scripts</code></td><td><span class="badge badge-action">Action</span></td><td>Enqueue page assets</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Theme/Template</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>vf_head</code></td><td><span class="badge badge-action">Action</span></td><td>Inside head tag</td></tr>
+                            <tr><td><code>vf_footer</code></td><td><span class="badge badge-action">Action</span></td><td>Before body close</td></tr>
+                            <tr><td><code>body_class</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify body classes</td></tr>
+                            <tr><td><code>template_include</code></td><td><span class="badge badge-filter">Filter</span></td><td>Override template</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>REST API</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Hook</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>rest_api_init</code></td><td><span class="badge badge-action">Action</span></td><td>Register routes</td></tr>
+                            <tr><td><code>rest_pre_dispatch</code></td><td><span class="badge badge-filter">Filter</span></td><td>Before handling request</td></tr>
+                            <tr><td><code>rest_post_dispatch</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify response</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Examples -->
+            <section id="examples">
+                <h2>Examples</h2>
+                
+                <h3>Social Share Buttons</h3>
+<pre><code><span class="k">&lt;?php</span>
+<span class="c">/**
+ * Plugin Name: Social Share
+ * Version: 1.0.0
+ */</span>
+
+<span class="k">defined</span>(<span class="s">'CMS_ROOT'</span>) <span class="k">or</span> <span class="k">die</span>();
+
+<span class="f">Plugin::addFilter</span>(<span class="s">'the_content'</span>, <span class="k">function</span>(<span class="v">$content</span>, <span class="v">$post</span>) {
+    <span class="k">if</span> (<span class="v">$post</span>[<span class="s">'post_type'</span>] !== <span class="s">'post'</span>) <span class="k">return</span> <span class="v">$content</span>;
+    
+    <span class="v">$url</span> = <span class="f">urlencode</span>(<span class="f">Post::permalink</span>(<span class="v">$post</span>));
+    <span class="v">$buttons</span> = <span class="s">'&lt;div class="share"&gt;
+        &lt;a href="https://twitter.com/intent/tweet?url='</span> . <span class="v">$url</span> . <span class="s">'"&gt;Tweet&lt;/a&gt;
+    &lt;/div&gt;'</span>;
+    
+    <span class="k">return</span> <span class="v">$content</span> . <span class="v">$buttons</span>;
+}, <span class="n">20</span>);</code></pre>
+                
+                <h3>View Counter</h3>
+<pre><code><span class="k">&lt;?php</span>
+<span class="c">/**
+ * Plugin Name: View Counter
+ * Version: 1.0.0
+ */</span>
+
+<span class="k">defined</span>(<span class="s">'CMS_ROOT'</span>) <span class="k">or</span> <span class="k">die</span>();
+
+<span class="f">Plugin::addAction</span>(<span class="s">'template_redirect'</span>, <span class="k">function</span>() {
+    <span class="k">global</span> <span class="v">$post</span>;
+    <span class="k">if</span> (!<span class="v">$post</span>) <span class="k">return</span>;
+    
+    <span class="v">$views</span> = (<span class="k">int</span>)<span class="f">Post::getMeta</span>(<span class="v">$post</span>[<span class="s">'id'</span>], <span class="s">'views'</span>, <span class="n">0</span>);
+    <span class="f">Post::setMeta</span>(<span class="v">$post</span>[<span class="s">'id'</span>], <span class="s">'views'</span>, <span class="v">$views</span> + <span class="n">1</span>);
 });
 
-<span class="token-comment">// Drop table on uninstall</span>
-<span class="token-function">add_action</span>(<span class="token-string">'uninstall_my-plugin'</span>, <span class="token-keyword">function</span>() {
-    <span class="token-function">drop_plugin_table</span>(<span class="token-string">'my_custom_data'</span>);
-});
-
-<span class="token-comment">// Using the Database class directly</span>
-<span class="token-variable">$table</span> = Database::<span class="token-function">table</span>(<span class="token-string">'my_custom_data'</span>);
-<span class="token-variable">$items</span> = Database::<span class="token-function">query</span>(<span class="token-string">"SELECT * FROM </span><span class="token-variable">{$table}</span><span class="token-string"> WHERE id = ?"</span>, [<span class="token-number">1</span>]);</code></pre>
-        </section>
-
-        <!-- Available Hooks -->
-        <section class="doc-section" id="available-hooks">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path
-                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
-                /></svg
-            ></span>
-            Available Hooks
-          </h2>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Hook Name</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>init</code></td>
-                  <td>Action</td>
-                  <td>Fires after core loads, before output</td>
-                </tr>
-                <tr>
-                  <td><code>plugins_loaded</code></td>
-                  <td>Action</td>
-                  <td>Fires after all plugins are loaded</td>
-                </tr>
-                <tr>
-                  <td><code>admin_init</code></td>
-                  <td>Action</td>
-                  <td>Fires on admin page load</td>
-                </tr>
-                <tr>
-                  <td><code>wp_head</code></td>
-                  <td>Action</td>
-                  <td>Fires in the &lt;head&gt; section</td>
-                </tr>
-                <tr>
-                  <td><code>wp_footer</code></td>
-                  <td>Action</td>
-                  <td>Fires before &lt;/body&gt;</td>
-                </tr>
-                <tr>
-                  <td><code>the_content</code></td>
-                  <td>Filter</td>
-                  <td>Filters post/page content</td>
-                </tr>
-                <tr>
-                  <td><code>the_title</code></td>
-                  <td>Filter</td>
-                  <td>Filters post/page title</td>
-                </tr>
-                <tr>
-                  <td><code>post_saved</code></td>
-                  <td>Action</td>
-                  <td>Fires when a post is saved</td>
-                </tr>
-                <tr>
-                  <td><code>activate_{plugin}</code></td>
-                  <td>Action</td>
-                  <td>Fires when plugin is activated</td>
-                </tr>
-                <tr>
-                  <td><code>deactivate_{plugin}</code></td>
-                  <td>Action</td>
-                  <td>Fires when plugin is deactivated</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Helper Functions -->
-        <section class="doc-section" id="helper-functions">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-                /></svg
-            ></span>
-            Helper Functions
-          </h2>
-          <p>Useful functions available to all plugins:</p>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Function</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>esc($string)</code></td>
-                  <td>Escape HTML entities for safe output</td>
-                </tr>
-                <tr>
-                  <td><code>sanitizeSlug($string)</code></td>
-                  <td>Create URL-safe slug from string</td>
-                </tr>
-                <tr>
-                  <td><code>getOption($name, $default)</code></td>
-                  <td>Get a site option from database</td>
-                </tr>
-                <tr>
-                  <td><code>setOption($name, $value)</code></td>
-                  <td>Save a site option to database</td>
-                </tr>
-                <tr>
-                  <td><code>deleteOption($name)</code></td>
-                  <td>Delete a site option</td>
-                </tr>
-                <tr>
-                  <td><code>csrfToken()</code></td>
-                  <td>Get CSRF token string</td>
-                </tr>
-                <tr>
-                  <td><code>csrfField()</code></td>
-                  <td>Get hidden input with CSRF token</td>
-                </tr>
-                <tr>
-                  <td><code>verifyCsrf($token)</code></td>
-                  <td>Verify CSRF token is valid</td>
-                </tr>
-                <tr>
-                  <td><code>redirect($url)</code></td>
-                  <td>Redirect to URL and exit</td>
-                </tr>
-                <tr>
-                  <td><code>setFlash($type, $message)</code></td>
-                  <td>Set flash message for next request</td>
-                </tr>
-                <tr>
-                  <td><code>User::isLoggedIn()</code></td>
-                  <td>Check if user is logged in</td>
-                </tr>
-                <tr>
-                  <td><code>User::isAdmin()</code></td>
-                  <td>Check if user is admin</td>
-                </tr>
-                <tr>
-                  <td><code>User::current()</code></td>
-                  <td>Get current user data</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Best Practices -->
-        <section class="doc-section" id="best-practices">
-          <h2>
-            <span class="icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" /></svg
-            ></span>
-            Best Practices
-          </h2>
-
-          <h3>Security</h3>
-          <ul>
-            <li>Always use <code>esc()</code> when outputting user data</li>
-            <li>Validate and sanitize all input data</li>
-            <li>Use <code>verifyCsrf()</code> for form submissions</li>
-            <li>Check user permissions before sensitive operations</li>
-            <li>Use prepared statements with <code>Database::query()</code></li>
-          </ul>
-
-          <h3>Performance</h3>
-          <ul>
-            <li>Only load assets on pages that need them</li>
-            <li>Use caching for expensive operations</li>
-            <li>Minimize database queries</li>
-            <li>Use scheduled tasks for heavy processing</li>
-          </ul>
-
-          <h3>Code Quality</h3>
-          <ul>
-            <li>Use PHP 8+ features (typed properties, named arguments)</li>
-            <li>Follow PSR-12 coding standards</li>
-            <li>Document your code with PHPDoc comments</li>
-            <li>Prefix functions/classes to avoid conflicts</li>
-            <li>Clean up on plugin deactivation/uninstall</li>
-          </ul>
-
-          <div class="info-box tip">
-            <svg
-              class="info-box-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <div class="info-box-content">
-              <h4>Pro Tip</h4>
-              <p>
-                Check out the included <code>hello-world</code> plugin as a
-                working reference implementation.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="doc-footer">
-          <p>
-            VoidForge CMS v0.1.4 •
-            <a href="theme-development.html">Theme Development</a> •
-            <a href="https://clearanceclarence.github.io/VoidForge-CMS/"
-              >Landing</a
-            >
-          </p>
-        </footer>
-      </div>
-    </main>
-
+<span class="f">Plugin::addShortcode</span>(<span class="s">'views'</span>, <span class="k">function</span>() {
+    <span class="k">global</span> <span class="v">$post</span>;
+    <span class="k">return</span> <span class="f">number_format</span>(<span class="f">Post::getMeta</span>(<span class="v">$post</span>[<span class="s">'id'</span>], <span class="s">'views'</span>, <span class="n">0</span>)) . <span class="s">' views'</span>;
+});</code></pre>
+            </section>
+            
+            <!-- Best Practices -->
+            <section id="best-practices">
+                <h2>Best Practices</h2>
+                
+                <h3>Security</h3>
+                <ul>
+                    <li>Always verify CSRF tokens on form submissions</li>
+                    <li>Use prepared statements for all database queries</li>
+                    <li>Escape output with <code>esc()</code> to prevent XSS</li>
+                    <li>Check user capabilities before actions</li>
+                </ul>
+                
+                <h3>Performance</h3>
+                <ul>
+                    <li>Cache expensive operations when possible</li>
+                    <li>Use appropriate hook priorities (default: 10)</li>
+                    <li>Only load code when needed</li>
+                </ul>
+                
+                <h3>Code Quality</h3>
+                <ul>
+                    <li>Prefix all functions with your plugin name</li>
+                    <li>Include <code>defined('CMS_ROOT')</code> check</li>
+                    <li>Document hooks for other developers</li>
+                </ul>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>More resources</strong>
+                        See the <a href="theme-development.html">Theme Development Guide</a> for frontend customization.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
     <script>
-      // Highlight active sidebar link on scroll
-      const sections = document.querySelectorAll(".doc-section");
-      const navLinks = document.querySelectorAll(".sidebar-link");
-
-      const observerOptions = {
-        rootMargin: "-100px 0px -70% 0px",
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute("id");
-            navLinks.forEach((link) => {
-              link.classList.toggle(
-                "active",
-                link.getAttribute("href") === "#" + id
-              );
+        // Active link tracking
+        const sections = document.querySelectorAll('section');
+        const links = document.querySelectorAll('.nav-group a');
+        
+        function updateActive() {
+            let current = '';
+            sections.forEach(s => {
+                if (s.getBoundingClientRect().top <= 120) current = s.id;
             });
-          }
-        });
-      }, observerOptions);
-
-      sections.forEach((section) => observer.observe(section));
-
-      // Copy code buttons
-      document.querySelectorAll("pre").forEach((pre) => {
-        const header = document.createElement("div");
-        header.className = "code-header";
-        header.innerHTML = `
-                <span class="code-lang">PHP</span>
-                <button class="code-copy" onclick="copyCode(this)">Copy</button>
-            `;
-        pre.insertBefore(header, pre.firstChild);
-      });
-
-      function copyCode(btn) {
-        const code = btn.closest("pre").querySelector("code").textContent;
-        navigator.clipboard.writeText(code).then(() => {
-          btn.textContent = "Copied!";
-          setTimeout(() => (btn.textContent = "Copy"), 2000);
-        });
-      }
+            links.forEach(l => {
+                l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+            });
+        }
+        
+        window.addEventListener('scroll', updateActive);
+        updateActive();
+        
+        // Close mobile menu on click
+        links.forEach(l => l.addEventListener('click', () => {
+            document.querySelector('aside').classList.remove('open');
+        }));
     </script>
-  </body>
+</body>
 </html>
