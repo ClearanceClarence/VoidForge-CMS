@@ -27,6 +27,7 @@ require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/theme.php';
 require_once CMS_ROOT . '/includes/menu.php';
+require_once CMS_ROOT . '/includes/comment.php';
 
 // Initialize
 Post::init();
@@ -106,6 +107,12 @@ if (!is_array($customPostTypes)) {
 // Helper to include theme template
 function loadTemplate(string $template, array $data = []): void
 {
+    // Allow filtering of which template to load
+    $template = Plugin::applyFilters('template_include', $template, $data);
+    
+    // Fire action before template loads
+    Plugin::doAction('template_redirect', $template, $data);
+    
     $path = Theme::getTemplate($template);
     if ($path) {
         extract($data);
@@ -133,6 +140,7 @@ if (!empty($_GET['s'])) {
     $homepageId = getOption('homepage_id', 0);
     
     if ($homepageId > 0) {
+        // Static homepage is set - load that page
         $post = Post::find($homepageId);
         if ($post && $post['status'] === 'published') {
             // Check for home.php template first, then page.php, then index.php
@@ -148,8 +156,12 @@ if (!empty($_GET['s'])) {
             loadTemplate('404');
         }
     } else {
-        // No homepage set - show posts listing (index.php)
-        loadTemplate('index');
+        // No static homepage set - check for home.php (landing page), else show posts listing
+        if (Theme::hasTemplate('home')) {
+            loadTemplate('home', ['post' => null]);
+        } else {
+            loadTemplate('index');
+        }
     }
     
 } elseif (preg_match('#^post/([^/]+)$#', $path, $matches)) {

@@ -1,0 +1,12 @@
+{
+    "name": "Nova",
+    "description": "A stunning cosmic theme with animated starfields, glassmorphism effects, and bold typography. The flagship theme for VoidForge CMS.",
+    "version": "1.0.0",
+    "author": "VoidForge",
+    "author_uri": "https://github.com/ClearanceClarence/VoidForge-CMS",
+    "theme_uri": "https://github.com/ClearanceClarence/VoidForge-CMS",
+    "requires_php": "8.0",
+    "requires_cms": "0.1.8",
+    "license": "MIT",
+    "tags": ["dark", "cosmic", "modern", "animated", "glassmorphism", "responsive", "blog"]
+}

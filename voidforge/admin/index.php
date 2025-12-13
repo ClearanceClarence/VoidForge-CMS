@@ -60,6 +60,9 @@ User::requireLogin();
 $pageTitle = 'Dashboard';
 $currentUser = User::current();
 
+// Fire dashboard_setup action for plugins to register widgets
+Plugin::doAction('dashboard_setup');
+
 // Get stats
 $postsCount = Post::count(['post_type' => 'post', 'status' => 'published']);
 $pagesCount = Post::count(['post_type' => 'page', 'status' => 'published']);

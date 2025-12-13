@@ -914,6 +914,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
         
         $updateLog[] = '✓ Restored configuration files';
         
+        // Get new version from extracted files before cleanup
+        $newVersion = null;
+        $newConfigPath = $extractedRoot . '/includes/config.php';
+        if (file_exists($newConfigPath)) {
+            $newConfigContent = @file_get_contents($newConfigPath);
+            if ($newConfigContent && preg_match("/define\s*\(\s*'CMS_VERSION'\s*,\s*'([^']+)'/", $newConfigContent, $matches)) {
+                $newVersion = $matches[1];
+            }
+        }
+        
+        // Update CMS_VERSION in installed config.php
+        if ($newVersion) {
+            $installedConfigPath = CMS_ROOT . '/includes/config.php';
+            $installedConfig = @file_get_contents($installedConfigPath);
+            if ($installedConfig) {
+                $updatedConfig = preg_replace(
+                    "/define\s*\(\s*'CMS_VERSION'\s*,\s*'[^']+'\s*\)/",
+                    "define('CMS_VERSION', '{$newVersion}')",
+                    $installedConfig
+                );
+                if ($updatedConfig && $updatedConfig !== $installedConfig) {
+                    @file_put_contents($installedConfigPath, $updatedConfig);
+                    $updateLog[] = '✓ Updated CMS_VERSION to ' . $newVersion;
+                }
+            }
+        }
+        
         // Run database migrations
         $updateLog[] = '✓ Running database migrations...';
         $migrationLog = runMigrations();
@@ -927,11 +954,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf() && $zipAvailable) {
         try {
             setOption('last_update', date('Y-m-d H:i:s'));
             
-            // Try to read new version from config
-            $configContent = @file_get_contents(CMS_ROOT . '/includes/config.php');
-            if ($configContent && preg_match("/define\s*\(\s*'CMS_VERSION'\s*,\s*'([^']+)'/", $configContent, $matches)) {
-                setOption('cms_version', $matches[1]);
-                $updateLog[] = '✓ Updated to version: ' . $matches[1];
+            // Use the version we captured before cleanup
+            if ($newVersion) {
+                setOption('cms_version', $newVersion);
+                $updateLog[] = '✓ Database version updated to: ' . $newVersion;
             }
         } catch (Exception $e) {
             $updateLog[] = '⚠ Could not update version info: ' . $e->getMessage();

@@ -332,6 +332,9 @@ class Taxonomy
      */
     public static function createTerm(string $taxonomy, array $data): int
     {
+        // Allow filtering of term data before creation
+        $data = Plugin::applyFilters('pre_insert_term', $data, $taxonomy);
+        
         $table = Database::table('terms');
         
         $slug = self::generateTermSlug($taxonomy, $data['name'], $data['slug'] ?? '');
@@ -348,7 +351,12 @@ class Taxonomy
             ]
         );
         
-        return (int)Database::lastInsertId();
+        $id = (int)Database::lastInsertId();
+        
+        // Fire term created action
+        Plugin::doAction('term_inserted', $id, $taxonomy, $data);
+        
+        return $id;
     }
     
     /**
@@ -356,6 +364,14 @@ class Taxonomy
      */
     public static function updateTerm(int $id, array $data): bool
     {
+        $term = self::findTerm($id);
+        if (!$term) {
+            return false;
+        }
+        
+        // Allow filtering of term data before update
+        $data = Plugin::applyFilters('pre_update_term', $data, $id, $term);
+        
         $table = Database::table('terms');
         
         $fields = [];
@@ -389,6 +405,9 @@ class Taxonomy
             $params
         );
         
+        // Fire term updated action
+        Plugin::doAction('term_updated', $id, $data, $term);
+        
         return true;
     }
     
@@ -406,6 +425,9 @@ class Taxonomy
             return false;
         }
         
+        // Fire pre-delete action
+        Plugin::doAction('pre_delete_term', $id, $term);
+        
         // Update children to have no parent
         Database::execute("UPDATE {$table} SET parent_id = 0 WHERE parent_id = ?", [$id]);
         
@@ -414,6 +436,9 @@ class Taxonomy
         
         // Delete term
         Database::execute("DELETE FROM {$table} WHERE id = ?", [$id]);
+        
+        // Fire deleted action
+        Plugin::doAction('term_deleted', $id, $term);
         
         return true;
     }
@@ -559,6 +584,9 @@ class Taxonomy
         
         // Update term counts
         self::updateTermCounts($taxonomy);
+        
+        // Fire action
+        Plugin::doAction('post_terms_set', $postId, $taxonomy, $termIds, $current);
     }
     
     /**

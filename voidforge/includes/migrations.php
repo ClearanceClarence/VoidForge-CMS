@@ -13,6 +13,44 @@ $postsTable = Database::table('posts');
 $foldersTable = Database::table('media_folders');
 $mediaTable = Database::table('media');
 
+// v0.1.8: Create comments table FIRST (before anything else tries to access it)
+try {
+    $commentsTable = Database::table('comments');
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS {$commentsTable} (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            post_id INT UNSIGNED NOT NULL,
+            parent_id INT UNSIGNED NOT NULL DEFAULT 0,
+            user_id INT UNSIGNED DEFAULT NULL,
+            author_name VARCHAR(255) NOT NULL DEFAULT '',
+            author_email VARCHAR(255) NOT NULL DEFAULT '',
+            author_url VARCHAR(500) DEFAULT '',
+            author_ip VARCHAR(45) DEFAULT '',
+            content TEXT NOT NULL,
+            status ENUM('pending','approved','spam','trash') DEFAULT 'pending',
+            created_at DATETIME NOT NULL,
+            INDEX idx_post_id (post_id),
+            INDEX idx_parent_id (parent_id),
+            INDEX idx_user_id (user_id),
+            INDEX idx_status (status),
+            INDEX idx_created_at (created_at),
+            INDEX idx_post_status (post_id, status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+} catch (Exception $e) {
+    // Table might already exist
+}
+
+// v0.1.8: Add comment_count column to posts table
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'comment_count'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$postsTable} ADD COLUMN comment_count INT UNSIGNED NOT NULL DEFAULT 0");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
+
 // Fix posts table - add missing columns
 try {
     $columns = Database::query("SHOW COLUMNS FROM {$postsTable} LIKE 'parent_id'");
@@ -242,5 +280,5 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '0.1.6');
+setOption('cms_version', '0.1.8');
 setOption('last_update', date('Y-m-d H:i:s'));

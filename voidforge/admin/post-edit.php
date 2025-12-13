@@ -667,6 +667,11 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </div>
             
+            <?php 
+            // Fire edit_form_after_title action for plugins to add content
+            Plugin::doAction('edit_form_after_title', $post, $postType); 
+            ?>
+            
             <?php if (Post::typeSupports($postType, 'editor')): ?>
             <!-- Editor -->
             <div class="editor-wrap" style="margin-bottom: 1rem;">
@@ -708,6 +713,11 @@ include ADMIN_PATH . '/includes/header.php';
                 <input type="hidden" id="content" name="content" value="<?= esc($post['content'] ?? $_POST['content'] ?? '') ?>">
             </div>
             <?php endif; ?>
+            
+            <?php 
+            // Fire edit_form_after_editor action for plugins to add content
+            Plugin::doAction('edit_form_after_editor', $post, $postType); 
+            ?>
             
             <?php if (Post::typeSupports($postType, 'excerpt')): ?>
             <div class="card">
@@ -819,6 +829,11 @@ include ADMIN_PATH . '/includes/header.php';
                         </button>
                     </div>
                     <?php endif; ?>
+                    
+                    <?php 
+                    // Fire post_submitbox_actions for plugins to add actions
+                    Plugin::doAction('post_submitbox_actions', $post, $postType); 
+                    ?>
                 </div>
             </div>
             

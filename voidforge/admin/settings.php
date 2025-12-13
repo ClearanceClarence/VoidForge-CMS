@@ -50,6 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     ];
     setOption('revision_settings', $revisionSettings);
     
+    // Save comment settings
+    setOption('comments_enabled', isset($_POST['comments_enabled']));
+    setOption('comment_moderation', $_POST['comment_moderation'] ?? 'manual');
+    setOption('comment_require_registration', isset($_POST['comment_require_registration']));
+    setOption('comment_post_types', $_POST['comment_post_types'] ?? ['post']);
+    setOption('comment_max_depth', max(1, min(10, (int)($_POST['comment_max_depth'] ?? 3))));
+    setOption('comment_close_after', max(0, (int)($_POST['comment_close_after'] ?? 0)));
+    setOption('comment_min_length', max(1, (int)($_POST['comment_min_length'] ?? 3)));
+    setOption('comment_max_length', max(100, (int)($_POST['comment_max_length'] ?? 5000)));
+    setOption('comment_auto_links', isset($_POST['comment_auto_links']));
+    
     setFlash('success', 'Settings saved successfully.');
     redirect(ADMIN_URL . '/settings.php');
 }
@@ -62,6 +73,17 @@ $excerptLength = getOption('excerpt_length', 55);
 $dateFormat = getOption('date_format', 'M j, Y');
 $timeFormat = getOption('time_format', 'H:i');
 $revisionSettings = getOption('revision_settings', ['post' => 10, 'page' => 10]);
+
+// Comment settings
+$commentsEnabled = getOption('comments_enabled', true);
+$commentModeration = getOption('comment_moderation', 'manual');
+$commentRequireRegistration = getOption('comment_require_registration', false);
+$commentPostTypes = getOption('comment_post_types', ['post']);
+$commentMaxDepth = getOption('comment_max_depth', 3);
+$commentCloseAfter = getOption('comment_close_after', 0);
+$commentMinLength = getOption('comment_min_length', 3);
+$commentMaxLength = getOption('comment_max_length', 5000);
+$commentAutoLinks = getOption('comment_auto_links', true);
 
 // Get all pages for homepage dropdown
 $allPages = Post::query([
@@ -563,6 +585,162 @@ include ADMIN_PATH . '/includes/header.php';
     border-radius: 4px;
 }
 
+/* Toggle Switch */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.toggle-row input:checked + .toggle-switch {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.toggle-row input:checked + .toggle-switch::after {
+    left: 22px;
+}
+
+.toggle-label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* Radio Group */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.radio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.radio-item:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.radio-item input[type="radio"] {
+    margin-top: 0.125rem;
+    accent-color: #6366f1;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.radio-item input[type="radio"]:checked + .radio-label strong {
+    color: #6366f1;
+}
+
+.radio-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.radio-label strong {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.radio-hint {
+    font-size: 0.8125rem;
+    color: #64748b;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.checkbox-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.checkbox-item:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.checkbox-item input[type="checkbox"] {
+    accent-color: #6366f1;
+    width: 16px;
+    height: 16px;
+}
+
+.checkbox-item:has(input:checked) {
+    background: #eef2ff;
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+/* Form Row */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .form-grid-2 {
@@ -644,6 +822,12 @@ function switchTab(tabId, evt) {
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
             Reading
+        </button>
+        <button type="button" class="settings-tab" onclick="switchTab('comments', event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Comments
         </button>
         <button type="button" class="settings-tab" onclick="switchTab('system', event)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1013,6 +1197,161 @@ function switchTab(tabId, evt) {
                     <div class="form-hint" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--border-radius);">
                         <strong>Note:</strong> Revisions are created automatically when you update a post or page. 
                         Custom post type revision settings can be configured in Structure → Post Types.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments Settings -->
+        <div id="section-comments" class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Comment Settings</h3>
+                        <p>Configure how comments work on your site</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <!-- Enable Comments -->
+                    <div class="form-group">
+                        <label class="toggle-row">
+                            <input type="checkbox" name="comments_enabled" value="1" <?= $commentsEnabled ? 'checked' : '' ?>>
+                            <span class="toggle-switch"></span>
+                            <span class="toggle-label">Enable Comments</span>
+                        </label>
+                        <div class="form-hint">Allow visitors to leave comments on your posts.</div>
+                    </div>
+                    
+                    <!-- Moderation Mode -->
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label">Comment Moderation</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="comment_moderation" value="none" <?= $commentModeration === 'none' ? 'checked' : '' ?>>
+                                <span class="radio-label">
+                                    <strong>No moderation</strong>
+                                    <span class="radio-hint">All comments are published immediately</span>
+                                </span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="comment_moderation" value="registered" <?= $commentModeration === 'registered' ? 'checked' : '' ?>>
+                                <span class="radio-label">
+                                    <strong>Auto-approve registered users</strong>
+                                    <span class="radio-hint">Logged-in users' comments are auto-approved, guests need approval</span>
+                                </span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="comment_moderation" value="manual" <?= $commentModeration === 'manual' ? 'checked' : '' ?>>
+                                <span class="radio-label">
+                                    <strong>Manual approval</strong>
+                                    <span class="radio-hint">All comments require admin approval before appearing</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Require Registration -->
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="toggle-row">
+                            <input type="checkbox" name="comment_require_registration" value="1" <?= $commentRequireRegistration ? 'checked' : '' ?>>
+                            <span class="toggle-switch"></span>
+                            <span class="toggle-label">Require login to comment</span>
+                        </label>
+                        <div class="form-hint">Only registered and logged-in users can leave comments.</div>
+                    </div>
+                    
+                    <!-- Post Types -->
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label">Enable Comments On</label>
+                        <div class="checkbox-group">
+                            <?php 
+                            $allPostTypes = Post::getTypes();
+                            foreach ($allPostTypes as $typeSlug => $typeConfig): 
+                                if ($typeConfig['public']):
+                            ?>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="comment_post_types[]" value="<?= esc($typeSlug) ?>" <?= in_array($typeSlug, $commentPostTypes) ? 'checked' : '' ?>>
+                                <span><?= esc($typeConfig['label']) ?></span>
+                            </label>
+                            <?php 
+                                endif;
+                            endforeach; 
+                            ?>
+                        </div>
+                        <div class="form-hint">Select which post types allow comments.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-card" style="margin-top: 1.5rem;">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon orange">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Comment Display</h3>
+                        <p>Control how comments appear on your site</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <!-- Threading Depth -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="comment_max_depth">Reply Depth</label>
+                            <select name="comment_max_depth" id="comment_max_depth" class="form-select">
+                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                <option value="<?= $i ?>" <?= $commentMaxDepth == $i ? 'selected' : '' ?>><?= $i ?> level<?= $i > 1 ? 's' : '' ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <div class="form-hint">Maximum depth of nested replies.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="comment_close_after">Auto-close Comments</label>
+                            <select name="comment_close_after" id="comment_close_after" class="form-select">
+                                <option value="0" <?= $commentCloseAfter == 0 ? 'selected' : '' ?>>Never</option>
+                                <option value="7" <?= $commentCloseAfter == 7 ? 'selected' : '' ?>>After 7 days</option>
+                                <option value="14" <?= $commentCloseAfter == 14 ? 'selected' : '' ?>>After 14 days</option>
+                                <option value="30" <?= $commentCloseAfter == 30 ? 'selected' : '' ?>>After 30 days</option>
+                                <option value="60" <?= $commentCloseAfter == 60 ? 'selected' : '' ?>>After 60 days</option>
+                                <option value="90" <?= $commentCloseAfter == 90 ? 'selected' : '' ?>>After 90 days</option>
+                                <option value="365" <?= $commentCloseAfter == 365 ? 'selected' : '' ?>>After 1 year</option>
+                            </select>
+                            <div class="form-hint">Automatically close comments on old posts.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comment Length -->
+                    <div class="form-row" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="comment_min_length">Minimum Length</label>
+                            <input type="number" name="comment_min_length" id="comment_min_length" class="form-input" value="<?= $commentMinLength ?>" min="1" max="500">
+                            <div class="form-hint">Minimum characters required.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="comment_max_length">Maximum Length</label>
+                            <input type="number" name="comment_max_length" id="comment_max_length" class="form-input" value="<?= $commentMaxLength ?>" min="100" max="50000">
+                            <div class="form-hint">Maximum characters allowed.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Links -->
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="toggle-row">
+                            <input type="checkbox" name="comment_auto_links" value="1" <?= $commentAutoLinks ? 'checked' : '' ?>>
+                            <span class="toggle-switch"></span>
+                            <span class="toggle-label">Convert URLs to clickable links</span>
+                        </label>
+                        <div class="form-hint">Automatically make URLs in comments clickable.</div>
                     </div>
                 </div>
             </div>

@@ -7,6 +7,354 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.8] - 2025-12-13
+
+### 🪝 Comprehensive Hooks & Filters System
+
+A complete expansion of the plugin API with **90+ hooks and filters** for powerful theme and plugin development.
+
+### 📚 Documentation Redesign
+
+- **Light Mode Design** — Clean, professional documentation with white/gray background
+- **Modern Typography** — Outfit font for readability, Source Code Pro for code
+- **Syntax Highlighting** — Color-coded PHP, HTML, and CSS examples
+- **Responsive Layout** — Sticky navigation, mobile hamburger menu
+- **Correct Branding** — VoidForge logo with purple→cyan gradient
+
+#### Breaking Changes
+- **Renamed Functions** — `wp_send_json_success()` → `vf_send_json_success()`, `wp_send_json_error()` → `vf_send_json_error()` (legacy aliases kept for backward compatibility)
+- **Renamed Hooks** — `wp_head` → `vf_head`, `wp_footer` → `vf_footer` in themes
+
+#### Content Hooks (Posts/Pages)
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_insert_post` | Filter | Modify/validate post data before creation |
+| `post_inserted` | Action | Fires after post creation |
+| `post_inserted_{type}` | Action | Post type-specific insert action |
+| `pre_update_post` | Filter | Modify/validate update data |
+| `post_updated` | Action | Fires after post update |
+| `post_updated_{type}` | Action | Post type-specific update action |
+| `post_status_changed` | Action | When post status changes |
+| `post_status_{status}` | Action | When post transitions to specific status |
+| `pre_delete_post` | Action | Before post deletion |
+| `post_deleted` | Action | After permanent deletion |
+| `post_trashed` | Action | When post moves to trash |
+| `post_restored` | Action | When post restored from trash |
+| `pre_get_posts` | Filter | Modify query args before execution |
+| `the_posts` | Filter | Filter query results |
+| `the_title` | Filter | Modify post title display |
+| `the_excerpt` | Filter | Modify post excerpt |
+| `the_content` | Filter | Modify post content (already existed) |
+| `the_permalink` | Filter | Modify post permalinks |
+
+#### Post Meta Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_update_post_meta` | Filter | Modify meta value before save |
+| `post_meta_updated` | Action | After meta saved |
+| `pre_delete_post_meta` | Action | Before meta deleted |
+| `post_meta_deleted` | Action | After meta deleted |
+
+#### User & Authentication Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_user_login` | Action | Before login attempt |
+| `authenticate` | Filter | Custom authentication methods |
+| `user_logged_in` | Action | After successful login |
+| `user_login_failed` | Action | After failed login |
+| `user_logged_out` | Action | When user logs out |
+| `pre_insert_user` | Filter | Modify user data before creation |
+| `user_inserted` | Action | After user creation |
+| `pre_update_user` | Filter | Modify user update data |
+| `user_updated` | Action | After user update |
+| `user_role_changed` | Action | When user role changes |
+| `pre_delete_user` | Action | Before user deletion |
+| `user_deleted` | Action | After user deletion |
+
+#### Media Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_upload_media` | Filter | Modify upload data before processing |
+| `media_uploaded` | Action | After file upload |
+| `upload_allowed_types` | Filter | Modify allowed file types |
+| `upload_max_size` | Filter | Modify max upload size |
+| `thumbnail_sizes` | Filter | Add/modify thumbnail sizes |
+| `media_folder_changed` | Action | When media moved to folder |
+| `pre_delete_media` | Action | Before media deletion |
+| `media_deleted` | Action | After media deletion |
+
+#### Menu Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `menu_items` | Filter | Modify menu items before render |
+| `menu_item_classes` | Filter | Modify menu item CSS classes |
+| `pre_save_menu` | Filter | Modify menu data before save |
+| `menu_saved` | Action | After menu saved |
+| `menu_deleted` | Action | After menu deleted |
+
+#### Taxonomy/Term Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_insert_term` | Filter | Modify term data before creation |
+| `term_inserted` | Action | After term creation |
+| `pre_update_term` | Filter | Modify term update data |
+| `term_updated` | Action | After term update |
+| `pre_delete_term` | Action | Before term deletion |
+| `term_deleted` | Action | After term deletion |
+| `post_terms_set` | Action | When terms assigned to post |
+
+#### Comment Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_insert_comment` | Filter | Modify/reject comment before save |
+| `comment_created` | Action | After comment created (already existed) |
+| `comment_reply` | Action | When reply posted |
+| `comment_updated` | Action | After comment update (already existed) |
+| `comment_status_changed` | Action | When comment status changes |
+| `comment_deleted` | Action | After comment deleted (already existed) |
+
+#### Theme/Template Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `vf_head` | Action | Inside `<head>` tag |
+| `vf_footer` | Action | Before `</body>` tag |
+| `body_class` | Filter | Modify body CSS classes |
+| `template_include` | Filter | Override template selection |
+| `template_redirect` | Action | Before template loads |
+| `get_header` | Action | When header loads (already existed) |
+| `get_footer` | Action | When footer loads (already existed) |
+| `get_sidebar` | Action | When sidebar loads (already existed) |
+
+#### Options Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `pre_get_option_{name}` | Filter | Modify option before retrieval |
+| `pre_update_option_{name}` | Filter | Modify option before save |
+| `option_updated` | Action | After any option saved |
+
+#### REST API Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `rest_api_init` | Action | When REST API initializes |
+| `rest_pre_dispatch` | Filter | Before handling request |
+| `rest_post_dispatch` | Filter | Modify response after handling |
+| `rest_authentication_errors` | Filter | Custom authentication |
+
+#### System Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `cron_schedules` | Filter | Add custom cron intervals |
+| `vf_redirect` | Filter | Modify redirect URLs |
+| `shutdown` | Action | When script ends |
+| `init` | Action | After CMS initializes (already existed) |
+| `plugins_loaded` | Action | After all plugins load (already existed) |
+
+#### Admin Hooks
+| Hook | Type | Description |
+|------|------|-------------|
+| `admin_init` | Action | When admin loads (before header) |
+| `admin_menu` | Action | When building admin menu |
+| `admin_head` | Action | Inside admin `<head>` tag |
+| `admin_footer` | Action | Before admin `</body>` tag |
+| `admin_notices` | Action | Display admin notices |
+| `admin_enqueue_scripts` | Action | Enqueue page-specific assets |
+| `dashboard_setup` | Action | Setup dashboard widgets |
+| `edit_form_after_title` | Action | After post title field |
+| `edit_form_after_editor` | Action | After post editor |
+| `post_submitbox_actions` | Action | Inside publish box |
+
+#### New Helper Functions
+```php
+// JSON responses (use these instead of wp_ versions)
+vf_send_json_success($data, $code);
+vf_send_json_error($data, $code);
+
+// Content helpers
+the_title($post);      // Returns filtered title
+the_excerpt($post);    // Returns filtered excerpt
+the_content($post);    // Returns filtered content
+body_class($classes);  // Returns filtered body classes
+
+// Redirect with filter
+vf_redirect($url, $status);
+```
+
+### 💬 Comments System
+
+A complete commenting system for posts and pages with moderation, threading, and guest commenting.
+
+#### Core Features
+- **Comment Display** — Threaded comments with configurable reply depth (1-10 levels)
+- **Guest Commenting** — Visitors can comment with name/email or require registration
+- **User Comments** — Logged-in users auto-fill their details
+- **Gravatar Support** — Automatic avatars based on email address
+- **Comment Count** — Displays in post header with link to comments section
+
+#### Admin Management
+- **Comments Dashboard** — New admin page at Content → Comments
+- **Status Tabs** — Filter by All, Pending, Approved, Spam, Trash
+- **Bulk Actions** — Approve, spam, trash, restore, or delete multiple comments
+- **Inline Editing** — Edit comment content directly from the list
+- **Pending Badge** — Sidebar shows count of comments awaiting moderation
+- **Post Link** — Quick access to the post each comment belongs to
+
+#### Moderation Options
+- **No Moderation** — All comments publish immediately
+- **Auto-approve Registered** — Logged-in users auto-approved, guests need approval
+- **Manual Approval** — All comments require admin review
+
+#### Comment Settings
+Located in Settings → Comments tab:
+- **Enable/Disable** — Global toggle for comment system
+- **Post Types** — Choose which post types allow comments
+- **Require Login** — Optional requirement for users to be logged in
+- **Reply Depth** — Maximum nesting level (1-10)
+- **Auto-close** — Close comments after X days (7, 14, 30, 60, 90, 365, or never)
+- **Length Limits** — Minimum and maximum character counts
+- **Auto-links** — Convert URLs to clickable links
+
+#### Frontend Features
+- **Comment Form** — Clean, responsive comment submission form
+- **Reply Forms** — Inline reply forms that appear below comments
+- **Validation** — Client and server-side validation with error messages
+- **Success Messages** — Confirmation based on moderation settings
+- **Comments Closed** — Graceful message when comments are disabled
+
+#### Security
+- **Nonce Protection** — CSRF protection for comment forms
+- **IP Logging** — Author IP recorded for spam tracking
+- **Content Sanitization** — HTML stripped, optional auto-linking
+- **Validation** — Email format, length limits, required fields
+
+### 📁 New Files
+
+```
+includes/
+└── comment.php           # Comment class with CRUD, threading, moderation
+
+admin/
+└── comments.php          # Admin comment management page
+```
+
+### 📁 Modified Files
+
+```
+includes/
+├── config.php            — Version updated to 0.1.8
+├── functions.php         — Added nonce functions (createNonce, verifyNonce)
+└── migrations.php        — Added comments table, comment_count column
+
+admin/
+├── settings.php          — Added Comments settings tab with 10+ options
+└── includes/sidebar.php  — Added Comments link with pending badge
+
+themes/default/
+└── single.php            — Added comment display and submission form
+```
+
+### 🎯 Database Changes
+
+New `comments` table with fields:
+- id, post_id, parent_id, user_id
+- author_name, author_email, author_url, author_ip
+- content, status (pending/approved/spam/trash)
+- created_at
+
+New `comment_count` column on `posts` table for efficient counting.
+
+### 🔒 Security Features
+
+- Nonce tokens for form submission
+- CSRF protection
+- IP address logging
+- HTML sanitization
+- Rate limiting ready
+
+---
+
+## [0.1.7] - 2025-12-12
+
+### ☑️ Bulk Actions
+
+Perform actions on multiple posts at once from the post listing page.
+
+#### Features
+- **Checkbox Selection** — Select individual posts or use "Select All" to select all visible posts
+- **Selection Counter** — Shows how many items are selected with live updates
+- **Bulk Actions Bar** — Appears automatically when items are selected
+- **Row Highlighting** — Selected rows are highlighted with a subtle purple tint
+
+#### Available Actions (Normal View)
+- **Publish** — Publish multiple drafts at once
+- **Set to Draft** — Unpublish multiple posts at once
+- **Move to Trash** — Trash multiple posts at once
+- **Add Taxonomy** — Add categories/tags to multiple posts (per taxonomy)
+- **Remove Taxonomy** — Remove categories/tags from multiple posts (per taxonomy)
+
+#### Available Actions (Trash View)
+- **Restore** — Restore multiple trashed items at once
+- **Delete Permanently** — Permanently delete multiple items at once
+
+#### Taxonomy Bulk Assignment
+- Select a taxonomy action (Add/Remove Category, Tag, or custom taxonomy)
+- Multi-select dropdown appears with available terms
+- Apply to all selected posts at once
+
+#### UX Details
+- Confirmation dialogs for destructive actions (trash, delete)
+- "Deselect All" button to quickly clear selection
+- Validation prevents submitting without action or selection
+
+### ⚡ Quick Edit
+
+Edit post basics inline without leaving the posts list.
+
+#### Features
+- **Inline Editing Row** — Opens directly below the post row in the table
+- **AJAX Save** — Changes save instantly without page reload
+- **Live Updates** — Table row updates immediately with new values
+- **One-at-a-Time** — Opening a new Quick Edit closes any open one
+
+#### Editable Fields
+- **Title** — Edit the post title
+- **Slug** — Edit the URL slug
+- **Status** — Change between Draft, Published, Scheduled
+- **Date** — Change the post date with datetime picker
+- **Taxonomies** — Checkbox list for all available taxonomies (categories, tags, custom)
+
+#### UX Details
+- **Keyboard Support** — Press Escape to close Quick Edit
+- **Loading States** — Visual feedback during save
+- **Gradient Button** — Quick Edit button stands out with purple gradient
+- **Responsive Grid** — Fields arranged in responsive 4-column grid
+
+### 📁 Modified Files
+
+```
+admin/
+└── posts.php             — Complete rewrite with Bulk Actions & Quick Edit
+includes/
+└── config.php            — Version updated to 0.1.7
+```
+
+### 🎯 Usage
+
+#### Bulk Actions
+1. Navigate to any post list (Posts, Pages, or custom post types)
+2. Check boxes next to posts you want to modify
+3. The bulk actions bar appears automatically
+4. Select an action from the dropdown
+5. For taxonomy actions, select terms in the multi-select
+6. Click "Apply"
+
+#### Quick Edit
+1. Navigate to any post list
+2. Click the purple "Quick Edit" button on any row
+3. Edit title, slug, status, date, or taxonomies
+4. Click "Update" to save (or Escape/Cancel to discard)
+
+---
+
 ## [0.1.6.2] - 2025-12-12
 
 ### 🔐 Login Screen Editor
@@ -778,6 +1126,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.1.8 | 2025-12-13 | Comments system with threading, moderation, guest commenting, admin management |
+| 0.1.7 | 2025-12-12 | Bulk actions (trash, publish, draft, taxonomy assignment), Quick Edit (inline editing with AJAX) |
 | 0.1.6.2 | 2025-12-12 | Login screen editor with 80+ settings, 12 presets, pattern backgrounds, live preview |
 | 0.1.6.1 | 2025-12-12 | Repeater & group fields, sub-field modal, field key prefixing, radio buttons |
 | 0.1.6 | 2025-12-12 | Admin columns manager, column settings UI redesign, enhanced trash (30-day retention), scheduled publishing, column resize fix |

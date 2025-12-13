@@ -11,7 +11,7 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 
 // Branding
 define('CMS_NAME', 'VoidForge');
-define('CMS_VERSION', '0.1.6.2');
+define('CMS_VERSION', '0.1.8');
 
 // Database settings - configured during installation
 define('DB_HOST', '');

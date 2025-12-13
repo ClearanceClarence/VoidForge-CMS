@@ -199,6 +199,12 @@ function truncate(string $text, int $length = 150, string $suffix = '...'): stri
  */
 function getOption(string $name, $default = null)
 {
+    // Allow filtering of option value before retrieval
+    $preValue = Plugin::applyFilters('pre_get_option_' . $name, null, $default);
+    if ($preValue !== null) {
+        return $preValue;
+    }
+    
     $table = Database::table('options');
     $option = Database::queryOne(
         "SELECT option_value FROM {$table} WHERE option_name = ?",
@@ -219,6 +225,11 @@ function getOption(string $name, $default = null)
  */
 function setOption(string $name, $value): void
 {
+    // Allow filtering of option value before save
+    $value = Plugin::applyFilters('pre_update_option_' . $name, $value, $name);
+    
+    $oldValue = getOption($name);
+    
     if (is_array($value) || is_object($value)) {
         $value = json_encode($value);
     }
@@ -237,6 +248,9 @@ function setOption(string $name, $value): void
             'option_value' => $value
         ]);
     }
+    
+    // Fire option updated action
+    Plugin::doAction('option_updated', $name, $value, $oldValue);
 }
 
 /**
@@ -861,4 +875,69 @@ function generateSecuritySaltsArray(): array
     }
     
     return $salts;
+}
+
+// =====================================================
+// NONCE FUNCTIONS (for forms)
+// =====================================================
+
+/**
+ * Create a nonce (number used once) for form protection
+ * 
+ * @param string $action The action name for the nonce
+ * @param int $lifetime Lifetime in seconds (default 12 hours)
+ * @return string The nonce token
+ */
+function createNonce(string $action, int $lifetime = 43200): string
+{
+    $salt = defined('NONCE_SALT') && NONCE_SALT ? NONCE_SALT : 'voidforge_default_nonce_salt';
+    $tick = ceil(time() / $lifetime);
+    $userId = 0;
+    
+    if (class_exists('User')) {
+        $user = User::current();
+        if ($user) {
+            $userId = $user['id'];
+        }
+    }
+    
+    $token = hash_hmac('sha256', $tick . '|' . $action . '|' . $userId, $salt);
+    return substr($token, 0, 32);
+}
+
+/**
+ * Verify a nonce token
+ * 
+ * @param string $nonce The nonce to verify
+ * @param string $action The action name for the nonce
+ * @param int $lifetime Lifetime in seconds (default 12 hours)
+ * @return bool True if valid, false otherwise
+ */
+function verifyNonce(string $nonce, string $action, int $lifetime = 43200): bool
+{
+    if (empty($nonce)) {
+        return false;
+    }
+    
+    $salt = defined('NONCE_SALT') && NONCE_SALT ? NONCE_SALT : 'voidforge_default_nonce_salt';
+    $userId = 0;
+    
+    if (class_exists('User')) {
+        $user = User::current();
+        if ($user) {
+            $userId = $user['id'];
+        }
+    }
+    
+    // Check current tick and previous tick (allows for edge case timing)
+    $tick = ceil(time() / $lifetime);
+    
+    for ($i = 0; $i <= 1; $i++) {
+        $expected = hash_hmac('sha256', ($tick - $i) . '|' . $action . '|' . $userId, $salt);
+        if (hash_equals(substr($expected, 0, 32), $nonce)) {
+            return true;
+        }
+    }
+    
+    return false;
 }

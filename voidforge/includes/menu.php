@@ -54,14 +54,22 @@ class Menu
      */
     public static function create(array $data): int
     {
+        // Allow filtering of menu data before creation
+        $data = Plugin::applyFilters('pre_save_menu', $data, null);
+        
         $table = Database::table('menus');
         
-        return Database::insert($table, [
+        $id = Database::insert($table, [
             'name' => $data['name'],
             'slug' => slugify($data['name']),
             'location' => $data['location'] ?? null,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+        
+        // Fire menu created action
+        Plugin::doAction('menu_saved', $id, $data);
+        
+        return $id;
     }
 
     /**
@@ -69,6 +77,9 @@ class Menu
      */
     public static function update(int $id, array $data): bool
     {
+        // Allow filtering of menu data before update
+        $data = Plugin::applyFilters('pre_save_menu', $data, $id);
+        
         $table = Database::table('menus');
         
         $updateData = ['name' => $data['name']];
@@ -82,7 +93,13 @@ class Menu
             $updateData['location'] = $data['location'] ?: null;
         }
         
-        return Database::update($table, $updateData, "id = ?", [$id]) > 0;
+        $result = Database::update($table, $updateData, "id = ?", [$id]) > 0;
+        
+        if ($result) {
+            Plugin::doAction('menu_saved', $id, $data);
+        }
+        
+        return $result;
     }
 
     /**
@@ -90,6 +107,11 @@ class Menu
      */
     public static function delete(int $id): bool
     {
+        $menu = self::find($id);
+        if (!$menu) {
+            return false;
+        }
+        
         $menusTable = Database::table('menus');
         $itemsTable = Database::table('menu_items');
         
@@ -97,7 +119,13 @@ class Menu
         Database::query("DELETE FROM {$itemsTable} WHERE menu_id = ?", [$id]);
         
         // Delete the menu
-        return Database::delete($menusTable, "id = ?", [$id]) > 0;
+        $result = Database::delete($menusTable, "id = ?", [$id]) > 0;
+        
+        if ($result) {
+            Plugin::doAction('menu_deleted', $id, $menu);
+        }
+        
+        return $result;
     }
 
     /**
@@ -196,7 +224,10 @@ class Menu
             [$menuId]
         );
         
-        return self::buildTree($items);
+        $tree = self::buildTree($items);
+        
+        // Allow filtering of menu items
+        return Plugin::applyFilters('menu_items', $tree, $menuId);
     }
 
     /**
@@ -370,6 +401,9 @@ class Menu
             if ($item['css_class']) {
                 $classes[] = $item['css_class'];
             }
+            
+            // Allow filtering of menu item classes
+            $classes = Plugin::applyFilters('menu_item_classes', $classes, $item, $depth);
             
             $itemAttr = ' class="' . esc(implode(' ', $classes)) . '"';
             

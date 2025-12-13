@@ -6,6 +6,14 @@
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+// Load Comment class if available
+if (file_exists(CMS_ROOT . '/includes/comment.php')) {
+    require_once CMS_ROOT . '/includes/comment.php';
+}
+
+// Fire admin_init action
+Plugin::doAction('admin_init');
+
 // Auto-run migrations if version mismatch (runs once per version update)
 $dbVersion = getOption('cms_version', '0.0.0');
 if (version_compare($dbVersion, CMS_VERSION, '<')) {
@@ -252,6 +260,16 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
         .sidebar-logo .logo-icon svg { width: 24px; height: 24px; }
         <?php endif; ?>
     </style>
+    <?php 
+    // Fire admin_enqueue_scripts action for page-specific assets
+    Plugin::doAction('admin_enqueue_scripts', $currentPage);
+    
+    // Output enqueued styles
+    echo Plugin::renderStyles();
+    
+    // Fire admin_head action
+    Plugin::doAction('admin_head'); 
+    ?>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -339,3 +357,10 @@ $iconWeight = $iconStyles[$adminTheme['icon_style']]['stroke_width'] ?? '2';
                 <?php if ($flash = getFlash('error')): ?>
                     <div class="alert alert-error"><?= esc($flash) ?></div>
                 <?php endif; ?>
+                <?php 
+                // Fire admin_notices action
+                Plugin::doAction('admin_notices');
+                
+                // Render plugin notices
+                echo Plugin::renderNotices();
+                ?>

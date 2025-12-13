@@ -113,13 +113,25 @@ class User
      */
     public static function login(string $username, string $password): bool
     {
+        // Fire pre-login action
+        Plugin::doAction('pre_user_login', $username);
+        
         $table = Database::table('users');
         $user = Database::queryOne(
             "SELECT * FROM {$table} WHERE username = ? OR email = ?",
             [$username, $username]
         );
+        
+        // Allow custom authentication via filter
+        $authenticated = Plugin::applyFilters('authenticate', null, $username, $password, $user);
+        
+        // If filter returned a result, use it; otherwise do default check
+        if ($authenticated === null) {
+            $authenticated = $user && password_verify($password, $user['password']);
+        }
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        if (!$authenticated || !$user) {
+            Plugin::doAction('user_login_failed', $username);
             return false;
         }
 
@@ -128,6 +140,9 @@ class User
 
         // Update last login
         Database::update(Database::table('users'), ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+        
+        // Fire logged in action
+        Plugin::doAction('user_logged_in', $user['id'], $user);
 
         return true;
     }
@@ -137,6 +152,9 @@ class User
      */
     public static function logout(): void
     {
+        $userId = $_SESSION['user_id'] ?? null;
+        $user = self::$currentUser;
+        
         $_SESSION = [];
         
         if (ini_get('session.use_cookies')) {
@@ -149,6 +167,11 @@ class User
         
         session_destroy();
         self::$currentUser = null;
+        
+        // Fire logged out action
+        if ($userId) {
+            Plugin::doAction('user_logged_out', $userId, $user);
+        }
     }
 
     /**
@@ -192,14 +215,24 @@ class User
      */
     public static function create(array $data): int
     {
-        return Database::insert(Database::table('users'), [
+        // Allow filtering of user data before insertion
+        $data = Plugin::applyFilters('pre_insert_user', $data);
+        
+        $insertData = [
             'username' => $data['username'],
             'email' => $data['email'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT, ['cost' => HASH_COST]),
             'display_name' => $data['display_name'] ?? $data['username'],
             'role' => $data['role'] ?? 'subscriber',
             'created_at' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+        
+        $id = Database::insert(Database::table('users'), $insertData);
+        
+        // Fire user created action
+        Plugin::doAction('user_inserted', $id, $insertData);
+        
+        return $id;
     }
 
     /**
@@ -207,6 +240,16 @@ class User
      */
     public static function update(int $id, array $data): bool
     {
+        $user = self::find($id);
+        if (!$user) {
+            return false;
+        }
+        
+        $oldRole = $user['role'];
+        
+        // Allow filtering of update data
+        $data = Plugin::applyFilters('pre_update_user', $data, $id, $user);
+        
         $updateData = [];
 
         if (isset($data['username'])) {
@@ -229,7 +272,19 @@ class User
             return false;
         }
 
-        return Database::update(Database::table('users'), $updateData, 'id = ?', [$id]) > 0;
+        $result = Database::update(Database::table('users'), $updateData, 'id = ?', [$id]) > 0;
+        
+        if ($result) {
+            // Fire user updated action
+            Plugin::doAction('user_updated', $id, $updateData, $user);
+            
+            // Fire role changed action if role changed
+            if (isset($updateData['role']) && $oldRole !== $updateData['role']) {
+                Plugin::doAction('user_role_changed', $id, $updateData['role'], $oldRole, $user);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -239,8 +294,12 @@ class User
     {
         // Prevent deleting the last admin
         $user = self::find($id);
+        if (!$user) {
+            return false;
+        }
+        
         $table = Database::table('users');
-        if ($user && $user['role'] === 'admin') {
+        if ($user['role'] === 'admin') {
             $adminCount = Database::queryValue(
                 "SELECT COUNT(*) FROM {$table} WHERE role = 'admin'"
             );
@@ -248,8 +307,17 @@ class User
                 return false;
             }
         }
+        
+        // Fire pre-delete action
+        Plugin::doAction('pre_delete_user', $id, $user);
 
-        return Database::delete(Database::table('users'), 'id = ?', [$id]) > 0;
+        $result = Database::delete(Database::table('users'), 'id = ?', [$id]) > 0;
+        
+        if ($result) {
+            Plugin::doAction('user_deleted', $id, $user);
+        }
+        
+        return $result;
     }
 
     /**

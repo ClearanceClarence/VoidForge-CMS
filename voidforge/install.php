@@ -92,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     `published_at` DATETIME,
                     `trashed_at` DATETIME DEFAULT NULL,
                     `scheduled_at` DATETIME DEFAULT NULL,
+                    `comment_count` INT UNSIGNED NOT NULL DEFAULT 0,
                     UNIQUE KEY `slug` (`slug`),
                     KEY `status` (`status`),
                     KEY `post_type` (`post_type`),
@@ -245,6 +246,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INDEX `idx_term_id` (`term_id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 
+                // Comments table
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$dbPrefix}comments` (
+                    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    `post_id` INT UNSIGNED NOT NULL,
+                    `parent_id` INT UNSIGNED NOT NULL DEFAULT 0,
+                    `user_id` INT UNSIGNED DEFAULT NULL,
+                    `author_name` VARCHAR(255) NOT NULL DEFAULT '',
+                    `author_email` VARCHAR(255) NOT NULL DEFAULT '',
+                    `author_url` VARCHAR(500) DEFAULT '',
+                    `author_ip` VARCHAR(45) DEFAULT '',
+                    `content` TEXT NOT NULL,
+                    `status` ENUM('pending','approved','spam','trash') DEFAULT 'pending',
+                    `created_at` DATETIME NOT NULL,
+                    INDEX `idx_post_id` (`post_id`),
+                    INDEX `idx_parent_id` (`parent_id`),
+                    INDEX `idx_user_id` (`user_id`),
+                    INDEX `idx_status` (`status`),
+                    INDEX `idx_created_at` (`created_at`),
+                    INDEX `idx_post_status` (`post_id`, `status`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                
                 // Create admin user
                 $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}users` (username, email, password, display_name, role) VALUES (?, ?, ?, ?, 'admin')");
@@ -260,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'date_format' => 'F j, Y',
                     'time_format' => 'g:i a',
                     'timezone' => 'UTC',
-                    'active_theme' => 'default',
+                    'active_theme' => 'nova',
                     'cms_version' => CMS_VERSION
                 );
                 
@@ -315,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('PLUGINS_PATH', CMS_ROOT . '/plugins');";
                 $configLines[] = "define('PLUGINS_URL', SITE_URL . '/plugins');";
                 $configLines[] = "";
-                $configLines[] = "define('CURRENT_THEME', 'default');";
+                $configLines[] = "define('CURRENT_THEME', 'nova');";
                 $configLines[] = "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);";
                 $configLines[] = "";
                 $configLines[] = "define('SESSION_NAME', 'voidforge_session');";

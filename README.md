@@ -1,172 +1,339 @@
-# VoidForge CMS
+<![CDATA[<div align="center">
 
-<div align="center">
+<br>
+
+# ⬡ VOIDFORGE
+
+<br>
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.1.6.2-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.1.8-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
-**A modern, lightweight content management system built with pure PHP.**
+<br>
 
-No frameworks. No bloat. Just powerful features and elegant code.
+### A modern, lightweight content management system built with pure PHP.
 
-[Features](#-features) • [Installation](#-installation) • [Documentation](#-api-reference) • [Contributing](#-contributing)
+**No frameworks. No bloat. Just powerful features and elegant code.**
+
+<br>
+
+[Features](#-features) · [Installation](#-installation) · [Theme Development](#-theme-development) · [Plugin Development](#-plugin-development) · [API Reference](#-api-reference)
+
+<br>
+
+---
+
+<br>
 
 </div>
 
----
-
 ## ✨ Features
 
-### Content Management
-- **Custom Post Types** — Create unlimited content types with custom fields, icons, and URL structures
-- **Custom Fields** — 16+ field types including text, WYSIWYG, images, files, colors, dates, repeaters, groups, and more
-- **Repeater Fields** — Create dynamic lists of grouped sub-fields (team members, testimonials, FAQs)
-- **Group Fields** — Combine multiple fields into a single logical unit (addresses, SEO settings)
-- **Field Key Prefixing** — Field keys automatically prefixed with post type for unique identification
-- **Field Groups** — Create reusable field groups and assign them to any post type or users
-- **Taxonomies** — Categories, tags, and custom taxonomies with hierarchical or flat structure
-- **Menu Builder** — Visual drag-and-drop menu management with nested items and multiple locations
-- **Post Revisions** — Automatic revision history with compare and restore functionality
-- **Admin Columns** — Fully customizable column management for post listings with drag-to-resize
-- **Scheduled Publishing** — Schedule posts to publish automatically at a future date and time
-- **Enhanced Trash** — 30-day retention with days remaining display and automatic cleanup
-- **Media Library** — Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads
-- **Thumbnail Manager** — View, regenerate, and manage all image sizes with modal preview
-- **Rich Text Editor** — Built-in WYSIWYG editor with formatting toolbar
+<br>
 
-### Theme System
-- **Multiple Themes** — Ships with Default (dark gradient) and Flavor (light minimal) themes
-- **Theme Settings** — Per-theme customization with colors, sections, features, stats, and CTAs
-- **Unique Landing Pages** — Each theme has its own distinctive landing page design
-- **Custom CSS** — Add custom CSS per theme without editing files
-- **Live Preview** — Real-time preview of theme changes
+<table>
+<tr>
+<td valign="top" width="50%">
 
-### Administration
-- **Modern Admin Interface** — Beautiful dark sidebar with customizable color schemes
-- **Admin Theme Customization** — Choose from multiple color schemes, fonts, and icon styles
-- **Login Screen Editor** — Visual editor with 80+ settings, 12 presets, pattern backgrounds, and live preview
-- **Live CSS Editor** — Real-time styling with instant preview for admin and frontend
-- **Granular Font Sizes** — Separate font size controls for sidebar, header, and content areas
-- **80+ Admin Icons** — Extensive icon library for post types and navigation
+### 📝 Content Management
 
-### User Management
-- **Role-Based Permissions** — Admin, Editor, and Subscriber roles
-- **User Profiles** — Gravatar support and customizable profile fields
-- **Secure Authentication** — Password hashing, CSRF protection, secure sessions
+| Feature | Description |
+|:--------|:------------|
+| **Custom Post Types** | Create unlimited content types with custom fields, icons, and URL structures |
+| **Custom Fields** | 16+ field types including text, WYSIWYG, images, files, colors, dates, repeaters, groups |
+| **Repeater Fields** | Create dynamic lists of grouped sub-fields (team members, testimonials, FAQs) |
+| **Group Fields** | Combine multiple fields into a single logical unit (addresses, SEO settings) |
+| **Field Key Prefixing** | Field keys automatically prefixed with post type for unique identification |
+| **Field Groups** | Create reusable field groups and assign them to any post type or users |
+| **Taxonomies** | Categories, tags, and custom taxonomies with hierarchical or flat structure |
+| **Menu Builder** | Visual drag-and-drop menu management with nested items and multiple locations |
+| **Post Revisions** | Automatic revision history with compare and restore functionality |
+| **Admin Columns** | Fully customizable column management for post listings with drag-to-resize |
+| **Bulk Actions** | Select multiple posts to trash, publish, draft, or assign taxonomies in one click |
+| **Quick Edit** | Inline editing of title, slug, status, date, and taxonomies with AJAX save |
+| **Scheduled Publishing** | Schedule posts to publish automatically at a future date and time |
+| **Enhanced Trash** | 30-day retention with days remaining display and automatic cleanup |
+| **Media Library** | Grid/list views, full-screen modal editing, keyboard navigation, drag-and-drop uploads |
+| **Thumbnail Manager** | View, regenerate, and manage all image sizes with modal preview |
+| **Rich Text Editor** | Built-in WYSIWYG editor with formatting toolbar |
 
-### Plugin System
-- **WordPress-Style Hooks** — Actions and filters for extending functionality
-- **Shortcodes** — `[tag]` syntax for dynamic content
-- **Settings API** — Persistent plugin settings storage
-- **AJAX Handlers** — Easy AJAX endpoint registration
-- **Asset Enqueueing** — Script and style management
-- **Admin Pages** — Add custom admin menu items
-- **REST API Extensions** — Custom REST routes
-- **Scheduled Tasks** — Cron-like task scheduling
-- **Included Plugins** — Starter Shortcodes and Social Share examples
+</td>
+<td valign="top" width="50%">
 
-### Developer Features
-- **Theme Support** — Simple PHP templates with full access to all data
-- **Clean Architecture** — No framework magic, just readable PHP code
-- **Auto Updates** — One-click updates with automatic backups
-- **Plugin Documentation** — Comprehensive 72KB HTML development guide
-- **Theme Documentation** — Complete theme creation guide with examples
+### 🎨 Theme System
 
-### Security
-- **CSRF Protection** — Token-based form protection
-- **XSS Prevention** — Output escaping helpers
-- **Secure Sessions** — Properly configured PHP sessions
-- **Password Security** — bcrypt password hashing
+| Feature | Description |
+|:--------|:------------|
+| **Multiple Themes** | Ships with Default (dark), Flavor (light), and Nova (modern marketing) themes |
+| **Theme Settings** | Per-theme customization with colors, sections, features, stats, and CTAs |
+| **Unique Landing Pages** | Each theme has its own distinctive landing page design |
+| **Custom CSS** | Add custom CSS per theme without editing files |
+| **Live Preview** | Real-time preview of theme changes |
+
+<br>
+
+### 💬 Comments System
+
+| Feature | Description |
+|:--------|:------------|
+| **Threaded Comments** | Nested replies with configurable depth (1-10 levels) |
+| **Guest Commenting** | Allow visitors to comment with name/email |
+| **Moderation** | Approve, spam, trash, and bulk moderate comments |
+| **Gravatar Support** | Automatic avatars based on email address |
+| **Admin Dashboard** | Full comments management at Content → Comments |
+
+<br>
+
+### 🖥️ Administration
+
+| Feature | Description |
+|:--------|:------------|
+| **Modern Admin Interface** | Beautiful dark sidebar with customizable color schemes |
+| **Admin Theme Customization** | Choose from multiple color schemes, fonts, and icon styles |
+| **Login Screen Editor** | Visual editor with 80+ settings, 12 presets, and live preview |
+| **Live CSS Editor** | Real-time styling with instant preview for admin and frontend |
+| **Granular Font Sizes** | Separate font size controls for sidebar, header, and content areas |
+| **80+ Admin Icons** | Extensive icon library for post types and navigation |
+
+<br>
+
+### 👥 User Management
+
+| Feature | Description |
+|:--------|:------------|
+| **Role-Based Permissions** | Admin, Editor, and Subscriber roles |
+| **User Profiles** | Gravatar support and customizable profile fields |
+| **Secure Authentication** | Password hashing, CSRF protection, secure sessions |
+
+</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+<td valign="top" width="50%">
+
+### 🔌 Plugin System
+
+| Feature | Description |
+|:--------|:------------|
+| **WordPress-Style Hooks** | 90+ actions and filters for extending functionality |
+| **Shortcodes** | `[tag]` syntax for dynamic content |
+| **Settings API** | Persistent plugin settings storage |
+| **AJAX Handlers** | Easy AJAX endpoint registration |
+| **Asset Enqueueing** | Script and style management |
+| **Admin Pages** | Add custom admin menu items |
+| **REST API Extensions** | Custom REST routes |
+| **Scheduled Tasks** | Cron-like task scheduling |
+| **Included Plugins** | Starter Shortcodes and Social Share examples |
+
+</td>
+<td valign="top" width="50%">
+
+### 🛡️ Security
+
+| Feature | Description |
+|:--------|:------------|
+| **CSRF Protection** | Token-based form protection |
+| **XSS Prevention** | Output escaping helpers |
+| **Secure Sessions** | Properly configured PHP sessions |
+| **Password Security** | bcrypt password hashing |
+
+<br>
+
+### 🧑‍💻 Developer Features
+
+| Feature | Description |
+|:--------|:------------|
+| **Theme Support** | Simple PHP templates with full access to all data |
+| **Clean Architecture** | No framework magic, just readable PHP code |
+| **Auto Updates** | One-click updates with automatic backups |
+| **Plugin Documentation** | Comprehensive 72KB HTML development guide |
+| **Theme Documentation** | Complete theme creation guide with examples |
+
+</td>
+</tr>
+</table>
+
+<br>
 
 ---
+
+<br>
+
+## 🔐 Login Screen Editor
+
+<div align="center">
+
+*Customize your admin login page with a powerful visual editor*
+
+</div>
+
+<br>
+
+<table>
+<tr>
+<td align="center" width="25%">
+
+**🎨 Backgrounds**
+
+Solid · Gradient · Image · Pattern
+
+*5 pattern styles*
+
+</td>
+<td align="center" width="25%">
+
+**💳 Card Styling**
+
+Dimensions · Border · Blur · Shadow
+
+*Glassmorphism effects*
+
+</td>
+<td align="center" width="25%">
+
+**✏️ Typography**
+
+Title · Subtitle · Labels · Sizes
+
+*Full font control*
+
+</td>
+<td align="center" width="25%">
+
+**✨ Animation**
+
+Fade · Slide · Scale · Bounce
+
+*12 presets included*
+
+</td>
+</tr>
+</table>
+
+<br>
+
+---
+
+<br>
 
 ## 📋 Requirements
 
-- PHP 8.0 or higher
-- MySQL 5.7+ or MariaDB 10.3+
-- Apache with mod_rewrite (or nginx)
-- GD Library (for image processing)
+<div align="center">
+
+| Requirement | Version |
+|:-----------:|:-------:|
+| PHP | 8.0+ |
+| MySQL | 5.7+ |
+| MariaDB | 10.3+ |
+| Apache | mod_rewrite |
+| GD Library | Required |
+
+</div>
+
+<br>
 
 ---
+
+<br>
 
 ## 🚀 Installation
 
+<br>
+
 ### Quick Install
 
-1. **Download** the latest release and extract to your web directory
-2. **Navigate** to your site URL in a browser
-3. **Follow** the installation wizard
-4. **Done!** Log in to your new admin dashboard
+```
+1. Download the latest release and extract to your web directory
+2. Navigate to your site URL in a browser
+3. Follow the installation wizard
+4. Done! Log in to your new admin dashboard
+```
+
+<br>
 
 ### Manual Installation
 
-1. Clone or download the repository:
-   ```bash
-   git clone https://github.com/yourusername/voidforge-cms.git
-   ```
+```bash
+# Clone or download the repository
+git clone https://github.com/ClearanceClarence/VoidForge-CMS.git
 
-2. Create a MySQL database:
-   ```sql
-   CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
+# Create a MySQL database
+mysql -e "CREATE DATABASE voidforge_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 
-3. Copy the sample config (if available) or run the installer:
-   ```bash
-   cp includes/config.sample.php includes/config.php
-   ```
+# Copy the sample config (if available) or run the installer
+cp includes/config.sample.php includes/config.php
 
-4. Configure your web server to point to the project root
+# Configure your web server to point to the project root
+# Visit your domain and complete the installation wizard
+```
 
-5. Visit your domain and complete the installation wizard
+<br>
 
 ---
+
+<br>
 
 ## 📁 Directory Structure
 
 ```
 voidforge-cms/
-├── admin/                  # Admin panel files
-│   ├── assets/            # Admin CSS, JS, images
-│   ├── includes/          # Admin includes (header, footer, sidebar)
-│   ├── index.php          # Admin dashboard
-│   ├── posts.php          # Post management
-│   ├── menus.php          # Menu builder
-│   ├── media.php          # Media library with modal editing
-│   ├── thumbnails.php     # Thumbnail manager
-│   ├── themes.php         # Theme management
-│   ├── theme-settings.php # Per-theme customization
-│   ├── login-editor.php   # Login screen visual editor
-│   ├── plugins.php        # Plugin management
+│
+├── 📂 admin/                    Admin panel files
+│   ├── 📂 assets/              CSS, JS, images
+│   ├── 📂 includes/            Header, footer, sidebar
+│   ├── 📄 index.php            Admin dashboard
+│   ├── 📄 posts.php            Post management
+│   ├── 📄 menus.php            Menu builder
+│   ├── 📄 media.php            Media library with modal editing
+│   ├── 📄 thumbnails.php       Thumbnail manager
+│   ├── 📄 themes.php           Theme management
+│   ├── 📄 theme-settings.php   Per-theme customization
+│   ├── 📄 login-editor.php     Login screen visual editor
+│   ├── 📄 plugins.php          Plugin management
 │   └── ...
-├── docs/                  # Documentation
-│   ├── plugin-development.html  # Plugin dev guide
-│   └── theme-development.html   # Theme dev guide
-├── includes/              # Core PHP files
-│   ├── config.php         # Configuration (generated)
-│   ├── database.php       # Database class
-│   ├── functions.php      # Helper functions
-│   ├── user.php           # User class
-│   ├── post.php           # Post class
-│   ├── media.php          # Media class
-│   ├── menu.php           # Menu class
-│   ├── plugin.php         # Plugin system
-│   └── theme.php          # Theme system
-├── plugins/               # Plugin directory
-│   ├── starter-shortcodes/# Example shortcodes
-│   └── social-share/      # Example social plugin
-├── themes/                # Theme directory
-│   ├── default/           # Default dark theme
-│   └── flavor/            # Light minimal theme
-├── uploads/               # Media uploads
-├── backups/               # Auto-update backups
-├── index.php              # Front-end router
-├── install.php            # Installation wizard
-└── .htaccess              # Apache configuration
+│
+├── 📂 docs/                     Documentation
+│   ├── 📄 plugin-development.html
+│   └── 📄 theme-development.html
+│
+├── 📂 includes/                 Core PHP files
+│   ├── 📄 config.php           Configuration (generated)
+│   ├── 📄 database.php         Database class
+│   ├── 📄 functions.php        Helper functions
+│   ├── 📄 user.php             User class
+│   ├── 📄 post.php             Post class
+│   ├── 📄 media.php            Media class
+│   ├── 📄 menu.php             Menu class
+│   ├── 📄 plugin.php           Plugin system
+│   └── 📄 theme.php            Theme system
+│
+├── 📂 plugins/                  Plugin directory
+│   ├── 📂 starter-shortcodes/
+│   └── 📂 social-share/
+│
+├── 📂 themes/                   Theme directory
+│   ├── 📂 default/             Dark gradient theme
+│   ├── 📂 flavor/              Light minimal theme
+│   └── 📂 nova/                Modern marketing theme
+│
+├── 📂 uploads/                  Media uploads
+├── 📂 backups/                  Auto-update backups
+├── 📄 index.php                 Front-end router
+├── 📄 install.php               Installation wizard
+└── 📄 .htaccess                 Apache configuration
 ```
 
+<br>
+
 ---
+
+<br>
 
 ## 🎨 Theme Development
 
@@ -199,20 +366,28 @@ get_header();
 <?php get_footer(); ?>
 ```
 
+<br>
+
 ### Theme Settings
 
 Themes can define customizable settings that appear in the admin:
 
-- Hero section toggle and content
-- Color customization
-- Feature sections
-- Stats display
-- Call-to-action areas
-- Custom CSS
+<table>
+<tr>
+<td>✓ Hero section toggle and content</td>
+<td>✓ Color customization</td>
+<td>✓ Feature sections</td>
+</tr>
+<tr>
+<td>✓ Stats display</td>
+<td>✓ Call-to-action areas</td>
+<td>✓ Custom CSS</td>
+</tr>
+</table>
+
+<br>
 
 ### Menu Integration
-
-Display navigation menus in your theme:
 
 ```php
 // Get menu assigned to a location
@@ -234,11 +409,15 @@ echo Menu::display('primary', [
 ]);
 ```
 
-**Important:** Menus must be assigned to a location (e.g., "Primary Navigation") in the admin to appear on the frontend. If no menu is assigned, themes fall back to displaying pages.
+> **Note:** Menus must be assigned to a location in the admin to appear on the frontend. If no menu is assigned, themes fall back to displaying pages.
 
-See `/docs/theme-development.html` for comprehensive documentation.
+📚 See `/docs/theme-development.html` for comprehensive documentation.
+
+<br>
 
 ---
+
+<br>
 
 ## 🔌 Plugin Development
 
@@ -252,7 +431,7 @@ Create plugins using WordPress-style hooks:
  * Version: 1.0.0
  * Author: Your Name
  * Requires PHP: 8.0
- * Requires CMS: 0.1.4
+ * Requires CMS: 0.1.8
  */
 
 // Hook into initialization
@@ -281,56 +460,42 @@ add_admin_page('my-settings', [
 ]);
 ```
 
-See `/docs/plugin-development.html` for comprehensive documentation.
+📚 See `/docs/plugin-development.html` for comprehensive documentation.
+
+<br>
 
 ---
 
-## 🔐 Login Screen Editor
-
-Customize your admin login page with a powerful visual editor:
-
-### Background Options
-- **4 Types** — Solid color, gradient, image, or pattern
-- **5 Patterns** — Dots, grid, diagonal, crosses, waves
-- **Pattern Settings** — Customizable color (rgba) and size (10-50px)
-- **Image Support** — Background images with optional overlay
-
-### Card & Form Styling
-- **Card Dimensions** — Width, padding, border radius, shadow
-- **Glassmorphism** — Backdrop blur effect (0-30px)
-- **Typography** — Title/subtitle text, colors, sizes, font weights
-- **Input Fields** — Background, border, text color, padding, focus states
-- **Button** — Gradient or solid, custom label, shadow, full-width toggle
-
-### Presets & Animation
-- **12 Presets** — Default, Aurora, Minimal, Ocean, Nature, Rose, Soft, Corporate, Sunset, Lavender, Slate, Fresh
-- **5 Animations** — None, fade, slide, scale, bounce
-- **Live Preview** — See changes in real-time as you edit
-
-Access via **Design → Login Screen** in the admin sidebar.
-
----
+<br>
 
 ## 🖼️ Media Library
 
-The media library features a modern interface with:
+<div align="center">
 
-- **Grid/List Views** — Toggle between visual grid and detailed list
-- **Full-Screen Modal** — Large preview with editing sidebar
-- **Keyboard Navigation** — Arrow keys to browse, Escape to close
-- **Quick Actions** — Edit title/alt text, copy URL, delete
-- **Drag & Drop Upload** — Drop files anywhere to upload
-- **Folder Organization** — Organize media into folders
+| Feature | Description |
+|:-------:|:------------|
+| 📊 **Grid/List Views** | Toggle between visual grid and detailed list |
+| 🖼️ **Full-Screen Modal** | Large preview with editing sidebar |
+| ⌨️ **Keyboard Navigation** | Arrow keys to browse, Escape to close |
+| ⚡ **Quick Actions** | Edit title/alt text, copy URL, delete |
+| 📥 **Drag & Drop Upload** | Drop files anywhere to upload |
+| 📁 **Folder Organization** | Organize media into folders |
+
+</div>
+
+<br>
 
 ---
+
+<br>
 
 ## ⚙️ Configuration
 
 ### Database Settings
 
-Edit `includes/config.php`:
-
 ```php
+// includes/config.php
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'voidforge_cms');
 define('DB_USER', 'username');
@@ -342,47 +507,101 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.1.6.2');
+define('CMS_VERSION', '0.1.8');
 define('CMS_NAME', 'VoidForge');
 ```
 
+<br>
+
 ---
+
+<br>
 
 ## 🔄 Updating
 
 ### Automatic Updates
 
-1. Go to **Admin → Updates**
-2. Upload the new version ZIP file
-3. Click **Install Update**
-4. VoidForge will:
-   - Create a timestamped backup
-   - Extract new files
-   - Preserve your config, uploads, and customizations
-   - Run any necessary migrations
+<table>
+<tr>
+<td width="50">1.</td>
+<td>Go to <strong>Admin → Updates</strong></td>
+</tr>
+<tr>
+<td>2.</td>
+<td>Upload the new version ZIP file</td>
+</tr>
+<tr>
+<td>3.</td>
+<td>Click <strong>Install Update</strong></td>
+</tr>
+<tr>
+<td>4.</td>
+<td>VoidForge will automatically:
+  <br>✓ Create a timestamped backup
+  <br>✓ Extract new files
+  <br>✓ Preserve your config, uploads, and customizations
+  <br>✓ Run any necessary migrations
+</td>
+</tr>
+</table>
+
+<br>
 
 ### Manual Updates
 
+```
 1. Backup your installation
 2. Replace all files except:
-   - `includes/config.php`
-   - `uploads/` directory
-   - Custom themes and plugins
+   • includes/config.php
+   • uploads/ directory
+   • Custom themes and plugins
 3. Visit the admin panel to run migrations
+```
+
+<br>
 
 ---
+
+<br>
 
 ## 🛡️ Security Best Practices
 
-1. **Keep Updated** — Always run the latest version
-2. **Strong Passwords** — Use complex passwords for all accounts
-3. **File Permissions** — Set appropriate permissions (755 for directories, 644 for files)
-4. **HTTPS** — Always use SSL/TLS in production
-5. **Backups** — Regularly backup your database and files
+<table>
+<tr>
+<td align="center">🔄</td>
+<td><strong>Keep Updated</strong> — Always run the latest version</td>
+</tr>
+<tr>
+<td align="center">🔐</td>
+<td><strong>Strong Passwords</strong> — Use complex passwords for all accounts</td>
+</tr>
+<tr>
+<td align="center">📁</td>
+<td><strong>File Permissions</strong> — Set appropriate permissions (755 for directories, 644 for files)</td>
+</tr>
+<tr>
+<td align="center">🔒</td>
+<td><strong>HTTPS</strong> — Always use SSL/TLS in production</td>
+</tr>
+<tr>
+<td align="center">💾</td>
+<td><strong>Backups</strong> — Regularly backup your database and files</td>
+</tr>
+</table>
+
+<br>
 
 ---
 
+<br>
+
 ## 📖 API Reference
+
+<br>
+
+<table>
+<tr>
+<td valign="top" width="50%">
 
 ### Posts
 
@@ -420,6 +639,9 @@ $result = Media::upload($_FILES['file']);
 $image = get_featured_image($post_id);
 ```
 
+</td>
+<td valign="top" width="50%">
+
 ### Options
 
 ```php
@@ -456,6 +678,12 @@ Menu::addItem($menuId, [
 ]);
 ```
 
+</td>
+</tr>
+</table>
+
+<br>
+
 ### Taxonomies
 
 ```php
@@ -483,36 +711,65 @@ $termId = Taxonomy::createTerm('genre', [
 ]);
 ```
 
+<br>
+
 ---
+
+<br>
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+# 1. Fork the repository
+git clone https://github.com/ClearanceClarence/VoidForge-CMS.git
+
+# 2. Create your feature branch
+git checkout -b feature/amazing-feature
+
+# 3. Commit your changes
+git commit -m 'Add amazing feature'
+
+# 4. Push to the branch
+git push origin feature/amazing-feature
+
+# 5. Open a Pull Request
+```
+
+<br>
 
 ---
+
+<br>
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+<br>
 
 ---
+
+<br>
 
 ## 🙏 Credits
 
-- Built with ❤️ by the VoidForge team
-- Icons from [Feather Icons](https://feathericons.com/)
-- Fonts from [Google Fonts](https://fonts.google.com/)
+<div align="center">
+
+Built with ❤️ by the VoidForge team
+
+[Feather Icons](https://feathericons.com/) · [Google Fonts](https://fonts.google.com/)
+
+<br>
 
 ---
 
-<div align="center">
+<br>
 
-**[VoidForge CMS](https://github.com/yourusername/voidforge-cms)** — Modern Content Management
+**⬡ VoidForge CMS** — Modern Content Management
+
+<br>
 
 </div>
+]]>

@@ -192,6 +192,10 @@ class Post
         ];
 
         $args = array_merge($defaults, $args);
+        
+        // Allow filtering of query args before execution
+        $args = Plugin::applyFilters('pre_get_posts', $args);
+        
         $where = ['1=1'];
         $params = [];
 
@@ -246,7 +250,12 @@ class Post
             $sql .= " LIMIT {$args['limit']} OFFSET {$args['offset']}";
         }
 
-        return Database::query($sql, $params);
+        $posts = Database::query($sql, $params);
+        
+        // Allow filtering of query results
+        $posts = Plugin::applyFilters('the_posts', $posts, $args);
+        
+        return $posts;
     }
 
     /**
@@ -298,6 +307,9 @@ class Post
      */
     public static function create(array $data): int
     {
+        // Allow filtering of post data before insertion
+        $data = Plugin::applyFilters('pre_insert_post', $data);
+        
         // Handle slug - use provided slug or generate from title
         if (!empty($data['slug'])) {
             $slug = slugify($data['slug']);
@@ -306,7 +318,7 @@ class Post
         }
         $slug = uniqueSlug($slug, $data['post_type'] ?? 'post');
 
-        $id = Database::insert(Database::table('posts'), [
+        $insertData = [
             'post_type' => $data['post_type'] ?? 'post',
             'title' => $data['title'] ?? '',
             'slug' => $slug,
@@ -320,7 +332,9 @@ class Post
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
             'published_at' => $data['status'] === self::STATUS_PUBLISHED ? date('Y-m-d H:i:s') : null,
-        ]);
+        ];
+        
+        $id = Database::insert(Database::table('posts'), $insertData);
 
         // Save meta
         if (!empty($data['meta']) && is_array($data['meta'])) {
@@ -328,6 +342,12 @@ class Post
                 self::setMeta($id, $key, $value);
             }
         }
+        
+        // Fire post_inserted action
+        Plugin::doAction('post_inserted', $id, $insertData, $data);
+        
+        // Fire post type specific action
+        Plugin::doAction('post_inserted_' . $insertData['post_type'], $id, $insertData);
 
         return $id;
     }
@@ -341,6 +361,12 @@ class Post
         if (!$post) {
             return false;
         }
+        
+        // Store old status for status change detection
+        $oldStatus = $post['status'];
+        
+        // Allow filtering of update data
+        $data = Plugin::applyFilters('pre_update_post', $data, $id, $post);
 
         $updateData = [
             'updated_at' => date('Y-m-d H:i:s'),
@@ -390,6 +416,21 @@ class Post
                 self::setMeta($id, $key, $value);
             }
         }
+        
+        if ($result) {
+            // Fire post_updated action
+            Plugin::doAction('post_updated', $id, $updateData, $post);
+            
+            // Fire post type specific action
+            Plugin::doAction('post_updated_' . $post['post_type'], $id, $updateData, $post);
+            
+            // Fire status change action if status changed
+            $newStatus = $updateData['status'] ?? $oldStatus;
+            if ($oldStatus !== $newStatus) {
+                Plugin::doAction('post_status_changed', $id, $newStatus, $oldStatus, $post);
+                Plugin::doAction('post_status_' . $newStatus, $id, $oldStatus, $post);
+            }
+        }
 
         return $result;
     }
@@ -399,6 +440,14 @@ class Post
      */
     public static function delete(int $id, bool $permanent = false): bool
     {
+        $post = self::find($id);
+        if (!$post) {
+            return false;
+        }
+        
+        // Fire pre_delete action (can be used to prevent deletion)
+        Plugin::doAction('pre_delete_post', $id, $post, $permanent);
+        
         if ($permanent) {
             // Delete taxonomy terms
             if (class_exists('Taxonomy')) {
@@ -412,17 +461,26 @@ class Post
             Database::delete(Database::table('postmeta'), 'post_id = ?', [$id]);
             // Delete revisions
             self::deleteRevisions($id);
-            return Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
+            
+            $result = Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
+            
+            if ($result) {
+                Plugin::doAction('post_deleted', $id, $post);
+                Plugin::doAction('post_deleted_' . $post['post_type'], $id, $post);
+            }
+            
+            return $result;
         }
 
         // Soft delete: set status to trash and record trashed_at timestamp
         $table = Database::table('posts');
+        $result = false;
         
         // Check if trashed_at column exists (for backward compatibility)
         try {
             $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'trashed_at'");
             if (!empty($columns)) {
-                return Database::execute(
+                $result = Database::execute(
                     "UPDATE {$table} SET status = ?, trashed_at = NOW(), updated_at = NOW() WHERE id = ?",
                     [self::STATUS_TRASH, $id]
                 ) > 0;
@@ -431,8 +489,16 @@ class Post
             // Fall through to simple update
         }
         
-        // Fallback for databases without trashed_at column
-        return self::update($id, ['status' => self::STATUS_TRASH]);
+        if (!$result) {
+            // Fallback for databases without trashed_at column
+            $result = self::update($id, ['status' => self::STATUS_TRASH]);
+        }
+        
+        if ($result) {
+            Plugin::doAction('post_trashed', $id, $post);
+        }
+        
+        return $result;
     }
 
     /**
@@ -440,13 +506,19 @@ class Post
      */
     public static function restore(int $id): bool
     {
+        $post = self::find($id);
+        if (!$post) {
+            return false;
+        }
+        
         $table = Database::table('posts');
+        $result = false;
         
         // Check if trashed_at column exists (for backward compatibility)
         try {
             $columns = Database::query("SHOW COLUMNS FROM {$table} LIKE 'trashed_at'");
             if (!empty($columns)) {
-                return Database::execute(
+                $result = Database::execute(
                     "UPDATE {$table} SET status = ?, trashed_at = NULL, updated_at = NOW() WHERE id = ?",
                     [self::STATUS_DRAFT, $id]
                 ) > 0;
@@ -455,8 +527,16 @@ class Post
             // Fall through to simple update
         }
         
-        // Fallback for databases without trashed_at column
-        return self::update($id, ['status' => self::STATUS_DRAFT]);
+        if (!$result) {
+            // Fallback for databases without trashed_at column
+            $result = self::update($id, ['status' => self::STATUS_DRAFT]);
+        }
+        
+        if ($result) {
+            Plugin::doAction('post_restored', $id, $post);
+        }
+        
+        return $result;
     }
 
     /**
@@ -780,6 +860,9 @@ class Post
      */
     public static function setMeta(int $postId, string $key, $value): void
     {
+        // Allow filtering of meta value before save
+        $value = Plugin::applyFilters('pre_update_post_meta', $value, $postId, $key);
+        
         if (is_array($value) || is_object($value)) {
             $value = json_encode($value);
         }
@@ -799,6 +882,9 @@ class Post
                 'meta_value' => $value,
             ]);
         }
+        
+        // Fire action after meta updated
+        Plugin::doAction('post_meta_updated', $postId, $key, $value);
     }
 
     /**
@@ -806,7 +892,15 @@ class Post
      */
     public static function deleteMeta(int $postId, string $key): bool
     {
-        return Database::delete(Database::table('postmeta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
+        Plugin::doAction('pre_delete_post_meta', $postId, $key);
+        
+        $result = Database::delete(Database::table('postmeta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
+        
+        if ($result) {
+            Plugin::doAction('post_meta_deleted', $postId, $key);
+        }
+        
+        return $result;
     }
 
     /**
@@ -856,9 +950,13 @@ class Post
     public static function permalink(array $post): string
     {
         if ($post['post_type'] === 'page') {
-            return SITE_URL . '/' . $post['slug'];
+            $url = SITE_URL . '/' . $post['slug'];
+        } else {
+            $url = SITE_URL . '/' . $post['post_type'] . '/' . $post['slug'];
         }
-        return SITE_URL . '/' . $post['post_type'] . '/' . $post['slug'];
+        
+        // Allow filtering of permalink
+        return Plugin::applyFilters('the_permalink', $url, $post);
     }
 
     // =====================================================

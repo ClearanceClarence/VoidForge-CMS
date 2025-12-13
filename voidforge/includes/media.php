@@ -48,12 +48,17 @@ class Media
             self::$thumbnailSizes = self::loadThumbnailSizes();
         }
         
+        $sizes = self::$thumbnailSizes;
+        
+        // Allow filtering of thumbnail sizes
+        $sizes = Plugin::applyFilters('thumbnail_sizes', $sizes);
+        
         if ($includeDisabled) {
-            return self::$thumbnailSizes;
+            return $sizes;
         }
         
         // Filter to only enabled sizes
-        return array_filter(self::$thumbnailSizes, function($size) {
+        return array_filter($sizes, function($size) {
             return !isset($size[3]) || $size[3] === true;
         });
     }
@@ -285,18 +290,35 @@ class Media
     public static function upload(array $file, ?int $userId = null, int $folderId = 0): array
     {
         $errors = [];
+        
+        // Allow filtering of upload data before processing
+        $uploadData = Plugin::applyFilters('pre_upload_media', [
+            'file' => $file,
+            'user_id' => $userId,
+            'folder_id' => $folderId,
+        ]);
+        $file = $uploadData['file'];
+        $userId = $uploadData['user_id'];
+        $folderId = $uploadData['folder_id'];
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $errors[] = self::getUploadError($file['error']);
             return ['success' => false, 'error' => implode(', ', $errors)];
         }
+        
+        // Allow filtering max file size
+        $maxSize = Plugin::applyFilters('upload_max_size', self::MAX_FILE_SIZE);
 
-        if ($file['size'] > self::MAX_FILE_SIZE) {
-            return ['success' => false, 'error' => 'File size exceeds maximum limit of ' . formatFileSize(self::MAX_FILE_SIZE)];
+        if ($file['size'] > $maxSize) {
+            return ['success' => false, 'error' => 'File size exceeds maximum limit of ' . formatFileSize($maxSize)];
         }
 
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!isset(self::ALLOWED_TYPES[$extension])) {
+        
+        // Allow filtering allowed types
+        $allowedTypes = Plugin::applyFilters('upload_allowed_types', self::ALLOWED_TYPES);
+        
+        if (!isset($allowedTypes[$extension])) {
             return ['success' => false, 'error' => 'File type not allowed: ' . $extension];
         }
 
@@ -352,6 +374,9 @@ class Media
         if ($media && self::isImage($media) && $extension !== 'svg') {
             self::generateThumbnails($media);
         }
+        
+        // Fire media uploaded action
+        Plugin::doAction('media_uploaded', $id, $media);
 
         return [
             'success' => true,
@@ -365,6 +390,12 @@ class Media
      */
     public static function update(int $id, array $data): array
     {
+        $media = self::get($id);
+        if (!$media) {
+            return ['success' => false, 'error' => 'Media not found'];
+        }
+        
+        $oldFolderId = $media['folder_id'] ?? null;
         $updateData = [];
 
         if (isset($data['alt_text'])) {
@@ -382,6 +413,13 @@ class Media
         }
 
         Database::update(Database::table('media'), $updateData, 'id = ?', [$id]);
+        
+        // Fire folder changed action if folder changed
+        $newFolderId = $updateData['folder_id'] ?? $oldFolderId;
+        if (isset($updateData['folder_id']) && $oldFolderId !== $newFolderId) {
+            Plugin::doAction('media_folder_changed', $id, $newFolderId, $oldFolderId, $media);
+        }
+        
         return ['success' => true];
     }
 
@@ -394,6 +432,9 @@ class Media
         if (!$media) {
             return ['success' => false, 'error' => 'Media not found'];
         }
+        
+        // Fire pre-delete action
+        Plugin::doAction('pre_delete_media', $id, $media);
 
         // Delete thumbnails first
         self::deleteThumbnails($media);
@@ -411,6 +452,10 @@ class Media
         );
 
         Database::delete(Database::table('media'), 'id = ?', [$id]);
+        
+        // Fire deleted action
+        Plugin::doAction('media_deleted', $id, $media);
+        
         return ['success' => true];
     }
 

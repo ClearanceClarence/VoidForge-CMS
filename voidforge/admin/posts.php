@@ -1,6 +1,7 @@
 <?php
 /**
  * Posts Listing (Posts, Pages, Custom Post Types)
+ * VoidForge CMS v0.1.7 - With Bulk Actions & Quick Edit
  */
 
 define('CMS_ROOT', dirname(__DIR__));
@@ -56,6 +57,9 @@ $currentPage = max(1, (int)($_GET['paged'] ?? 1));
 $status = $_GET['status'] ?? null;
 $search = $_GET['s'] ?? null;
 
+// Get taxonomies for this post type
+$postTaxonomies = Taxonomy::getForPostType($postType);
+
 // Count totals
 $totalAll = Post::count(['post_type' => $postType]);
 $totalPublished = Post::count(['post_type' => $postType, 'status' => 'published']);
@@ -89,12 +93,13 @@ $posts = Post::query($queryArgs);
 $total = Post::count($queryArgs);
 $pagination = paginate($total, $perPage, $currentPage);
 
-// Handle actions
+// Handle single post actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     $action = $_POST['action'] ?? '';
     $postId = (int)($_POST['post_id'] ?? 0);
 
-    if ($postId && $action) {
+    // Single post actions
+    if ($postId && $action && $action !== 'bulk') {
         switch ($action) {
             case 'trash':
                 Post::delete($postId);
@@ -121,16 +126,434 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
         redirect(currentUrl());
     }
     
-    // Handle empty trash action (no post_id required)
+    // Empty trash action
     if (($action ?? '') === 'empty_trash') {
         $deleted = Post::emptyTrash($postType);
         setFlash('success', $deleted . ' item(s) permanently deleted from trash.');
         redirect(ADMIN_URL . '/posts.php?type=' . $postType);
     }
+    
+    // Bulk actions
+    if ($action === 'bulk') {
+        $bulkAction = $_POST['bulk_action'] ?? '';
+        $postIds = $_POST['post_ids'] ?? [];
+        
+        if (!empty($postIds) && !empty($bulkAction)) {
+            $postIds = array_map('intval', $postIds);
+            $count = 0;
+            
+            switch ($bulkAction) {
+                case 'trash':
+                    foreach ($postIds as $pid) {
+                        if (Post::delete($pid)) $count++;
+                    }
+                    setFlash('success', $count . ' item(s) moved to trash.');
+                    break;
+                    
+                case 'restore':
+                    foreach ($postIds as $pid) {
+                        if (Post::restore($pid)) $count++;
+                    }
+                    setFlash('success', $count . ' item(s) restored.');
+                    break;
+                    
+                case 'delete':
+                    foreach ($postIds as $pid) {
+                        if (Post::delete($pid, true)) $count++;
+                    }
+                    setFlash('success', $count . ' item(s) permanently deleted.');
+                    break;
+                    
+                case 'publish':
+                    foreach ($postIds as $pid) {
+                        if (Post::update($pid, ['status' => 'published'])) $count++;
+                    }
+                    setFlash('success', $count . ' item(s) published.');
+                    break;
+                    
+                case 'draft':
+                    foreach ($postIds as $pid) {
+                        if (Post::update($pid, ['status' => 'draft'])) $count++;
+                    }
+                    setFlash('success', $count . ' item(s) set to draft.');
+                    break;
+                    
+                default:
+                    // Check for taxonomy assignment (format: add_tax_{taxonomy} or remove_tax_{taxonomy})
+                    if (preg_match('/^(add|remove)_tax_(.+)$/', $bulkAction, $m)) {
+                        $taxAction = $m[1];
+                        $taxSlug = $m[2];
+                        $termIds = $_POST['bulk_term_ids'] ?? [];
+                        
+                        if (!empty($termIds)) {
+                            $termIds = array_map('intval', $termIds);
+                            foreach ($postIds as $pid) {
+                                if ($taxAction === 'add') {
+                                    Taxonomy::addPostTerms($pid, $termIds);
+                                } else {
+                                    Taxonomy::removePostTerms($pid, $termIds);
+                                }
+                                $count++;
+                            }
+                            // Update counts
+                            Taxonomy::updateTermCounts($taxSlug);
+                            setFlash('success', 'Taxonomy updated for ' . $count . ' item(s).');
+                        }
+                    }
+            }
+        }
+        redirect(currentUrl());
+    }
+}
+
+// Handle Quick Edit AJAX
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quick_edit']) && verifyCsrf()) {
+    header('Content-Type: application/json');
+    
+    $postId = (int)($_POST['post_id'] ?? 0);
+    $post = Post::find($postId);
+    
+    if (!$post) {
+        echo json_encode(['success' => false, 'error' => 'Post not found']);
+        exit;
+    }
+    
+    $updateData = [];
+    
+    if (isset($_POST['title'])) {
+        $updateData['title'] = trim($_POST['title']);
+    }
+    if (isset($_POST['slug'])) {
+        $updateData['slug'] = trim($_POST['slug']);
+    }
+    if (isset($_POST['status']) && in_array($_POST['status'], ['draft', 'published', 'scheduled'])) {
+        $updateData['status'] = $_POST['status'];
+    }
+    if (isset($_POST['date']) && !empty($_POST['date'])) {
+        // Update created_at date
+        $table = Database::table('posts');
+        Database::execute("UPDATE {$table} SET created_at = ? WHERE id = ?", [$_POST['date'], $postId]);
+    }
+    
+    // Handle taxonomies
+    if (!empty($postTaxonomies)) {
+        foreach ($postTaxonomies as $taxSlug => $taxConfig) {
+            $fieldName = 'tax_' . $taxSlug;
+            if (isset($_POST[$fieldName])) {
+                $termIds = array_map('intval', $_POST[$fieldName]);
+                Taxonomy::setPostTerms($postId, $taxSlug, $termIds);
+            } else {
+                // Clear all terms for this taxonomy
+                Taxonomy::setPostTerms($postId, $taxSlug, []);
+            }
+        }
+    }
+    
+    if (!empty($updateData)) {
+        Post::update($postId, $updateData);
+    }
+    
+    // Return updated post data
+    $updatedPost = Post::find($postId);
+    echo json_encode([
+        'success' => true,
+        'post' => [
+            'id' => $updatedPost['id'],
+            'title' => $updatedPost['title'],
+            'slug' => $updatedPost['slug'],
+            'status' => $updatedPost['status'],
+            'status_label' => Post::STATUS_LABELS[$updatedPost['status']] ?? $updatedPost['status'],
+            'date' => formatDate($updatedPost['created_at']),
+        ]
+    ]);
+    exit;
+}
+
+// Get Quick Edit data via AJAX
+if (isset($_GET['get_quick_edit']) && isset($_GET['id'])) {
+    header('Content-Type: application/json');
+    
+    $postId = (int)$_GET['id'];
+    $post = Post::find($postId);
+    
+    if (!$post) {
+        echo json_encode(['success' => false, 'error' => 'Post not found']);
+        exit;
+    }
+    
+    // Get taxonomy terms
+    $terms = [];
+    foreach ($postTaxonomies as $taxSlug => $taxConfig) {
+        $terms[$taxSlug] = Taxonomy::getPostTermIds($postId, $taxSlug);
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'post' => [
+            'id' => $post['id'],
+            'title' => $post['title'],
+            'slug' => $post['slug'],
+            'status' => $post['status'],
+            'date' => substr($post['created_at'], 0, 16), // Format for datetime-local input
+        ],
+        'terms' => $terms,
+    ]);
+    exit;
 }
 
 include ADMIN_PATH . '/includes/header.php';
 ?>
+
+<style>
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+.bulk-actions-bar.visible {
+    display: flex;
+    flex-wrap: wrap;
+}
+.bulk-actions-bar .selected-count {
+    font-weight: 600;
+    color: var(--forge-primary);
+    min-width: 100px;
+}
+.bulk-actions-bar select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-color);
+    font-size: 0.875rem;
+    min-width: 180px;
+}
+.bulk-actions-bar .term-select {
+    display: none;
+    max-width: 200px;
+}
+.bulk-actions-bar .term-select.visible {
+    display: block;
+}
+
+/* Checkbox column */
+.col-checkbox {
+    width: 40px !important;
+    text-align: center;
+}
+.col-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--forge-primary);
+}
+
+/* Quick Edit Row */
+.quick-edit-row {
+    display: none;
+}
+.quick-edit-row.visible {
+    display: table-row;
+}
+.quick-edit-row td {
+    padding: 0 !important;
+    background: var(--bg-card-header) !important;
+}
+.quick-edit-container {
+    padding: 1.25rem;
+    border-top: 2px solid var(--forge-primary);
+    border-bottom: 2px solid var(--forge-primary);
+    position: relative;
+}
+.quick-edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.quick-edit-header h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--forge-primary);
+}
+.quick-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.quick-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+.quick-edit-field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.quick-edit-field input,
+.quick-edit-field select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+.quick-edit-field input:focus,
+.quick-edit-field select:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+.quick-edit-taxonomies {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+.quick-edit-taxonomies h5 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem 0;
+}
+.quick-edit-tax-group {
+    margin-bottom: 1rem;
+}
+.quick-edit-tax-group > label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+.quick-edit-terms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+.quick-edit-terms label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-page);
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.quick-edit-terms label:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+.quick-edit-terms input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--forge-primary);
+}
+.quick-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+.quick-edit-actions .btn {
+    min-width: 100px;
+}
+
+/* Row actions update */
+.table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+.btn-quick-edit {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #fff !important;
+    border: none !important;
+}
+.btn-quick-edit:hover {
+    filter: brightness(1.1);
+}
+
+/* Loading state */
+.quick-edit-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+.quick-edit-container.loading::after {
+    content: 'Saving...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--forge-primary);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    z-index: 10;
+}
+
+/* Resizable columns */
+#postsTable {
+    table-layout: fixed;
+    width: 100%;
+}
+#postsTable th {
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#postsTable td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#postsTable th .resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    background: transparent;
+}
+#postsTable th .resize-handle:hover {
+    background: var(--forge-primary);
+}
+
+/* Selected row highlight */
+tr.selected {
+    background: rgba(139, 92, 246, 0.05) !important;
+}
+</style>
 
 <div class="action-bar">
     <div class="action-bar-left">
@@ -262,12 +685,17 @@ include ADMIN_PATH . '/includes/header.php';
             'comments' => 'Comments',
         ];
         
-        // Get taxonomies and custom fields for labels
-        $postTaxonomies = Taxonomy::getForPostType($postType);
+        // Get custom fields
         $customFields = get_post_type_fields($postType);
         $customFieldsByKey = [];
         foreach ($customFields as $cf) {
             $customFieldsByKey[$cf['key']] = $cf;
+        }
+        
+        // Get all taxonomy terms for bulk actions and quick edit
+        $allTaxTerms = [];
+        foreach ($postTaxonomies as $taxSlug => $taxConfig) {
+            $allTaxTerms[$taxSlug] = Taxonomy::getTerms($taxSlug);
         }
         
         /**
@@ -382,7 +810,10 @@ include ADMIN_PATH . '/includes/header.php';
                     return number_format($count);
                     
                 case 'comments':
-                    // Comments not implemented yet
+                    $commentCount = (int) ($post['comment_count'] ?? 0);
+                    if ($commentCount > 0) {
+                        return '<a href="' . ADMIN_URL . '/comments.php?post_id=' . $post['id'] . '" style="color: var(--forge-primary); text-decoration: none; font-weight: 500;">' . number_format($commentCount) . '</a>';
+                    }
                     return '<span style="color: var(--text-muted);">0</span>';
                     
                 default:
@@ -391,123 +822,221 @@ include ADMIN_PATH . '/includes/header.php';
         }
         ?>
         
-        <style>
-        /* Resizable columns */
-        #postsTable {
-            table-layout: fixed;
-            width: 100%;
-        }
-        #postsTable th {
-            position: relative;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        #postsTable td {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        #postsTable th .resize-handle {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 8px;
-            cursor: col-resize;
-            background: transparent;
-        }
-        #postsTable th .resize-handle:hover {
-            background: var(--forge-primary);
-        }
-        </style>
-        
-        <div class="table-wrapper">
-            <table class="table" id="postsTable">
-                <colgroup id="tableColgroup">
-                    <?php foreach ($activeColumns as $colIndex => $col): ?>
-                    <col data-col-key="<?= esc($col['key']) ?>" style="<?= !empty($col['width']) && $col['width'] !== 'auto' ? 'width: ' . esc($col['width']) : '' ?>">
-                    <?php endforeach; ?>
-                    <col style="width: 140px">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <?php foreach ($activeColumns as $colIndex => $col): ?>
-                        <?php
-                        // Use custom label if set, otherwise default
-                        $label = '';
-                        if (!empty($col['label'])) {
-                            $label = $col['label'];
-                        } else {
-                            $label = $columnMeta[$col['key']] ?? '';
-                            if (strpos($col['key'], 'tax_') === 0) {
-                                $taxSlug = substr($col['key'], 4);
-                                $label = $postTaxonomies[$taxSlug]['label'] ?? ucfirst($taxSlug);
-                            } elseif (strpos($col['key'], 'cf_') === 0) {
-                                $fieldKey = substr($col['key'], 3);
-                                $label = $customFieldsByKey[$fieldKey]['label'] ?? ucfirst($fieldKey);
-                            }
-                        }
-                        ?>
-                        <th data-col-index="<?= $colIndex ?>" data-col-key="<?= esc($col['key']) ?>">
-                            <?= esc($label) ?>
-                            <span class="resize-handle"></span>
-                        </th>
+        <!-- Bulk Actions Bar -->
+        <form method="post" id="bulkActionsForm">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="bulk">
+            
+            <div class="bulk-actions-bar" id="bulkActionsBar">
+                <span class="selected-count"><span id="selectedCount">0</span> selected</span>
+                
+                <select name="bulk_action" id="bulkActionSelect">
+                    <option value="">— Select Action —</option>
+                    <?php if ($status === 'trash'): ?>
+                        <option value="restore">Restore</option>
+                        <option value="delete">Delete Permanently</option>
+                    <?php else: ?>
+                        <option value="publish">Publish</option>
+                        <option value="draft">Set to Draft</option>
+                        <option value="trash">Move to Trash</option>
+                        <?php foreach ($postTaxonomies as $taxSlug => $taxConfig): ?>
+                            <option value="add_tax_<?= esc($taxSlug) ?>">Add <?= esc($taxConfig['singular']) ?></option>
+                            <option value="remove_tax_<?= esc($taxSlug) ?>">Remove <?= esc($taxConfig['singular']) ?></option>
                         <?php endforeach; ?>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($posts as $post): ?>
+                    <?php endif; ?>
+                </select>
+                
+                <!-- Term selectors for taxonomy actions -->
+                <?php foreach ($postTaxonomies as $taxSlug => $taxConfig): ?>
+                    <select name="bulk_term_ids[]" class="term-select" data-taxonomy="<?= esc($taxSlug) ?>" multiple>
+                        <?php foreach ($allTaxTerms[$taxSlug] as $term): ?>
+                            <option value="<?= $term['id'] ?>"><?= esc($term['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endforeach; ?>
+                
+                <button type="submit" class="btn btn-primary btn-sm" id="applyBulkAction">
+                    Apply
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()">
+                    Deselect All
+                </button>
+            </div>
+        
+            <div class="table-wrapper">
+                <table class="table" id="postsTable">
+                    <colgroup id="tableColgroup">
+                        <col style="width: 40px">
+                        <?php foreach ($activeColumns as $colIndex => $col): ?>
+                        <col data-col-key="<?= esc($col['key']) ?>" style="<?= !empty($col['width']) && $col['width'] !== 'auto' ? 'width: ' . esc($col['width']) : '' ?>">
+                        <?php endforeach; ?>
+                        <col style="width: 180px">
+                    </colgroup>
+                    <thead>
                         <tr>
-                            <?php foreach ($activeColumns as $col): ?>
-                            <td><?= renderColumnValue($post, $col['key'], $status, $postTaxonomies, $customFieldsByKey) ?></td>
+                            <th class="col-checkbox">
+                                <input type="checkbox" id="selectAll" title="Select all">
+                            </th>
+                            <?php foreach ($activeColumns as $colIndex => $col): ?>
+                            <?php
+                            // Use custom label if set, otherwise default
+                            $label = '';
+                            if (!empty($col['label'])) {
+                                $label = $col['label'];
+                            } else {
+                                $label = $columnMeta[$col['key']] ?? '';
+                                if (strpos($col['key'], 'tax_') === 0) {
+                                    $taxSlug = substr($col['key'], 4);
+                                    $label = $postTaxonomies[$taxSlug]['label'] ?? ucfirst($taxSlug);
+                                } elseif (strpos($col['key'], 'cf_') === 0) {
+                                    $fieldKey = substr($col['key'], 3);
+                                    $label = $customFieldsByKey[$fieldKey]['label'] ?? ucfirst($fieldKey);
+                                }
+                            }
+                            ?>
+                            <th data-col-index="<?= $colIndex ?>" data-col-key="<?= esc($col['key']) ?>">
+                                <?= esc($label) ?>
+                                <span class="resize-handle"></span>
+                            </th>
                             <?php endforeach; ?>
-                            <td>
-                                <div class="table-actions">
-                                    <?php if ($status === 'trash'): ?>
-                                        <form method="post" style="display: inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="action" value="restore">
-                                            <button type="submit" class="btn btn-secondary btn-sm">Restore</button>
-                                        </form>
-                                        <form method="post" style="display: inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="action" value="delete">
-                                            <button type="submit" class="btn btn-danger btn-sm" data-confirm="Permanently delete this item?">Delete</button>
-                                        </form>
-                                    <?php else: ?>
-                                        <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $post['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
-                                        <?php if ($post['status'] === 'published'): ?>
-                                            <a href="<?= Post::permalink($post) ?>" target="_blank" class="btn btn-secondary btn-sm">View</a>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($posts as $post): ?>
+                            <tr data-post-id="<?= $post['id'] ?>">
+                                <td class="col-checkbox">
+                                    <input type="checkbox" name="post_ids[]" value="<?= $post['id'] ?>" class="post-checkbox">
+                                </td>
+                                <?php foreach ($activeColumns as $col): ?>
+                                <td data-col="<?= esc($col['key']) ?>"><?= renderColumnValue($post, $col['key'], $status, $postTaxonomies, $customFieldsByKey) ?></td>
+                                <?php endforeach; ?>
+                                <td>
+                                    <div class="table-actions">
+                                        <?php if ($status === 'trash'): ?>
+                                            <form method="post" style="display: inline;">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                <input type="hidden" name="action" value="restore">
+                                                <button type="submit" class="btn btn-secondary btn-sm">Restore</button>
+                                            </form>
+                                            <form method="post" style="display: inline;">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                <input type="hidden" name="action" value="delete">
+                                                <button type="submit" class="btn btn-danger btn-sm" data-confirm="Permanently delete this item?">Delete</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $post['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
+                                            <button type="button" class="btn btn-sm btn-quick-edit" onclick="openQuickEdit(<?= $post['id'] ?>)">Quick Edit</button>
+                                            <?php if ($post['status'] === 'published'): ?>
+                                                <a href="<?= Post::permalink($post) ?>" target="_blank" class="btn btn-secondary btn-sm">View</a>
+                                            <?php endif; ?>
+                                            <form method="post" style="display: inline;">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                <input type="hidden" name="action" value="duplicate">
+                                                <button type="submit" class="btn btn-secondary btn-sm" title="Duplicate">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                            <form method="post" style="display: inline;">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                <input type="hidden" name="action" value="trash">
+                                                <button type="submit" class="btn btn-secondary btn-sm" data-confirm="Move this item to trash?">Trash</button>
+                                            </form>
                                         <?php endif; ?>
-                                        <form method="post" style="display: inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="action" value="duplicate">
-                                            <button type="submit" class="btn btn-secondary btn-sm" title="Duplicate">
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Quick Edit Row (hidden by default) -->
+                            <tr class="quick-edit-row" id="quickEditRow_<?= $post['id'] ?>">
+                                <td colspan="<?= count($activeColumns) + 2 ?>">
+                                    <div class="quick-edit-container" id="quickEditContainer_<?= $post['id'] ?>">
+                                        <div class="quick-edit-header">
+                                            <h4>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem; vertical-align: -2px;">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                </svg>
+                                                Quick Edit
+                                            </h4>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="closeQuickEdit(<?= $post['id'] ?>)">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
                                             </button>
-                                        </form>
-                                        <form method="post" style="display: inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="action" value="trash">
-                                            <button type="submit" class="btn btn-secondary btn-sm" data-confirm="Move this item to trash?">Trash</button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                                        </div>
+                                        
+                                        <div class="quick-edit-grid">
+                                            <div class="quick-edit-field">
+                                                <label for="qe_title_<?= $post['id'] ?>">Title</label>
+                                                <input type="text" id="qe_title_<?= $post['id'] ?>" name="title" value="">
+                                            </div>
+                                            <div class="quick-edit-field">
+                                                <label for="qe_slug_<?= $post['id'] ?>">Slug</label>
+                                                <input type="text" id="qe_slug_<?= $post['id'] ?>" name="slug" value="">
+                                            </div>
+                                            <div class="quick-edit-field">
+                                                <label for="qe_status_<?= $post['id'] ?>">Status</label>
+                                                <select id="qe_status_<?= $post['id'] ?>" name="status">
+                                                    <option value="draft">Draft</option>
+                                                    <option value="published">Published</option>
+                                                    <option value="scheduled">Scheduled</option>
+                                                </select>
+                                            </div>
+                                            <div class="quick-edit-field">
+                                                <label for="qe_date_<?= $post['id'] ?>">Date</label>
+                                                <input type="datetime-local" id="qe_date_<?= $post['id'] ?>" name="date" value="">
+                                            </div>
+                                        </div>
+                                        
+                                        <?php if (!empty($postTaxonomies)): ?>
+                                        <div class="quick-edit-taxonomies">
+                                            <h5>Taxonomies</h5>
+                                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                                <?php foreach ($postTaxonomies as $taxSlug => $taxConfig): ?>
+                                                <div class="quick-edit-tax-group">
+                                                    <label><?= esc($taxConfig['label']) ?></label>
+                                                    <div class="quick-edit-terms" id="qe_terms_<?= esc($taxSlug) ?>_<?= $post['id'] ?>">
+                                                        <?php foreach ($allTaxTerms[$taxSlug] as $term): ?>
+                                                        <label>
+                                                            <input type="checkbox" name="tax_<?= esc($taxSlug) ?>[]" value="<?= $term['id'] ?>">
+                                                            <?= esc($term['name']) ?>
+                                                        </label>
+                                                        <?php endforeach; ?>
+                                                        <?php if (empty($allTaxTerms[$taxSlug])): ?>
+                                                        <span style="color: var(--text-muted); font-size: 0.8125rem;">No terms yet</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="quick-edit-actions">
+                                            <button type="button" class="btn btn-secondary" onclick="closeQuickEdit(<?= $post['id'] ?>)">Cancel</button>
+                                            <button type="button" class="btn btn-primary" onclick="saveQuickEdit(<?= $post['id'] ?>)">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                                Update
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </form>
 
         <?php if ($pagination['total_pages'] > 1): ?>
             <div class="pagination">
@@ -533,6 +1062,9 @@ include ADMIN_PATH . '/includes/header.php';
 
 <script>
 (function() {
+    // =========================================================================
+    // Column Resize (existing functionality)
+    // =========================================================================
     var table = document.getElementById('postsTable');
     var colgroup = document.getElementById('tableColgroup');
     if (!table || !colgroup) return;
@@ -550,7 +1082,6 @@ include ADMIN_PATH . '/includes/header.php';
         if (key && saved[key]) {
             col.style.width = saved[key];
         } else if (!col.style.width) {
-            // Set a default width based on rendered size
             col.style.width = (headers[i] ? headers[i].offsetWidth : 150) + 'px';
         }
     });
@@ -589,7 +1120,270 @@ include ADMIN_PATH . '/includes/header.php';
         currentCol = null;
         currentKey = null;
     });
+    
+    // =========================================================================
+    // Bulk Actions
+    // =========================================================================
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = document.querySelectorAll('.post-checkbox');
+    var bulkBar = document.getElementById('bulkActionsBar');
+    var selectedCount = document.getElementById('selectedCount');
+    var bulkActionSelect = document.getElementById('bulkActionSelect');
+    var termSelects = document.querySelectorAll('.term-select');
+    
+    function updateBulkBar() {
+        var checked = document.querySelectorAll('.post-checkbox:checked');
+        var count = checked.length;
+        selectedCount.textContent = count;
+        
+        if (count > 0) {
+            bulkBar.classList.add('visible');
+        } else {
+            bulkBar.classList.remove('visible');
+        }
+        
+        // Update select all state
+        selectAll.checked = count === checkboxes.length && count > 0;
+        selectAll.indeterminate = count > 0 && count < checkboxes.length;
+        
+        // Highlight selected rows
+        document.querySelectorAll('tr[data-post-id]').forEach(function(row) {
+            var cb = row.querySelector('.post-checkbox');
+            if (cb && cb.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+        });
+    }
+    
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(function(cb) {
+            cb.checked = selectAll.checked;
+        });
+        updateBulkBar();
+    });
+    
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', updateBulkBar);
+    });
+    
+    // Show/hide term selectors based on bulk action
+    bulkActionSelect.addEventListener('change', function() {
+        var val = this.value;
+        termSelects.forEach(function(sel) {
+            sel.classList.remove('visible');
+        });
+        
+        var match = val.match(/^(add|remove)_tax_(.+)$/);
+        if (match) {
+            var taxSlug = match[2];
+            var termSel = document.querySelector('.term-select[data-taxonomy="' + taxSlug + '"]');
+            if (termSel) {
+                termSel.classList.add('visible');
+            }
+        }
+    });
+    
+    // Deselect all helper
+    window.deselectAll = function() {
+        checkboxes.forEach(function(cb) {
+            cb.checked = false;
+        });
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        updateBulkBar();
+    };
+    
+    // Validate bulk action before submit
+    document.getElementById('bulkActionsForm').addEventListener('submit', function(e) {
+        var action = bulkActionSelect.value;
+        var checked = document.querySelectorAll('.post-checkbox:checked');
+        
+        if (!action) {
+            e.preventDefault();
+            alert('Please select an action.');
+            return;
+        }
+        
+        if (checked.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one item.');
+            return;
+        }
+        
+        // Confirm destructive actions
+        if (action === 'trash' || action === 'delete') {
+            var msg = action === 'delete' 
+                ? 'Permanently delete ' + checked.length + ' item(s)? This cannot be undone.'
+                : 'Move ' + checked.length + ' item(s) to trash?';
+            if (!confirm(msg)) {
+                e.preventDefault();
+            }
+        }
+    });
 })();
+
+// =========================================================================
+// Quick Edit
+// =========================================================================
+var currentQuickEditId = null;
+var csrfToken = '<?= csrfToken() ?>';
+
+function openQuickEdit(postId) {
+    // Close any open quick edit first
+    if (currentQuickEditId && currentQuickEditId !== postId) {
+        closeQuickEdit(currentQuickEditId);
+    }
+    
+    var row = document.getElementById('quickEditRow_' + postId);
+    var container = document.getElementById('quickEditContainer_' + postId);
+    
+    if (!row || !container) return;
+    
+    // Show loading state
+    row.classList.add('visible');
+    container.classList.add('loading');
+    currentQuickEditId = postId;
+    
+    // Fetch current post data
+    fetch('?type=<?= esc($postType) ?>&get_quick_edit=1&id=' + postId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            container.classList.remove('loading');
+            
+            if (!data.success) {
+                alert(data.error || 'Failed to load post data');
+                closeQuickEdit(postId);
+                return;
+            }
+            
+            // Populate fields
+            document.getElementById('qe_title_' + postId).value = data.post.title || '';
+            document.getElementById('qe_slug_' + postId).value = data.post.slug || '';
+            document.getElementById('qe_status_' + postId).value = data.post.status || 'draft';
+            document.getElementById('qe_date_' + postId).value = data.post.date || '';
+            
+            // Populate taxonomy checkboxes
+            if (data.terms) {
+                for (var taxSlug in data.terms) {
+                    var termIds = data.terms[taxSlug];
+                    var termsContainer = document.getElementById('qe_terms_' + taxSlug + '_' + postId);
+                    if (termsContainer) {
+                        var checkboxes = termsContainer.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(function(cb) {
+                            cb.checked = termIds.indexOf(parseInt(cb.value)) !== -1;
+                        });
+                    }
+                }
+            }
+        })
+        .catch(function(err) {
+            container.classList.remove('loading');
+            alert('Error loading post data');
+            closeQuickEdit(postId);
+        });
+}
+
+function closeQuickEdit(postId) {
+    var row = document.getElementById('quickEditRow_' + postId);
+    if (row) {
+        row.classList.remove('visible');
+    }
+    if (currentQuickEditId === postId) {
+        currentQuickEditId = null;
+    }
+}
+
+function saveQuickEdit(postId) {
+    var container = document.getElementById('quickEditContainer_' + postId);
+    if (!container) return;
+    
+    container.classList.add('loading');
+    
+    // Gather form data
+    var formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+    formData.append('quick_edit', '1');
+    formData.append('post_id', postId);
+    formData.append('title', document.getElementById('qe_title_' + postId).value);
+    formData.append('slug', document.getElementById('qe_slug_' + postId).value);
+    formData.append('status', document.getElementById('qe_status_' + postId).value);
+    formData.append('date', document.getElementById('qe_date_' + postId).value);
+    
+    // Gather taxonomy terms
+    var taxonomySlugs = <?= json_encode(array_keys($postTaxonomies)) ?>;
+    taxonomySlugs.forEach(function(taxSlug) {
+        var termsContainer = document.getElementById('qe_terms_' + taxSlug + '_' + postId);
+        if (termsContainer) {
+            var checkboxes = termsContainer.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(function(cb) {
+                formData.append('tax_' + taxSlug + '[]', cb.value);
+            });
+        }
+    });
+    
+    fetch('?type=<?= esc($postType) ?>', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        container.classList.remove('loading');
+        
+        if (!data.success) {
+            alert(data.error || 'Failed to save');
+            return;
+        }
+        
+        // Update the table row with new data
+        var row = document.querySelector('tr[data-post-id="' + postId + '"]');
+        if (row && data.post) {
+            // Update title cell
+            var titleCell = row.querySelector('td[data-col="title"]');
+            if (titleCell) {
+                titleCell.innerHTML = '<a href="<?= ADMIN_URL ?>/post-edit.php?id=' + postId + '"><strong>' + escapeHtml(data.post.title || '(no title)') + '</strong></a>';
+            }
+            
+            // Update slug cell
+            var slugCell = row.querySelector('td[data-col="slug"]');
+            if (slugCell) {
+                slugCell.innerHTML = '<code style="font-size: 0.75rem; background: var(--bg-card-header); padding: 0.125rem 0.375rem; border-radius: 3px;">' + escapeHtml(data.post.slug) + '</code>';
+            }
+            
+            // Update status cell
+            var statusCell = row.querySelector('td[data-col="status"]');
+            if (statusCell) {
+                statusCell.innerHTML = '<span class="status-badge status-' + data.post.status + '">' + escapeHtml(data.post.status_label) + '</span>';
+            }
+            
+            // Update date cell
+            var dateCell = row.querySelector('td[data-col="date"]');
+            if (dateCell) {
+                dateCell.textContent = data.post.date;
+            }
+        }
+        
+        closeQuickEdit(postId);
+    })
+    .catch(function(err) {
+        container.classList.remove('loading');
+        alert('Error saving: ' + err.message);
+    });
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Keyboard shortcut: Escape to close quick edit
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && currentQuickEditId) {
+        closeQuickEdit(currentQuickEditId);
+    }
+});
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

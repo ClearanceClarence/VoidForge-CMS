@@ -702,7 +702,7 @@ class Plugin
     public static function handleAjax(string $action): void
     {
         if (!isset(self::$ajaxHandlers[$action])) {
-            wp_send_json_error(['message' => 'Invalid action'], 400);
+            self::sendJsonError(['message' => 'Invalid action'], 400);
         }
 
         $handler = self::$ajaxHandlers[$action];
@@ -822,6 +822,9 @@ class Plugin
      */
     public static function handleRestRequest(string $path): bool
     {
+        // Fire rest_api_init action for registering routes
+        self::doAction('rest_api_init');
+        
         if (empty(self::$restRoutes)) {
             return false;
         }
@@ -834,6 +837,18 @@ class Plugin
                 if (!in_array($method, (array)$config['methods'])) {
                     self::sendJsonError(['message' => 'Method not allowed'], 405);
                 }
+                
+                // Allow filtering before dispatch (for auth, rate limiting)
+                $error = self::applyFilters('rest_pre_dispatch', null, $path, $config);
+                if ($error) {
+                    self::sendJsonError($error, 403);
+                }
+                
+                // Check authentication errors
+                $authError = self::applyFilters('rest_authentication_errors', null, $path);
+                if ($authError) {
+                    self::sendJsonError(['message' => $authError], 401);
+                }
 
                 // Check permission
                 if ($config['permission_callback'] && !call_user_func($config['permission_callback'])) {
@@ -845,6 +860,10 @@ class Plugin
                 
                 try {
                     $result = call_user_func($config['callback'], $params);
+                    
+                    // Allow filtering of response
+                    $result = self::applyFilters('rest_post_dispatch', $result, $path, $config);
+                    
                     self::sendJsonSuccess($result);
                 } catch (\Throwable $e) {
                     self::sendJsonError(['message' => $e->getMessage()], 500);
@@ -884,12 +903,16 @@ class Plugin
      */
     public static function processCronJobs(): void
     {
+        // Default intervals
         $intervals = [
             'hourly' => 3600,
             'twicedaily' => 43200,
             'daily' => 86400,
             'weekly' => 604800,
         ];
+        
+        // Allow plugins to add custom intervals
+        $intervals = self::applyFilters('cron_schedules', $intervals);
 
         foreach (self::$cronJobs as $hook => $job) {
             $lastRun = (int)getOption('cron_last_run_' . $hook, 0);
@@ -1317,6 +1340,17 @@ function register_ajax_handler(string $action, callable $callback, bool $nopriv 
     Plugin::registerAjax($action, $callback, $nopriv);
 }
 
+function vf_send_json_success(mixed $data = null, int $code = 200): void
+{
+    Plugin::sendJsonSuccess($data, $code);
+}
+
+function vf_send_json_error(mixed $data = null, int $code = 400): void
+{
+    Plugin::sendJsonError($data, $code);
+}
+
+// Legacy aliases for backward compatibility (deprecated)
 function wp_send_json_success(mixed $data = null, int $code = 200): void
 {
     Plugin::sendJsonSuccess($data, $code);
@@ -1360,3 +1394,71 @@ function drop_plugin_table(string $tableName): bool
 {
     return Plugin::dropTable($tableName);
 }
+
+// =========================================================================
+// Additional Theme/Content Helper Functions
+// =========================================================================
+
+/**
+ * Apply body class filter
+ */
+function body_class(array $classes = []): string
+{
+    $classes = Plugin::applyFilters('body_class', $classes);
+    return implode(' ', array_filter($classes));
+}
+
+/**
+ * Get the title with filter applied
+ */
+function the_title(array $post): string
+{
+    $title = $post['title'] ?? '';
+    return Plugin::applyFilters('the_title', $title, $post);
+}
+
+/**
+ * Get the excerpt with filter applied
+ */
+function the_excerpt(array $post, int $length = 55): string
+{
+    $excerpt = $post['excerpt'] ?? '';
+    
+    // Auto-generate from content if empty
+    if (empty($excerpt)) {
+        $content = strip_tags($post['content'] ?? '');
+        $excerpt = wp_trim_words($content, $length);
+    }
+    
+    return Plugin::applyFilters('the_excerpt', $excerpt, $post);
+}
+
+/**
+ * Get the content with filter applied
+ */
+function the_content(array $post): string
+{
+    $content = $post['content'] ?? '';
+    return Plugin::applyFilters('the_content', $content, $post);
+}
+
+/**
+ * Redirect with filter
+ */
+function vf_redirect(string $url, int $status = 302): void
+{
+    $url = Plugin::applyFilters('vf_redirect', $url);
+    header('Location: ' . $url, true, $status);
+    exit;
+}
+
+/**
+ * Fire shutdown action (call at end of request)
+ */
+function vf_shutdown(): void
+{
+    Plugin::doAction('shutdown');
+}
+
+// Register shutdown function
+register_shutdown_function('vf_shutdown');

@@ -29,5 +29,12 @@
             <script src="<?= ADMIN_URL ?>/assets/js/<?= $script ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
+    <?php 
+    // Output enqueued footer scripts
+    echo Plugin::renderScripts(true);
+    
+    // Fire admin_footer action
+    Plugin::doAction('admin_footer'); 
+    ?>
 </body>
 </html>

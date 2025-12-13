@@ -9,6 +9,9 @@ defined('CMS_ROOT') or die('Direct access not allowed');
 // Initialize default menus
 initDefaultAdminMenus();
 
+// Fire admin_menu action for plugins to register menu items
+Plugin::doAction('admin_menu');
+
 // Get post types for content menu
 $postTypes = Post::getTypes();
 ?>
@@ -99,6 +102,24 @@ $postTypes = Post::getTypes();
                         <?php endif; ?>
                     </div>
                 </div>
+                
+                <?php 
+                // Comments with pending count badge
+                $pendingComments = 0;
+                if (class_exists('Comment')) {
+                    $pendingComments = Comment::countPending();
+                }
+                ?>
+                <a href="<?= ADMIN_URL ?>/comments.php" class="nav-item <?= $currentPage === 'comments' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('message-circle') ?>
+                    </div>
+                    <span class="nav-label">Comments</span>
+                    <?php if ($pendingComments > 0): ?>
+                    <span class="nav-badge" style="background: #f59e0b; color: white;"><?= $pendingComments ?></span>
+                    <?php endif; ?>
+                    <?php if ($currentPage === 'comments'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
             </div>
 
             <?php if (User::isAdmin()): ?>

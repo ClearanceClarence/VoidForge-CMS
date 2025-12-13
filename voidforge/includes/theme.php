@@ -15,7 +15,7 @@ class Theme
      */
     public static function init(): void
     {
-        self::$activeTheme = getOption('active_theme', 'default');
+        self::$activeTheme = getOption('active_theme', 'nova');
         self::scanThemes();
     }
     
@@ -154,7 +154,7 @@ class Theme
     public static function getActive(): string
     {
         if (self::$activeTheme === null) {
-            self::$activeTheme = getOption('active_theme', 'default');
+            self::$activeTheme = getOption('active_theme', 'nova');
         }
         return self::$activeTheme;
     }
