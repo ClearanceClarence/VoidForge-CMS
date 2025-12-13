@@ -1157,6 +1157,7 @@
 
         .theme-card.dark .theme-card-preview { background: linear-gradient(135deg, #0f172a, #1e1b4b); }
         .theme-card.light .theme-card-preview { background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
+        .theme-card.nova .theme-card-preview { background: linear-gradient(135deg, #eef2ff, #c7d2fe); }
 
         .theme-card-label {
             padding: 0.875rem;
@@ -1530,7 +1531,7 @@
                     <div class="hero-eyebrow">
                         <span class="hero-eyebrow-dot"></span>
                         <span class="hero-eyebrow-text">Now Available</span>
-                        <span class="hero-eyebrow-badge">v0.1.6.2</span>
+                        <span class="hero-eyebrow-badge">v0.1.8</span>
                     </div>
                     <h1>Build Content<br>from the <span class="gradient-text">Void</span></h1>
                     <p class="hero-description">A modern, lightweight CMS built with pure PHP. No frameworks, no dependencies, no bloat — just powerful features, elegant architecture, and infinite extensibility.</p>
@@ -1543,15 +1544,15 @@
                     </div>
                     <div class="hero-metrics">
                         <div class="hero-metric">
-                            <div class="hero-metric-value">14+</div>
+                            <div class="hero-metric-value">16+</div>
                             <div class="hero-metric-label">Field Types</div>
                         </div>
                         <div class="hero-metric">
-                            <div class="hero-metric-value">80+</div>
-                            <div class="hero-metric-label">Admin Icons</div>
+                            <div class="hero-metric-value">90+</div>
+                            <div class="hero-metric-label">Hooks & Filters</div>
                         </div>
                         <div class="hero-metric">
-                            <div class="hero-metric-value">&lt;1MB</div>
+                            <div class="hero-metric-value">&lt;350KB</div>
                             <div class="hero-metric-label">Core Size</div>
                         </div>
                     </div>
@@ -1577,7 +1578,7 @@
                                     <div class="sidebar-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</div>
                                     <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Posts</div>
                                     <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Media</div>
-                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Users</div>
+                                    <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comments</div>
                                     <div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>Plugins</div>
                                 </div>
                             </div>
@@ -1600,11 +1601,11 @@
                                     </div>
                                     <div class="stat-card">
                                         <div class="stat-card-header">
-                                            <div class="stat-card-icon emerald"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                                            <div class="stat-card-icon emerald"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
                                             <div class="stat-card-badge up">+8%</div>
                                         </div>
                                         <div class="stat-card-value">1,842</div>
-                                        <div class="stat-card-label">Total Users</div>
+                                        <div class="stat-card-label">Comments</div>
                                     </div>
                                     <div class="stat-card">
                                         <div class="stat-card-header">
@@ -1635,8 +1636,8 @@
                     </div>
                     <div class="floating-element floating-element-1">
                         <div class="floating-icon gradient-purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                        <div class="floating-label">This Month</div>
-                        <div class="floating-value">+32.5%</div>
+                        <div class="floating-label">Performance</div>
+                        <div class="floating-value">&lt;50ms</div>
                     </div>
                     <div class="floating-element floating-element-2">
                         <div class="floating-icon gradient-emerald"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -1672,35 +1673,35 @@
                         <div class="feature-icon-glow"></div>
                     </div>
                     <h3 class="feature-title">Media Library</h3>
-                    <p class="feature-description">Grid/list views, full-screen modal editing with keyboard navigation, drag-and-drop uploads, and automatic thumbnail generation.</p>
-                    <div class="feature-tags"><span class="feature-tag">Full-Screen Modal</span><span class="feature-tag">Thumbnails</span></div>
+                    <p class="feature-description">Grid/list views, folder organization, drag-and-drop uploads, keyboard navigation, and automatic thumbnail generation.</p>
+                    <div class="feature-tags"><span class="feature-tag">Folder Support</span><span class="feature-tag">Thumbnails</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
-                        <div class="feature-icon emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/></svg></div>
+                        <div class="feature-icon emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
-                    <h3 class="feature-title">Theme System</h3>
-                    <p class="feature-description">Multiple themes with per-theme settings, live CSS preview, custom landing pages, and instant theme switching without losing configurations.</p>
-                    <div class="feature-tags"><span class="feature-tag">Live Preview</span><span class="feature-tag">Per-Theme Settings</span></div>
+                    <h3 class="feature-title">Comments System</h3>
+                    <p class="feature-description">Threaded comments with nested replies, guest commenting, Gravatar support, moderation tools, and spam protection.</p>
+                    <div class="feature-tags"><span class="feature-tag">Threaded Replies</span><span class="feature-tag">Moderation</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
                         <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
-                    <h3 class="feature-title">14+ Field Types</h3>
-                    <p class="feature-description">Text, WYSIWYG, images, files, colors, dates, selects, checkboxes, radio buttons, repeaters, and more for any content structure.</p>
-                    <div class="feature-tags"><span class="feature-tag">Repeater Fields</span><span class="feature-tag">WYSIWYG</span></div>
+                    <h3 class="feature-title">16+ Field Types</h3>
+                    <p class="feature-description">Text, WYSIWYG, images, galleries, files, colors, dates, selects, checkboxes, radio buttons, repeaters, relationships, and more.</p>
+                    <div class="feature-tags"><span class="feature-tag">Repeater Fields</span><span class="feature-tag">Gallery</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
                         <div class="feature-icon cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
-                    <h3 class="feature-title">Plugin System</h3>
-                    <p class="feature-description">WordPress-style hooks and filters. Create shortcodes, add admin pages, register AJAX handlers, and extend REST API endpoints.</p>
-                    <div class="feature-tags"><span class="feature-tag">Hooks & Filters</span><span class="feature-tag">Shortcodes</span></div>
+                    <h3 class="feature-title">90+ Hooks & Filters</h3>
+                    <p class="feature-description">WordPress-style plugin API with 90+ hooks for content, users, media, menus, taxonomies, REST API, and admin customization.</p>
+                    <div class="feature-tags"><span class="feature-tag">Actions</span><span class="feature-tag">Filters</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
@@ -1713,21 +1714,21 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
-                        <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+                        <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Theme System</h3>
+                    <p class="feature-description">Multiple themes with per-theme settings, live CSS preview, custom landing pages, and instant theme switching.</p>
+                    <div class="feature-tags"><span class="feature-tag">Live Preview</span><span class="feature-tag">Per-Theme Settings</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
                     <h3 class="feature-title">Menu Builder</h3>
                     <p class="feature-description">Visual drag-and-drop menu management with nested items, multiple locations, custom links, and real-time reordering.</p>
                     <div class="feature-tags"><span class="feature-tag">Drag & Drop</span><span class="feature-tag">Nested Menus</span></div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-                        <div class="feature-icon-glow"></div>
-                    </div>
-                    <h3 class="feature-title">Post Revisions</h3>
-                    <p class="feature-description">Automatic revision history with side-by-side comparison and one-click restore. Never lose your content changes.</p>
-                    <div class="feature-tags"><span class="feature-tag">Compare Revisions</span><span class="feature-tag">Restore</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
@@ -1740,12 +1741,12 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
-                        <div class="feature-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><rect x="4" y="8" width="4" height="12" rx="1"/><rect x="10" y="5" width="4" height="15" rx="1"/><rect x="16" y="10" width="4" height="10" rx="1"/></svg></div>
+                        <div class="feature-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
-                    <h3 class="feature-title">Admin Columns</h3>
-                    <p class="feature-description">Fully customizable column management for post listings. Drag-to-resize, custom labels, and per-post-type configurations.</p>
-                    <div class="feature-tags"><span class="feature-tag">Drag to Resize</span><span class="feature-tag">Custom Labels</span></div>
+                    <h3 class="feature-title">Post Revisions</h3>
+                    <p class="feature-description">Automatic revision history with side-by-side comparison and one-click restore. Never lose your content changes.</p>
+                    <div class="feature-tags"><span class="feature-tag">Compare Revisions</span><span class="feature-tag">Restore</span></div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
@@ -1806,9 +1807,9 @@
                     <h3 class="bento-title">Lightweight & Powerful</h3>
                     <p class="bento-description">Enterprise features without the enterprise bloat.</p>
                     <div class="bento-stats">
-                        <div class="bento-stat"><div class="bento-stat-value">14<span>+</span></div><div class="bento-stat-label">Field Types</div></div>
-                        <div class="bento-stat"><div class="bento-stat-value">80<span>+</span></div><div class="bento-stat-label">Icons</div></div>
-                        <div class="bento-stat"><div class="bento-stat-value">&lt;1<span>MB</span></div><div class="bento-stat-label">Core Size</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">16<span>+</span></div><div class="bento-stat-label">Field Types</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">90<span>+</span></div><div class="bento-stat-label">Hooks</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">&lt;350<span>KB</span></div><div class="bento-stat-label">Core Size</div></div>
                         <div class="bento-stat"><div class="bento-stat-value">0</div><div class="bento-stat-label">Dependencies</div></div>
                     </div>
                 </div>
@@ -1819,11 +1820,12 @@
                     <div class="theme-cards">
                         <div class="theme-card dark"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div class="theme-card-label">Default (Dark)</div></div>
                         <div class="theme-card light"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></div><div class="theme-card-label">Flavor (Light)</div></div>
+                        <div class="theme-card nova"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="theme-card-label">Nova (Modern)</div></div>
                     </div>
                 </div>
                 <div class="bento-card bento-card-wide">
                     <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>Custom Fields</span>
-                    <h3 class="bento-title">14+ Field Types for Any Content</h3>
+                    <h3 class="bento-title">16+ Field Types for Any Content</h3>
                     <p class="bento-description">Build any content structure with our comprehensive field library.</p>
                     <div class="field-tags">
                         <span class="field-tag">Text</span>
@@ -1835,11 +1837,13 @@
                         <span class="field-tag">Date</span>
                         <span class="field-tag">Color</span>
                         <span class="field-tag">Image</span>
+                        <span class="field-tag">Gallery</span>
                         <span class="field-tag">File</span>
                         <span class="field-tag">Select</span>
                         <span class="field-tag">Checkbox</span>
                         <span class="field-tag">Radio</span>
                         <span class="field-tag">Repeater</span>
+                        <span class="field-tag">Relationship</span>
                     </div>
                 </div>
             </div>
@@ -1874,21 +1878,21 @@
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
-                    <div class="comparison-cell"><span class="comparison-feature">WordPress-Style Hooks</span></div>
+                    <div class="comparison-cell"><span class="comparison-feature">90+ Hooks & Filters</span></div>
                     <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
-                    <div class="comparison-cell"><span class="comparison-feature">Sub-1MB Core Size</span></div>
+                    <div class="comparison-cell"><span class="comparison-feature">Sub-350KB Core Size</span></div>
                     <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
-                    <div class="comparison-cell"><span class="comparison-feature">Per-Theme Settings</span></div>
+                    <div class="comparison-cell"><span class="comparison-feature">Built-in Comments</span></div>
                     <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
@@ -1959,7 +1963,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">© 2025 VoidForge CMS v0.1.6.2 — MIT License</p>
+                <p class="footer-copyright">© 2025 VoidForge CMS v0.1.8 — MIT License</p>
                 <div class="footer-social">
                     <a href="https://github.com/ClearanceClarence/VoidForge-CMS" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
                 </div>
