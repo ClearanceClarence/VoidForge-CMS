@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 <br>
 
@@ -772,4 +772,3 @@ Built with ❤️ by the VoidForge team
 <br>
 
 </div>
-]]>
