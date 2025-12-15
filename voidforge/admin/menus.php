@@ -997,7 +997,7 @@ include ADMIN_PATH . '/includes/header.php';
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             <h2>No Menu Selected</h2>
             <p>Select an existing menu or create a new one.</p>
-            <button class="btn-create-menu" onclick="openModal('newMenuModal')">
+            <button class="btn-primary-action" onclick="openModal('newMenuModal')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Create New Menu
             </button>
