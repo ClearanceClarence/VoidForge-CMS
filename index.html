@@ -1168,10 +1168,51 @@
             background: var(--gray-50);
         }
 
+        /* Block Grid */
+        .block-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.625rem;
+        }
+
+        .block-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.75rem 0.5rem;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
+
+        .block-item:hover {
+            background: var(--indigo-50);
+            border-color: var(--indigo-200);
+            color: var(--indigo-700);
+            transform: translateY(-2px);
+        }
+
+        .block-item svg {
+            color: var(--gray-500);
+            transition: color 0.2s;
+        }
+
+        .block-item:hover svg {
+            color: var(--indigo-500);
+        }
+
         /* Field Tags */
         .field-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
         .field-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             padding: 0.5rem 1rem;
             background: var(--gray-100);
             border-radius: 100px;
@@ -1181,10 +1222,19 @@
             transition: all 0.2s;
         }
 
+        .field-tag svg {
+            color: var(--gray-400);
+            flex-shrink: 0;
+        }
+
         .field-tag:hover {
             background: var(--indigo-100);
             color: var(--indigo-700);
             transform: translateY(-2px);
+        }
+
+        .field-tag:hover svg {
+            color: var(--indigo-500);
         }
 
         /* ================================================
@@ -1501,7 +1551,11 @@
             <div class="header-inner">
                 <a href="https://github.com/ClearanceClarence/VoidForge-CMS" class="logo">
                     <div class="logo-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg>
+                        <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+                            <path d="M6 6 L18 30 L30 6" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="18" cy="15" r="4" fill="rgba(255,255,255,0.9)"/>
+                            <circle cx="18" cy="15" r="2" fill="rgba(255,255,255,0.5)"/>
+                        </svg>
                     </div>
                     <span class="logo-text">VoidForge</span>
                 </a>
@@ -1531,10 +1585,10 @@
                     <div class="hero-eyebrow">
                         <span class="hero-eyebrow-dot"></span>
                         <span class="hero-eyebrow-text">Now Available</span>
-                        <span class="hero-eyebrow-badge">v0.1.8</span>
+                        <span class="hero-eyebrow-badge">v0.2.0</span>
                     </div>
                     <h1>Build Content<br>from the <span class="gradient-text">Void</span></h1>
-                    <p class="hero-description">A modern, lightweight CMS built with pure PHP. No frameworks, no dependencies, no bloat — just powerful features, elegant architecture, and infinite extensibility.</p>
+                    <p class="hero-description">A modern, lightweight CMS built with pure PHP. Featuring the new Anvil block editor with 15 block types — no frameworks, no dependencies, just powerful features and elegant architecture.</p>
                     <div class="hero-buttons">
                         <a href="https://github.com/ClearanceClarence/VoidForge-CMS" class="btn btn-primary btn-xl">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -1544,15 +1598,15 @@
                     </div>
                     <div class="hero-metrics">
                         <div class="hero-metric">
-                            <div class="hero-metric-value">16+</div>
-                            <div class="hero-metric-label">Field Types</div>
+                            <div class="hero-metric-value">15</div>
+                            <div class="hero-metric-label">Block Types</div>
                         </div>
                         <div class="hero-metric">
                             <div class="hero-metric-value">90+</div>
                             <div class="hero-metric-label">Hooks & Filters</div>
                         </div>
                         <div class="hero-metric">
-                            <div class="hero-metric-value">&lt;350KB</div>
+                            <div class="hero-metric-value">&lt;400KB</div>
                             <div class="hero-metric-label">Core Size</div>
                         </div>
                     </div>
@@ -1570,7 +1624,7 @@
                             <div class="window-sidebar">
                                 <div class="sidebar-brand">
                                     <div class="sidebar-brand-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg>
+                                        <svg width="16" height="16" viewBox="0 0 36 36" fill="none"><path d="M6 6 L18 30 L30 6" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="15" r="3.5" fill="rgba(255,255,255,0.9)"/></svg>
                                     </div>
                                     <div class="sidebar-brand-text">VoidForge</div>
                                 </div>
@@ -1639,11 +1693,6 @@
                         <div class="floating-label">Performance</div>
                         <div class="floating-value">&lt;50ms</div>
                     </div>
-                    <div class="floating-element floating-element-2">
-                        <div class="floating-icon gradient-emerald"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
-                        <div class="floating-label">Active Plugins</div>
-                        <div class="floating-value">4</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1660,7 +1709,16 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon-wrapper">
-                        <div class="feature-icon indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                        <div class="feature-icon indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                        <div class="feature-icon-glow"></div>
+                    </div>
+                    <h3 class="feature-title">Anvil Block Editor</h3>
+                    <p class="feature-description">15 block types including paragraph, heading, list, quote, code, table, image, gallery, video, columns, spacer, separator, button, HTML, and embed.</p>
+                    <div class="feature-tags"><span class="feature-tag">Drag & Drop</span><span class="feature-tag">Undo/Redo</span></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
                         <div class="feature-icon-glow"></div>
                     </div>
                     <h3 class="feature-title">Custom Post Types</h3>
@@ -1781,24 +1839,23 @@
             <div class="bento-grid">
                 <div class="bento-card bento-card-xl">
                     <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Developer Experience</span>
-                    <h3 class="bento-title">WordPress-Style Plugin API</h3>
-                    <p class="bento-description">Familiar hooks and filters. Create plugins with actions, shortcodes, settings pages, AJAX handlers, and REST endpoints.</p>
+                    <h3 class="bento-title">Extensible Block Architecture</h3>
+                    <p class="bento-description">Create custom blocks with PHP classes. Full control over rendering, attributes, and editor behavior.</p>
                     <div class="code-block">
                         <div class="code-header">
                             <div class="code-dots"><span></span><span></span><span></span></div>
-                            <div class="code-filename">my-plugin/plugin.php</div>
+                            <div class="code-filename">my-plugin/AlertBlock.php</div>
                         </div>
                         <div class="code-content">
-<span class="comment">// Register a custom shortcode</span>
-<span class="function">add_shortcode</span>(<span class="string">'greeting'</span>, <span class="keyword">function</span>(<span class="variable">$atts</span>) {
-    <span class="variable">$name</span> <span class="operator">=</span> <span class="variable">$atts</span>[<span class="string">'name'</span>] <span class="operator">??</span> <span class="string">'World'</span>;
-    <span class="keyword">return</span> <span class="string">"&lt;h2&gt;Hello, {<span class="variable">$name</span>}!&lt;/h2&gt;"</span>;
-});
+<span class="keyword">class</span> <span class="function">AlertBlock</span> <span class="keyword">extends</span> <span class="function">AnvilBlock</span> {
+    <span class="keyword">public static function</span> <span class="function">getType</span>(): <span class="variable">string</span> { <span class="keyword">return</span> <span class="string">'alert'</span>; }
+    <span class="keyword">public static function</span> <span class="function">getLabel</span>(): <span class="variable">string</span> { <span class="keyword">return</span> <span class="string">'Alert'</span>; }
+    <span class="keyword">public static function</span> <span class="function">getCategory</span>(): <span class="variable">string</span> { <span class="keyword">return</span> <span class="string">'layout'</span>; }
 
-<span class="comment">// Hook into content rendering</span>
-<span class="function">add_filter</span>(<span class="string">'the_content'</span>, <span class="keyword">function</span>(<span class="variable">$content</span>) {
-    <span class="keyword">return</span> <span class="variable">$content</span> <span class="operator">.</span> <span class="string">'&lt;p class="signature"&gt;— VoidForge&lt;/p&gt;'</span>;
-});
+    <span class="keyword">public static function</span> <span class="function">render</span>(<span class="variable">array</span> <span class="variable">$attrs</span>): <span class="variable">string</span> {
+        <span class="keyword">return</span> <span class="string">'&lt;div class="alert"&gt;'</span> <span class="operator">.</span> <span class="variable">$attrs</span>[<span class="string">'content'</span>] <span class="operator">.</span> <span class="string">'&lt;/div&gt;'</span>;
+    }
+}
                         </div>
                     </div>
                 </div>
@@ -1807,20 +1864,32 @@
                     <h3 class="bento-title">Lightweight & Powerful</h3>
                     <p class="bento-description">Enterprise features without the enterprise bloat.</p>
                     <div class="bento-stats">
-                        <div class="bento-stat"><div class="bento-stat-value">16<span>+</span></div><div class="bento-stat-label">Field Types</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">15</div><div class="bento-stat-label">Block Types</div></div>
                         <div class="bento-stat"><div class="bento-stat-value">90<span>+</span></div><div class="bento-stat-label">Hooks</div></div>
-                        <div class="bento-stat"><div class="bento-stat-value">&lt;350<span>KB</span></div><div class="bento-stat-label">Core Size</div></div>
+                        <div class="bento-stat"><div class="bento-stat-value">&lt;400<span>KB</span></div><div class="bento-stat-label">Core Size</div></div>
                         <div class="bento-stat"><div class="bento-stat-value">0</div><div class="bento-stat-label">Dependencies</div></div>
                     </div>
                 </div>
                 <div class="bento-card bento-card-wide">
-                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/></svg>Theme System</span>
-                    <h3 class="bento-title">Multiple Themes, Unique Settings</h3>
-                    <p class="bento-description">Each theme maintains its own configuration. Switch instantly without losing customizations.</p>
-                    <div class="theme-cards">
-                        <div class="theme-card dark"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><div class="theme-card-label">Default (Dark)</div></div>
-                        <div class="theme-card light"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></div><div class="theme-card-label">Flavor (Light)</div></div>
-                        <div class="theme-card nova"><div class="theme-card-preview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="theme-card-label">Nova (Modern)</div></div>
+                    <span class="bento-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Anvil Editor</span>
+                    <h3 class="bento-title">15 Blocks, Infinite Possibilities</h3>
+                    <p class="bento-description">A solid foundation with essential blocks — more block types and advanced features coming in future releases.</p>
+                    <div class="block-grid">
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="15" y2="18"/></svg><span>Paragraph</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg><span>Heading</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg><span>List</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21"/></svg><span>Quote</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>Code</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg><span>Table</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Image</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="6" height="5" rx="1"/><rect x="9" y="4" width="6" height="5" rx="1"/><rect x="16" y="4" width="6" height="5" rx="1"/><rect x="2" y="11" width="6" height="5" rx="1"/><rect x="9" y="11" width="6" height="5" rx="1"/><rect x="16" y="11" width="6" height="5" rx="1"/></svg><span>Gallery</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Video</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg><span>Columns</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/></svg><span>Spacer</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg><span>Separator</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="3"/></svg><span>Button</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg><span>HTML</span></div>
+                        <div class="block-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>Embed</span></div>
                     </div>
                 </div>
                 <div class="bento-card bento-card-wide">
@@ -1828,22 +1897,22 @@
                     <h3 class="bento-title">16+ Field Types for Any Content</h3>
                     <p class="bento-description">Build any content structure with our comprehensive field library.</p>
                     <div class="field-tags">
-                        <span class="field-tag">Text</span>
-                        <span class="field-tag">Textarea</span>
-                        <span class="field-tag">WYSIWYG</span>
-                        <span class="field-tag">Number</span>
-                        <span class="field-tag">Email</span>
-                        <span class="field-tag">URL</span>
-                        <span class="field-tag">Date</span>
-                        <span class="field-tag">Color</span>
-                        <span class="field-tag">Image</span>
-                        <span class="field-tag">Gallery</span>
-                        <span class="field-tag">File</span>
-                        <span class="field-tag">Select</span>
-                        <span class="field-tag">Checkbox</span>
-                        <span class="field-tag">Radio</span>
-                        <span class="field-tag">Repeater</span>
-                        <span class="field-tag">Relationship</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="12" y2="15"/></svg>Text</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>Textarea</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>WYSIWYG</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Number</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>URL</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Date</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>Color</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Image</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>Gallery</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>File</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>Select</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Checkbox</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>Radio</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Repeater</span>
+                        <span class="field-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Relationship</span>
                     </div>
                 </div>
             </div>
@@ -1872,6 +1941,12 @@
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
+                    <div class="comparison-cell"><span class="comparison-feature">Block Editor</span></div>
+                    <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                    <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                </div>
+                <div class="comparison-row">
                     <div class="comparison-cell"><span class="comparison-feature">Pure PHP (No Framework)</span></div>
                     <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check yes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
@@ -1884,7 +1959,7 @@
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                 </div>
                 <div class="comparison-row">
-                    <div class="comparison-cell"><span class="comparison-feature">Sub-350KB Core Size</span></div>
+                    <div class="comparison-cell"><span class="comparison-feature">Sub-400KB Core Size</span></div>
                     <div class="comparison-cell"><span class="comparison-check highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
                     <div class="comparison-cell"><span class="comparison-check no"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
@@ -1933,7 +2008,7 @@
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="/" class="logo">
-                        <div class="logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 4L12 20L18 4"/></svg></div>
+                        <div class="logo-icon"><svg width="20" height="20" viewBox="0 0 36 36" fill="none"><path d="M6 6 L18 30 L30 6" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="15" r="4" fill="rgba(255,255,255,0.9)"/><circle cx="18" cy="15" r="2" fill="rgba(255,255,255,0.5)"/></svg></div>
                         <span class="logo-text">VoidForge</span>
                     </a>
                     <p>A modern, lightweight CMS built with pure PHP. No frameworks, no bloat — just powerful features and elegant architecture.</p>
@@ -1942,7 +2017,6 @@
                     <h4>Product</h4>
                     <ul>
                         <li><a href="#features">Features</a></li>
-                        <li><a href="#showcase">Showcase</a></li>
                         <li><a href="#comparison">Compare</a></li>
                         <li><a href="https://github.com/ClearanceClarence/VoidForge-CMS/blob/main/CHANGELOG.md">Changelog</a></li>
                     </ul>
@@ -1963,7 +2037,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">© 2025 VoidForge CMS v0.1.8 — MIT License</p>
+                <p class="footer-copyright">© 2025 VoidForge CMS v0.2.0 — MIT License</p>
                 <div class="footer-social">
                     <a href="https://github.com/ClearanceClarence/VoidForge-CMS" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
                 </div>
