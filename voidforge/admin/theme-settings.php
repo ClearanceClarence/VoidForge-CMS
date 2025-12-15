@@ -52,31 +52,10 @@ $defaultSettings = [
         'custom_css' => '',
     ],
     'flavor' => [
-        'hero_title' => '',
-        'hero_subtitle' => '',
-        'primary_color' => '#0ea5e9',
-        'secondary_color' => '#0284c7',
-        'accent_color' => '#e0f2fe',
-        'show_features' => true,
-        'show_posts' => true,
-        'show_stats' => true,
-        'show_cta' => true,
-        'stat_1_value' => '2',
-        'stat_1_label' => 'Themes',
-        'stat_2_value' => '∞',
-        'stat_2_label' => 'Possibilities',
-        'stat_3_value' => '0',
-        'stat_3_label' => 'Dependencies',
-        'stat_4_value' => '100%',
-        'stat_4_label' => 'PHP',
-        'feature_1_title' => 'Lightning Fast',
-        'feature_1_desc' => 'No bloat, no frameworks. Pure PHP that just works.',
-        'feature_2_title' => 'Theme System',
-        'feature_2_desc' => 'Switch looks instantly with WordPress-like themes.',
-        'feature_3_title' => 'Extendable',
-        'feature_3_desc' => 'Add features with plugins and shortcodes.',
-        'cta_title' => 'Ready to get started?',
-        'cta_text' => 'Head to the dashboard to create content and customize your site.',
+        'accent_color' => '#6366f1',
+        'content_width' => 'default',
+        'show_author' => true,
+        'show_date' => true,
         'custom_css' => '',
     ],
 ];
@@ -430,6 +409,125 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 </div>
 
+<?php if ($activeTheme === 'flavor'): ?>
+<!-- Flavor Theme Settings - Simple Form -->
+<form method="POST">
+    <?= csrfField() ?>
+    
+    <div class="settings-grid">
+        <nav class="settings-nav">
+            <a href="#colors" class="settings-nav-item active" onclick="scrollToSection('colors', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20"/><path d="M12 2v20"/></svg>
+                Colors
+            </a>
+            <a href="#layout" class="settings-nav-item" onclick="scrollToSection('layout', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Layout
+            </a>
+            <a href="#display" class="settings-nav-item" onclick="scrollToSection('display', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Display
+            </a>
+            <a href="#css" class="settings-nav-item" onclick="scrollToSection('css', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                Custom CSS
+            </a>
+        </nav>
+        
+        <div class="settings-content">
+            <!-- Colors -->
+            <section class="settings-section" id="colors">
+                <div class="section-header">
+                    <h2>Accent Color</h2>
+                    <p>The primary accent color used throughout the theme</p>
+                </div>
+                <div class="section-body">
+                    <div class="form-row">
+                        <label class="form-label">Accent Color</label>
+                        <div class="color-input-group">
+                            <div class="color-preview" style="background: <?= esc($themeSettings['accent_color']) ?>">
+                                <input type="color" name="accent_color" value="<?= esc($themeSettings['accent_color']) ?>" onchange="this.parentElement.style.background = this.value; this.parentElement.nextElementSibling.value = this.value">
+                            </div>
+                            <input type="text" class="form-input color-hex" value="<?= esc($themeSettings['accent_color']) ?>" onchange="this.previousElementSibling.style.background = this.value; this.previousElementSibling.querySelector('input').value = this.value" pattern="^#[0-9A-Fa-f]{6}$">
+                        </div>
+                        <p class="form-hint">Used for buttons, links, hero background, and interactive elements</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Layout -->
+            <section class="settings-section" id="layout">
+                <div class="section-header">
+                    <h2>Content Width</h2>
+                    <p>Control the maximum width of page content</p>
+                </div>
+                <div class="section-body">
+                    <div class="form-row">
+                        <label class="form-label">Content Width</label>
+                        <select name="content_width" class="form-input">
+                            <option value="narrow" <?= ($themeSettings['content_width'] ?? 'default') === 'narrow' ? 'selected' : '' ?>>Narrow (680px)</option>
+                            <option value="default" <?= ($themeSettings['content_width'] ?? 'default') === 'default' ? 'selected' : '' ?>>Default (780px)</option>
+                            <option value="wide" <?= ($themeSettings['content_width'] ?? 'default') === 'wide' ? 'selected' : '' ?>>Wide (920px)</option>
+                        </select>
+                        <p class="form-hint">Affects the maximum width of article content and block showcase sections</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Display Options -->
+            <section class="settings-section" id="display">
+                <div class="section-header">
+                    <h2>Post Display</h2>
+                    <p>Control what information is shown on posts</p>
+                </div>
+                <div class="section-body">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Show Author</div>
+                            <div class="toggle-desc">Display author name on posts</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="show_author" <?= ($themeSettings['show_author'] ?? true) ? 'checked' : '' ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Show Date</div>
+                            <div class="toggle-desc">Display publish date on posts</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="show_date" <?= ($themeSettings['show_date'] ?? true) ? 'checked' : '' ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Custom CSS -->
+            <section class="settings-section" id="css">
+                <div class="section-header">
+                    <h2>Custom CSS</h2>
+                    <p>Add custom styles to override theme defaults</p>
+                </div>
+                <div class="section-body">
+                    <div class="form-row">
+                        <label class="form-label">Custom Styles</label>
+                        <textarea name="custom_css" class="form-textarea code" rows="12" placeholder="/* Your custom CSS here */"><?= esc($themeSettings['custom_css'] ?? '') ?></textarea>
+                        <p class="form-hint">CSS will be added after theme styles. Use browser inspector to find element selectors.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+    </div>
+</form>
+
+<?php else: ?>
+<!-- Default/Other Themes Settings -->
 <form method="POST">
     <?= csrfField() ?>
     
@@ -451,12 +549,6 @@ include ADMIN_PATH . '/includes/header.php';
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Features
             </a>
-            <?php if ($activeTheme === 'flavor'): ?>
-            <a href="#stats" class="settings-nav-item" onclick="scrollToSection('stats', this)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-                Stats
-            </a>
-            <?php endif; ?>
             <a href="#cta" class="settings-nav-item" onclick="scrollToSection('cta', this)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 Call to Action
@@ -554,28 +646,6 @@ include ADMIN_PATH . '/includes/header.php';
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <?php if ($activeTheme === 'flavor'): ?>
-                    <div class="toggle-row">
-                        <div>
-                            <div class="toggle-label">Stats Section</div>
-                            <div class="toggle-desc">Display the statistics bar</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="show_stats" <?= $themeSettings['show_stats'] ? 'checked' : '' ?>>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="toggle-row">
-                        <div>
-                            <div class="toggle-label">Call to Action</div>
-                            <div class="toggle-desc">Show the CTA section before footer</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="show_cta" <?= $themeSettings['show_cta'] ?? true ? 'checked' : '' ?>>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </section>
             
@@ -624,64 +694,6 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </section>
             
-            <?php if ($activeTheme === 'flavor'): ?>
-            <!-- Stats (Flavor only) -->
-            <section class="settings-section" id="stats">
-                <div class="section-header">
-                    <h2>Stats</h2>
-                    <p>Customize the statistics displayed</p>
-                </div>
-                <div class="section-body">
-                    <div class="form-grid">
-                        <div class="feature-card">
-                            <div class="feature-card-header">Stat 1</div>
-                            <div class="form-row">
-                                <label class="form-label">Value</label>
-                                <input type="text" name="stat_1_value" class="form-input" value="<?= esc($themeSettings['stat_1_value'] ?? '2') ?>">
-                            </div>
-                            <div class="form-row">
-                                <label class="form-label">Label</label>
-                                <input type="text" name="stat_1_label" class="form-input" value="<?= esc($themeSettings['stat_1_label'] ?? 'Themes') ?>">
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-card-header">Stat 2</div>
-                            <div class="form-row">
-                                <label class="form-label">Value</label>
-                                <input type="text" name="stat_2_value" class="form-input" value="<?= esc($themeSettings['stat_2_value'] ?? '∞') ?>">
-                            </div>
-                            <div class="form-row">
-                                <label class="form-label">Label</label>
-                                <input type="text" name="stat_2_label" class="form-input" value="<?= esc($themeSettings['stat_2_label'] ?? 'Possibilities') ?>">
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-card-header">Stat 3</div>
-                            <div class="form-row">
-                                <label class="form-label">Value</label>
-                                <input type="text" name="stat_3_value" class="form-input" value="<?= esc($themeSettings['stat_3_value'] ?? '0') ?>">
-                            </div>
-                            <div class="form-row">
-                                <label class="form-label">Label</label>
-                                <input type="text" name="stat_3_label" class="form-input" value="<?= esc($themeSettings['stat_3_label'] ?? 'Dependencies') ?>">
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-card-header">Stat 4</div>
-                            <div class="form-row">
-                                <label class="form-label">Value</label>
-                                <input type="text" name="stat_4_value" class="form-input" value="<?= esc($themeSettings['stat_4_value'] ?? '100%') ?>">
-                            </div>
-                            <div class="form-row">
-                                <label class="form-label">Label</label>
-                                <input type="text" name="stat_4_label" class="form-input" value="<?= esc($themeSettings['stat_4_label'] ?? 'PHP') ?>">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <?php endif; ?>
-            
             <!-- CTA -->
             <section class="settings-section" id="cta">
                 <div class="section-header">
@@ -729,6 +741,7 @@ include ADMIN_PATH . '/includes/header.php';
         </div>
     </div>
 </form>
+<?php endif; ?>
 
 <script>
 function scrollToSection(id, el) {

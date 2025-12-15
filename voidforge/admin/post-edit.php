@@ -12,8 +12,10 @@ require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
+require_once CMS_ROOT . '/includes/anvil.php';
 
 Post::init();
+Anvil::init();
 Taxonomy::init();
 
 User::startSession();
@@ -35,6 +37,29 @@ if ($postId) {
 $typeConfig = Post::getType($postType);
 if (!$typeConfig) {
     redirect(ADMIN_URL . '/');
+}
+
+// Get the editor preference (can be overridden per-post via URL param)
+$defaultEditor = getOption('default_editor', 'anvil');
+$currentEditor = $_GET['editor'] ?? $defaultEditor;
+
+// Detect if existing content is blocks or HTML
+if ($post && !empty($post['content'])) {
+    $trimmed = trim($post['content']);
+    if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
+        $parsed = json_decode($post['content'], true);
+        if (is_array($parsed) && json_last_error() === JSON_ERROR_NONE) {
+            // Content is blocks - use anvil unless explicitly switching
+            if (!isset($_GET['editor'])) {
+                $currentEditor = 'anvil';
+            }
+        }
+    } else {
+        // Content is HTML - use classic unless explicitly switching
+        if (!isset($_GET['editor'])) {
+            $currentEditor = 'classic';
+        }
+    }
 }
 
 $pageTitle = $post ? 'Edit ' . $typeConfig['singular'] : 'New ' . $typeConfig['singular'];
@@ -302,96 +327,6 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 .permalink-edit:hover { border-color: var(--forge-primary); color: var(--forge-primary); }
-
-/* Editor */
-.editor-wrap {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    overflow: hidden;
-    background: var(--bg-card);
-}
-
-.editor-tabs {
-    display: flex;
-    background: var(--bg-card-header);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.editor-tab {
-    padding: 0.625rem 1rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-}
-
-.editor-tab:hover { color: var(--text-primary); }
-.editor-tab.active { color: var(--forge-primary); border-bottom-color: var(--forge-primary); background: var(--bg-card); }
-
-.editor-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    background: var(--bg-card-header);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.editor-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: transparent;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    transition: all 0.15s;
-}
-
-.editor-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.editor-btn.active { background: var(--forge-primary); color: #fff; }
-.editor-btn svg { width: 16px; height: 16px; }
-.editor-divider { width: 1px; height: 24px; background: var(--border-color); margin: 0 0.25rem; align-self: center; }
-
-.editor-visual {
-    min-height: 400px;
-    padding: 1.25rem;
-    outline: none;
-    font-size: 1rem;
-    line-height: 1.7;
-}
-
-.editor-visual:focus { outline: none; }
-.editor-visual h1 { font-size: 2rem; margin: 0 0 1rem; }
-.editor-visual h2 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; }
-.editor-visual h3 { font-size: 1.25rem; margin: 1.25rem 0 0.5rem; }
-.editor-visual p { margin: 0 0 1rem; }
-.editor-visual ul, .editor-visual ol { margin: 0 0 1rem; padding-left: 1.5rem; }
-.editor-visual blockquote { margin: 1rem 0; padding: 1rem; border-left: 4px solid var(--forge-primary); background: var(--bg-card-header); font-style: italic; }
-.editor-visual a { color: var(--forge-primary); }
-.editor-visual img { max-width: 100%; height: auto; border-radius: var(--border-radius); }
-
-.editor-code {
-    display: none;
-    width: 100%;
-    min-height: 400px;
-    padding: 1.25rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    border: none;
-    resize: vertical;
-    background: var(--bg-card);
-}
-
-.editor-code:focus { outline: none; }
 
 /* Sidebar cards */
 .sidebar-card {
@@ -673,45 +608,83 @@ include ADMIN_PATH . '/includes/header.php';
             ?>
             
             <?php if (Post::typeSupports($postType, 'editor')): ?>
-            <!-- Editor -->
-            <div class="editor-wrap" style="margin-bottom: 1rem;">
-                <div class="editor-tabs">
-                    <button type="button" class="editor-tab active" onclick="switchEditor('visual')">Visual</button>
-                    <button type="button" class="editor-tab" onclick="switchEditor('code')">Code</button>
-                </div>
-                <div class="editor-toolbar" id="editorToolbar">
-                    <button type="button" class="editor-btn" data-command="bold" title="Bold">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
-                    </button>
-                    <button type="button" class="editor-btn" data-command="italic" title="Italic">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
-                    </button>
-                    <button type="button" class="editor-btn" data-command="underline" title="Underline">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>
-                    </button>
-                    <div class="editor-divider"></div>
-                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="h2" title="Heading 2">H2</button>
-                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="h3" title="Heading 3">H3</button>
-                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="p" title="Paragraph">P</button>
-                    <div class="editor-divider"></div>
-                    <button type="button" class="editor-btn" data-command="insertUnorderedList" title="Bullet List">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4" cy="6" r="1.5" fill="currentColor"></circle><circle cx="4" cy="12" r="1.5" fill="currentColor"></circle><circle cx="4" cy="18" r="1.5" fill="currentColor"></circle></svg>
-                    </button>
-                    <button type="button" class="editor-btn" data-command="insertOrderedList" title="Numbered List">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
-                    </button>
-                    <div class="editor-divider"></div>
-                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="blockquote" title="Quote">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg>
-                    </button>
-                    <button type="button" class="editor-btn" data-command="createLink" title="Insert Link">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                    </button>
-                </div>
-                <div id="editorVisual" class="editor-visual" contenteditable="true"></div>
-                <textarea id="editorCode" class="editor-code" placeholder="Enter HTML code..."></textarea>
-                <input type="hidden" id="content" name="content" value="<?= esc($post['content'] ?? $_POST['content'] ?? '') ?>">
+            <!-- Editor Toggle -->
+            <div class="editor-toggle" style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Editor:</span>
+                <?php 
+                $editorUrl = ADMIN_URL . '/post-edit.php?';
+                if ($post) {
+                    $editorUrl .= 'id=' . $post['id'] . '&';
+                } else {
+                    $editorUrl .= 'type=' . $postType . '&';
+                }
+                ?>
+                <a href="<?= $editorUrl ?>editor=anvil" 
+                   class="editor-toggle-btn <?= $currentEditor === 'anvil' ? 'active' : '' ?>"
+                   style="padding: 0.25rem 0.625rem; font-size: 0.75rem; border-radius: 4px; text-decoration: none;
+                          background: <?= $currentEditor === 'anvil' ? 'var(--forge-primary)' : 'var(--bg-card)' ?>; 
+                          color: <?= $currentEditor === 'anvil' ? '#fff' : 'var(--text-muted)' ?>;
+                          border: 1px solid <?= $currentEditor === 'anvil' ? 'var(--forge-primary)' : 'var(--border-color)' ?>;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Blocks
+                </a>
+                <a href="<?= $editorUrl ?>editor=classic" 
+                   class="editor-toggle-btn <?= $currentEditor === 'classic' ? 'active' : '' ?>"
+                   style="padding: 0.25rem 0.625rem; font-size: 0.75rem; border-radius: 4px; text-decoration: none;
+                          background: <?= $currentEditor === 'classic' ? 'var(--forge-primary)' : 'var(--bg-card)' ?>; 
+                          color: <?= $currentEditor === 'classic' ? '#fff' : 'var(--text-muted)' ?>;
+                          border: 1px solid <?= $currentEditor === 'classic' ? 'var(--forge-primary)' : 'var(--border-color)' ?>;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Classic
+                </a>
             </div>
+            
+            <?php if ($currentEditor === 'anvil'): ?>
+            <!-- Anvil Block Editor -->
+            <div id="anvilEditor" class="anvil-editor" data-post-id="<?= $post['id'] ?? 0 ?>">
+                <!-- Editor will be initialized by JavaScript -->
+            </div>
+            <input type="hidden" id="content" name="content" value="<?= esc($post['content'] ?? $_POST['content'] ?? '') ?>">
+            <?php else: ?>
+            <!-- Classic HTML Editor -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Content</h3>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <?php
+                    // Get content - convert blocks to HTML if needed
+                    $editorContent = $post['content'] ?? $_POST['content'] ?? '';
+                    if (!empty($editorContent)) {
+                        $trimmed = trim($editorContent);
+                        if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
+                            $blocks = json_decode($editorContent, true);
+                            if (is_array($blocks) && json_last_error() === JSON_ERROR_NONE) {
+                                // Convert blocks to HTML for classic editor
+                                $editorContent = Anvil::renderBlocks($blocks);
+                            }
+                        }
+                    }
+                    ?>
+                    <textarea id="content" name="content" class="classic-editor" 
+                              style="width: 100%; min-height: 400px; padding: 1rem; border: none; 
+                                     font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; 
+                                     line-height: 1.6; resize: vertical; background: var(--bg-card);
+                                     color: var(--text-primary);"
+                              placeholder="Write your content here... HTML is supported."><?= esc($editorContent) ?></textarea>
+                </div>
+            </div>
+            <?php endif; ?>
             <?php endif; ?>
             
             <?php 
@@ -1239,22 +1212,68 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<?php if ($currentEditor === 'anvil'): ?>
+<link rel="stylesheet" href="<?= ADMIN_URL ?>/assets/css/anvil.css">
+<script src="<?= ADMIN_URL ?>/assets/js/anvil.js"></script>
+<?php endif; ?>
+
 <script>
 const titleInput = document.getElementById('title');
 const slugHidden = document.getElementById('slug');
 const permalinkSlug = document.getElementById('permalinkSlug');
-const editorVisual = document.getElementById('editorVisual');
-const editorCode = document.getElementById('editorCode');
 const contentInput = document.getElementById('content');
-let currentMode = 'visual';
 let selectedMediaId = null;
 let selectedMediaUrl = null;
 
-// Initialize editor
-if (contentInput && editorVisual) {
-    editorVisual.innerHTML = contentInput.value;
-    editorCode.value = contentInput.value;
+// Initialize Anvil Block Editor (only if using block editor)
+let anvilEditor = null;
+<?php if ($currentEditor === 'anvil'): ?>
+const anvilContainer = document.getElementById('anvilEditor');
+if (anvilContainer && typeof AnvilEditor !== 'undefined') {
+    // Get registered blocks from PHP
+    const editorData = <?= json_encode(Anvil::getEditorData()) ?>;
+    
+    // Parse existing content
+    let initialBlocks = [];
+    if (contentInput && contentInput.value) {
+        try {
+            const parsed = JSON.parse(contentInput.value);
+            if (Array.isArray(parsed)) {
+                initialBlocks = parsed;
+            }
+        } catch (e) {
+            // Content is HTML, convert to blocks
+            if (contentInput.value.trim()) {
+                initialBlocks = [{
+                    id: 'block_' + Date.now(),
+                    type: 'html',
+                    attributes: {
+                        content: contentInput.value
+                    }
+                }];
+            }
+        }
+    }
+    
+    // Initialize editor
+    anvilEditor = new AnvilEditor(anvilContainer, {
+        initialContent: initialBlocks,
+        blocks: editorData.blocks,
+        categories: editorData.categories,
+        onChange: function(blocks) {
+            if (contentInput) {
+                contentInput.value = JSON.stringify(blocks);
+            }
+        },
+        onMediaSelect: function(callback) {
+            // Store callback and open media modal
+            window.anvilMediaCallback = callback;
+            openMediaModal();
+        }
+    });
 }
+<?php endif; ?>
 
 // Auto-generate slug
 if (titleInput) {
@@ -1265,61 +1284,6 @@ if (titleInput) {
             permalinkSlug.textContent = slug || 'your-url';
         }
     });
-}
-
-// Toolbar buttons
-document.querySelectorAll('.editor-btn[data-command]').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const cmd = this.dataset.command;
-        const val = this.dataset.value || null;
-        
-        if (cmd === 'createLink') {
-            const url = prompt('Enter URL:');
-            if (url) document.execCommand(cmd, false, url);
-        } else {
-            document.execCommand(cmd, false, val);
-        }
-        editorVisual.focus();
-        syncContent();
-    });
-});
-
-// Sync content on input
-if (editorVisual) {
-    editorVisual.addEventListener('input', syncContent);
-}
-if (editorCode) {
-    editorCode.addEventListener('input', function() {
-        contentInput.value = this.value;
-    });
-}
-
-function syncContent() {
-    if (currentMode === 'visual') {
-        contentInput.value = editorVisual.innerHTML;
-        editorCode.value = editorVisual.innerHTML;
-    }
-}
-
-function switchEditor(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    if (mode === 'visual') {
-        editorVisual.innerHTML = editorCode.value;
-        contentInput.value = editorCode.value;
-        editorVisual.style.display = 'block';
-        editorCode.style.display = 'none';
-        document.getElementById('editorToolbar').style.display = 'flex';
-    } else {
-        editorCode.value = editorVisual.innerHTML;
-        contentInput.value = editorVisual.innerHTML;
-        editorVisual.style.display = 'none';
-        editorCode.style.display = 'block';
-        document.getElementById('editorToolbar').style.display = 'none';
-    }
 }
 
 function slugify(text) {
@@ -1471,10 +1435,21 @@ function removeCfImage(fieldId) {
     }
 }
 
-// Override selectMedia to handle both featured image and custom fields
+// Override selectMedia to handle featured image, custom fields, and Anvil blocks
 const originalSelectMedia = selectMedia;
 function selectMedia() {
     if (!selectedMediaId) return;
+    
+    // Check if Anvil editor is requesting media
+    if (window.anvilMediaCallback) {
+        window.anvilMediaCallback({
+            id: selectedMediaId,
+            url: selectedMediaUrl
+        });
+        window.anvilMediaCallback = null;
+        closeMediaModal();
+        return;
+    }
     
     if (currentCfImageField) {
         // Custom field image

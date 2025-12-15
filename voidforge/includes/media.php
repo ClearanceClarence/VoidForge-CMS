@@ -51,7 +51,7 @@ class Media
         $sizes = self::$thumbnailSizes;
         
         // Allow filtering of thumbnail sizes
-        $sizes = Plugin::applyFilters('thumbnail_sizes', $sizes);
+        $sizes = safe_apply_filters('thumbnail_sizes', $sizes);
         
         if ($includeDisabled) {
             return $sizes;
@@ -292,7 +292,7 @@ class Media
         $errors = [];
         
         // Allow filtering of upload data before processing
-        $uploadData = Plugin::applyFilters('pre_upload_media', [
+        $uploadData = safe_apply_filters('pre_upload_media', [
             'file' => $file,
             'user_id' => $userId,
             'folder_id' => $folderId,
@@ -307,7 +307,7 @@ class Media
         }
         
         // Allow filtering max file size
-        $maxSize = Plugin::applyFilters('upload_max_size', self::MAX_FILE_SIZE);
+        $maxSize = safe_apply_filters('upload_max_size', self::MAX_FILE_SIZE);
 
         if ($file['size'] > $maxSize) {
             return ['success' => false, 'error' => 'File size exceeds maximum limit of ' . formatFileSize($maxSize)];
@@ -316,7 +316,7 @@ class Media
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         
         // Allow filtering allowed types
-        $allowedTypes = Plugin::applyFilters('upload_allowed_types', self::ALLOWED_TYPES);
+        $allowedTypes = safe_apply_filters('upload_allowed_types', self::ALLOWED_TYPES);
         
         if (!isset($allowedTypes[$extension])) {
             return ['success' => false, 'error' => 'File type not allowed: ' . $extension];
@@ -376,7 +376,7 @@ class Media
         }
         
         // Fire media uploaded action
-        Plugin::doAction('media_uploaded', $id, $media);
+        safe_do_action('media_uploaded', $id, $media);
 
         return [
             'success' => true,
@@ -417,7 +417,7 @@ class Media
         // Fire folder changed action if folder changed
         $newFolderId = $updateData['folder_id'] ?? $oldFolderId;
         if (isset($updateData['folder_id']) && $oldFolderId !== $newFolderId) {
-            Plugin::doAction('media_folder_changed', $id, $newFolderId, $oldFolderId, $media);
+            safe_do_action('media_folder_changed', $id, $newFolderId, $oldFolderId, $media);
         }
         
         return ['success' => true];
@@ -434,7 +434,7 @@ class Media
         }
         
         // Fire pre-delete action
-        Plugin::doAction('pre_delete_media', $id, $media);
+        safe_do_action('pre_delete_media', $id, $media);
 
         // Delete thumbnails first
         self::deleteThumbnails($media);
@@ -454,7 +454,7 @@ class Media
         Database::delete(Database::table('media'), 'id = ?', [$id]);
         
         // Fire deleted action
-        Plugin::doAction('media_deleted', $id, $media);
+        safe_do_action('media_deleted', $id, $media);
         
         return ['success' => true];
     }
@@ -527,6 +527,22 @@ class Media
             return '';
         }
         return UPLOADS_URL . '/' . $media['filepath'];
+    }
+
+    /**
+     * Get URL for media (alias/convenience method)
+     * Can accept full media array or just the filepath
+     */
+    public static function url($mediaOrPath): string
+    {
+        if (is_array($mediaOrPath)) {
+            return self::getUrl($mediaOrPath);
+        }
+        // If string path is provided
+        if (is_string($mediaOrPath) && !empty($mediaOrPath)) {
+            return UPLOADS_URL . '/' . $mediaOrPath;
+        }
+        return '';
     }
 
     /**

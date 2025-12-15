@@ -6,7 +6,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('CMS_VERSION', '0.1.2');
+define('CMS_VERSION', '0.2.0');
 define('CMS_NAME', 'VoidForge CMS');
 define('CMS_ROOT', __DIR__);
 
@@ -282,8 +282,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'date_format' => 'F j, Y',
                     'time_format' => 'g:i a',
                     'timezone' => 'UTC',
-                    'active_theme' => 'nova',
-                    'cms_version' => CMS_VERSION
+                    'active_theme' => 'flavor',
+                    'cms_version' => CMS_VERSION,
+                    'comments_enabled' => '1',
+                    'comment_moderation' => 'manual',
+                    'comment_post_types' => json_encode(['post']),
+                    'comment_max_depth' => '3'
                 );
                 
                 $stmt = $pdo->prepare("INSERT INTO `{$dbPrefix}options` (option_name, option_value) VALUES (?, ?)");
@@ -324,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('DB_CHARSET', 'utf8mb4');";
                 $configLines[] = "";
                 $configLines[] = "define('SITE_URL', " . var_export($siteUrl, true) . ");";
-                $configLines[] = "define('CMS_VERSION', '0.1.2');";
+                $configLines[] = "define('CMS_VERSION', '0.2.0');";
                 $configLines[] = "define('CMS_NAME', 'VoidForge');";
                 $configLines[] = "";
                 $configLines[] = "define('ADMIN_PATH', CMS_ROOT . '/admin');";
@@ -337,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $configLines[] = "define('PLUGINS_PATH', CMS_ROOT . '/plugins');";
                 $configLines[] = "define('PLUGINS_URL', SITE_URL . '/plugins');";
                 $configLines[] = "";
-                $configLines[] = "define('CURRENT_THEME', 'nova');";
+                $configLines[] = "define('CURRENT_THEME', 'flavor');";
                 $configLines[] = "define('THEME_URL', SITE_URL . '/themes/' . CURRENT_THEME);";
                 $configLines[] = "";
                 $configLines[] = "define('SESSION_NAME', 'voidforge_session');";

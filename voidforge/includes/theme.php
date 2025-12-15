@@ -15,7 +15,7 @@ class Theme
      */
     public static function init(): void
     {
-        self::$activeTheme = getOption('active_theme', 'nova');
+        self::$activeTheme = getOption('active_theme', 'flavor');
         self::scanThemes();
     }
     
@@ -154,7 +154,7 @@ class Theme
     public static function getActive(): string
     {
         if (self::$activeTheme === null) {
-            self::$activeTheme = getOption('active_theme', 'nova');
+            self::$activeTheme = getOption('active_theme', 'flavor');
         }
         return self::$activeTheme;
     }
@@ -198,8 +198,8 @@ class Theme
         // Deactivate current theme
         $oldTheme = self::$activeTheme;
         if ($oldTheme && $oldTheme !== $slug) {
-            Plugin::doAction('switch_theme', $oldTheme, $slug);
-            Plugin::doAction('deactivate_theme_' . $oldTheme);
+            safe_do_action('switch_theme', $oldTheme, $slug);
+            safe_do_action('deactivate_theme_' . $oldTheme);
         }
         
         // Activate new theme
@@ -209,8 +209,8 @@ class Theme
         // Load theme functions
         self::loadFunctions($slug);
         
-        Plugin::doAction('activate_theme_' . $slug);
-        Plugin::doAction('after_switch_theme', $slug, $oldTheme);
+        safe_do_action('activate_theme_' . $slug);
+        safe_do_action('after_switch_theme', $slug, $oldTheme);
         
         return ['success' => true];
     }
@@ -294,7 +294,7 @@ class Theme
         
         if ($path) {
             extract($data);
-            Plugin::doAction('get_header', $name);
+            safe_do_action('get_header', $name);
             include $path;
         }
     }
@@ -313,7 +313,7 @@ class Theme
         
         if ($path) {
             extract($data);
-            Plugin::doAction('get_footer', $name);
+            safe_do_action('get_footer', $name);
             include $path;
         }
     }
@@ -332,7 +332,7 @@ class Theme
         
         if ($path) {
             extract($data);
-            Plugin::doAction('get_sidebar', $name);
+            safe_do_action('get_sidebar', $name);
             include $path;
         }
     }

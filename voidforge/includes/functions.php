@@ -6,6 +6,27 @@
 defined('CMS_ROOT') or die('Direct access not allowed');
 
 /**
+ * Safe wrapper for Plugin::doAction - only calls if Plugin class exists
+ */
+function safe_do_action(string $hook, ...$args): void
+{
+    if (class_exists('Plugin')) {
+        Plugin::doAction($hook, ...$args);
+    }
+}
+
+/**
+ * Safe wrapper for Plugin::applyFilters - returns value unchanged if Plugin class doesn't exist
+ */
+function safe_apply_filters(string $hook, $value, ...$args)
+{
+    if (class_exists('Plugin')) {
+        return Plugin::applyFilters($hook, $value, ...$args);
+    }
+    return $value;
+}
+
+/**
  * Escape HTML output
  */
 function esc(string $string): string
@@ -199,10 +220,12 @@ function truncate(string $text, int $length = 150, string $suffix = '...'): stri
  */
 function getOption(string $name, $default = null)
 {
-    // Allow filtering of option value before retrieval
-    $preValue = Plugin::applyFilters('pre_get_option_' . $name, null, $default);
-    if ($preValue !== null) {
-        return $preValue;
+    // Allow filtering of option value before retrieval (only if Plugin class is loaded)
+    if (class_exists('Plugin')) {
+        $preValue = Plugin::applyFilters('pre_get_option_' . $name, null, $default);
+        if ($preValue !== null) {
+            return $preValue;
+        }
     }
     
     $table = Database::table('options');
@@ -225,8 +248,10 @@ function getOption(string $name, $default = null)
  */
 function setOption(string $name, $value): void
 {
-    // Allow filtering of option value before save
-    $value = Plugin::applyFilters('pre_update_option_' . $name, $value, $name);
+    // Allow filtering of option value before save (only if Plugin class is loaded)
+    if (class_exists('Plugin')) {
+        $value = Plugin::applyFilters('pre_update_option_' . $name, $value, $name);
+    }
     
     $oldValue = getOption($name);
     
@@ -249,8 +274,10 @@ function setOption(string $name, $value): void
         ]);
     }
     
-    // Fire option updated action
-    Plugin::doAction('option_updated', $name, $value, $oldValue);
+    // Fire option updated action (only if Plugin class is loaded)
+    if (class_exists('Plugin')) {
+        Plugin::doAction('option_updated', $name, $value, $oldValue);
+    }
 }
 
 /**
@@ -940,4 +967,155 @@ function verifyNonce(string $nonce, string $action, int $lifetime = 43200): bool
     }
     
     return false;
+}
+
+// =====================================================
+// TEMPLATE HELPER FUNCTIONS
+// =====================================================
+
+/**
+ * Get the site URL
+ */
+function site_url(string $path = ''): string
+{
+    $url = defined('SITE_URL') ? SITE_URL : '';
+    if ($path) {
+        $url = rtrim($url, '/') . '/' . ltrim($path, '/');
+    }
+    return $url;
+}
+
+/**
+ * Get the site name
+ */
+function get_site_name(): string
+{
+    return getOption('site_name', 'VoidForge');
+}
+
+/**
+ * Get the site description
+ */
+function get_site_description(): string
+{
+    return getOption('site_description', 'A modern content management system');
+}
+
+/**
+ * Get the page title
+ */
+function get_page_title(): string
+{
+    global $post;
+    
+    $siteName = get_site_name();
+    $separator = ' — ';
+    
+    if (isset($post) && !empty($post['title'])) {
+        return $post['title'] . $separator . $siteName;
+    }
+    
+    // Check for archive/taxonomy pages
+    if (isset($GLOBALS['taxonomy_term']) && !empty($GLOBALS['taxonomy_term']['name'])) {
+        return $GLOBALS['taxonomy_term']['name'] . $separator . $siteName;
+    }
+    
+    return $siteName;
+}
+
+/**
+ * Output the head action hook
+ */
+function vf_head(): void
+{
+    safe_do_action('vf_head');
+}
+
+/**
+ * Output the footer action hook
+ */
+function vf_footer(): void
+{
+    safe_do_action('vf_footer');
+}
+
+/**
+ * Check if a URL matches the current URL
+ */
+function is_current_url(string $url): bool
+{
+    $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $checkPath = parse_url($url, PHP_URL_PATH);
+    
+    // Normalize paths
+    $currentPath = rtrim($currentPath, '/') ?: '/';
+    $checkPath = rtrim($checkPath, '/') ?: '/';
+    
+    return $currentPath === $checkPath;
+}
+
+/**
+ * Get the content for the current post (uses global $post)
+ */
+function the_content(): string
+{
+    global $post;
+    
+    if (!isset($post) || !is_array($post)) {
+        return '';
+    }
+    
+    $content = $post['content'] ?? '';
+    
+    // Check if content is Anvil blocks (JSON)
+    if (class_exists('Anvil') && !empty($content) && $content[0] === '[') {
+        $blocks = Anvil::parseBlocks($content);
+        if (!empty($blocks)) {
+            $content = Anvil::renderBlocks($blocks);
+        }
+    }
+    
+    // Apply content filter
+    if (class_exists('Plugin')) {
+        $content = Plugin::applyFilters('the_content', $content, $post);
+    }
+    
+    return $content;
+}
+
+/**
+ * Get body classes
+ */
+function body_class(): string
+{
+    global $post;
+    
+    $classes = [];
+    
+    // Add post type class
+    if (isset($post['post_type'])) {
+        $classes[] = 'post-type-' . $post['post_type'];
+        $classes[] = $post['post_type'] . '-' . ($post['id'] ?? 0);
+    }
+    
+    // Add template class
+    if (isset($GLOBALS['template'])) {
+        $classes[] = 'template-' . $GLOBALS['template'];
+    }
+    
+    // Check if home
+    $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if ($currentPath === '/' || $currentPath === '') {
+        $classes[] = 'home';
+    }
+    
+    // Check if logged in
+    if (class_exists('User') && User::isLoggedIn()) {
+        $classes[] = 'logged-in';
+    }
+    
+    // Apply filter
+    $classes = safe_apply_filters('body_class', $classes);
+    
+    return implode(' ', array_filter($classes));
 }

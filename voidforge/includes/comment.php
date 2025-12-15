@@ -327,7 +327,7 @@ class Comment
         }
 
         // Allow filtering of comment data before insertion (for spam checking, etc.)
-        $data = Plugin::applyFilters('pre_insert_comment', $data);
+        $data = safe_apply_filters('pre_insert_comment', $data);
         
         // If filter returns false/null, comment was rejected
         if (!$data) {
@@ -366,12 +366,12 @@ class Comment
             self::updatePostCommentCount($insertData['post_id']);
             
             // Fire action
-            Plugin::doAction('comment_created', $commentId, $insertData);
+            safe_do_action('comment_created', $commentId, $insertData);
             
             // Fire reply action if this is a reply
             if ($insertData['parent_id'] > 0) {
                 $parentComment = self::find($insertData['parent_id']);
-                Plugin::doAction('comment_reply', $commentId, $insertData, $parentComment);
+                safe_do_action('comment_reply', $commentId, $insertData, $parentComment);
             }
         }
 
@@ -424,11 +424,11 @@ class Comment
                 // Fire status changed action if status actually changed
                 $newStatus = $data['status'];
                 if ($oldStatus !== $newStatus) {
-                    Plugin::doAction('comment_status_changed', $id, $newStatus, $oldStatus, $comment);
+                    safe_do_action('comment_status_changed', $id, $newStatus, $oldStatus, $comment);
                 }
             }
             
-            Plugin::doAction('comment_updated', $id, $updateData);
+            safe_do_action('comment_updated', $id, $updateData);
         }
 
         return $result !== false;
@@ -460,7 +460,7 @@ class Comment
 
         if ($result) {
             self::updatePostCommentCount($comment['post_id']);
-            Plugin::doAction('comment_deleted', $id, $comment);
+            safe_do_action('comment_deleted', $id, $comment);
         }
 
         return $result > 0;
@@ -574,14 +574,26 @@ class Comment
      */
     public static function areOpen(array $post): bool
     {
-        // Check global setting
-        if (!getOption('comments_enabled', true)) {
+        // Check global setting (handle string "1" or bool true)
+        $enabled = getOption('comments_enabled', true);
+        if (!$enabled || $enabled === '0' || $enabled === 'false') {
             return false;
         }
 
         // Check post type setting
         $postType = $post['post_type'] ?? 'post';
         $enabledTypes = getOption('comment_post_types', ['post']);
+        
+        // Handle if stored as JSON string
+        if (is_string($enabledTypes)) {
+            $decoded = json_decode($enabledTypes, true);
+            $enabledTypes = is_array($decoded) ? $decoded : [$enabledTypes];
+        }
+        
+        if (!is_array($enabledTypes)) {
+            $enabledTypes = ['post'];
+        }
+        
         if (!in_array($postType, $enabledTypes)) {
             return false;
         }

@@ -566,6 +566,7 @@
                 <div class="nav-group-title">Advanced</div>
                 <a href="#admin-pages">Admin Pages</a>
                 <a href="#rest-api">REST API</a>
+                <a href="#custom-blocks">Custom Blocks</a>
                 <a href="#assets">Styles & Scripts</a>
                 <a href="#database">Database</a>
             </div>
@@ -806,6 +807,146 @@
 <span class="c">// GET /api/my-plugin/v1/items</span></code></pre>
             </section>
             
+            <!-- Custom Blocks -->
+            <section id="custom-blocks">
+                <h2>Custom Blocks</h2>
+                <p>Anvil is VoidForge's block-based content editor. You can create custom blocks by extending the <code>AnvilBlock</code> base class.</p>
+                
+                <h3>Block Structure</h3>
+                <p>Each block is a separate PHP class that defines its settings, attributes, and rendering logic:</p>
+                
+                <div class="file-tree">
+                    <div>
+                        <svg class="folder" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                        my-plugin/
+                    </div>
+                    <div class="indent">
+                        <svg class="file-php" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                        my-plugin.php
+                    </div>
+                    <div class="indent">
+                        <svg class="folder" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>
+                        blocks/
+                    </div>
+                    <div class="indent-2">
+                        <svg class="file-php" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                        AlertBlock.php
+                    </div>
+                </div>
+                
+                <h3>Creating a Block</h3>
+                <p>Create a class extending <code>AnvilBlock</code>:</p>
+                
+<pre><code><span class="k">&lt;?php</span>
+<span class="c">/**
+ * Alert Block - Display alert/notice boxes
+ */</span>
+
+<span class="k">defined</span>(<span class="s">'CMS_ROOT'</span>) <span class="k">or</span> <span class="k">die</span>();
+
+<span class="k">class</span> <span class="v">AlertBlock</span> <span class="k">extends</span> <span class="v">AnvilBlock</span>
+{
+    <span class="c">// Block identifier (used in JSON)</span>
+    <span class="k">protected static</span> <span class="k">string</span> <span class="v">$name</span> = <span class="s">'alert'</span>;
+    
+    <span class="c">// Display name in editor</span>
+    <span class="k">protected static</span> <span class="k">string</span> <span class="v">$label</span> = <span class="s">'Alert'</span>;
+    
+    <span class="c">// Description shown in block picker</span>
+    <span class="k">protected static</span> <span class="k">string</span> <span class="v">$description</span> = <span class="s">'Display an alert or notice box'</span>;
+    
+    <span class="c">// Category: text, media, layout, embed</span>
+    <span class="k">protected static</span> <span class="k">string</span> <span class="v">$category</span> = <span class="s">'layout'</span>;
+    
+    <span class="c">// Lucide icon name</span>
+    <span class="k">protected static</span> <span class="k">string</span> <span class="v">$icon</span> = <span class="s">'alert-triangle'</span>;
+    
+    <span class="c">// Block attributes with types and defaults</span>
+    <span class="k">protected static</span> <span class="k">array</span> <span class="v">$attributes</span> = [
+        <span class="s">'content'</span> => [<span class="s">'type'</span> => <span class="s">'string'</span>, <span class="s">'default'</span> => <span class="s">''</span>],
+        <span class="s">'type'</span> => [<span class="s">'type'</span> => <span class="s">'string'</span>, <span class="s">'default'</span> => <span class="s">'info'</span>],
+        <span class="s">'dismissible'</span> => [<span class="s">'type'</span> => <span class="s">'boolean'</span>, <span class="s">'default'</span> => <span class="k">false</span>],
+    ];
+    
+    <span class="c">// Supported features</span>
+    <span class="k">protected static</span> <span class="k">array</span> <span class="v">$supports</span> = [<span class="s">'className'</span>];
+    
+    <span class="c">// Render the block HTML</span>
+    <span class="k">public static function</span> <span class="f">render</span>(<span class="k">array</span> <span class="v">$attrs</span>, <span class="k">array</span> <span class="v">$block</span>): <span class="k">string</span>
+    {
+        <span class="v">$classes</span> = <span class="f">self::buildClasses</span>(<span class="v">$attrs</span>, <span class="s">'alert'</span>);
+        <span class="v">$classes</span>[] = <span class="s">'alert-'</span> . (<span class="v">$attrs</span>[<span class="s">'type'</span>] ?? <span class="s">'info'</span>);
+        
+        <span class="k">if</span> (!<span class="k">empty</span>(<span class="v">$attrs</span>[<span class="s">'dismissible'</span>])) {
+            <span class="v">$classes</span>[] = <span class="s">'is-dismissible'</span>;
+        }
+        
+        <span class="k">return</span> <span class="f">sprintf</span>(
+            <span class="s">'&lt;div class="%s"&gt;%s&lt;/div&gt;'</span>,
+            <span class="f">esc</span>(<span class="f">self::classString</span>(<span class="v">$classes</span>)),
+            <span class="f">self::processInlineContent</span>(<span class="v">$attrs</span>[<span class="s">'content'</span>] ?? <span class="s">''</span>)
+        );
+    }
+}</code></pre>
+                
+                <h3>Registering Blocks</h3>
+                <p>Register your block on the <code>anvil_register_blocks</code> hook:</p>
+                
+<pre><code><span class="k">&lt;?php</span>
+<span class="c">/**
+ * Plugin Name: Custom Blocks
+ * Description: Adds custom Anvil blocks
+ */</span>
+
+<span class="k">defined</span>(<span class="s">'CMS_ROOT'</span>) <span class="k">or</span> <span class="k">die</span>();
+
+<span class="c">// Load the block class</span>
+<span class="k">require_once</span> <span class="f">__DIR__</span> . <span class="s">'/blocks/AlertBlock.php'</span>;
+
+<span class="c">// Register on the anvil_register_blocks hook</span>
+<span class="f">Plugin::addAction</span>(<span class="s">'anvil_register_blocks'</span>, <span class="k">function</span>() {
+    <span class="f">Anvil::registerBlockClass</span>(<span class="v">AlertBlock</span>::<span class="k">class</span>);
+});</code></pre>
+                
+                <h3>Block Attributes</h3>
+                <p>Each attribute needs a type and default value:</p>
+                
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Type</th><th>Description</th><th>Example</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>string</code></td><td>Text content</td><td><code>['type' => 'string', 'default' => '']</code></td></tr>
+                            <tr><td><code>integer</code></td><td>Numeric value</td><td><code>['type' => 'integer', 'default' => 1]</code></td></tr>
+                            <tr><td><code>boolean</code></td><td>True/false</td><td><code>['type' => 'boolean', 'default' => false]</code></td></tr>
+                            <tr><td><code>array</code></td><td>List of items</td><td><code>['type' => 'array', 'default' => []]</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Adding Categories</h3>
+                <p>You can also register custom block categories:</p>
+                
+<pre><code><span class="f">Plugin::addAction</span>(<span class="s">'anvil_register_blocks'</span>, <span class="k">function</span>() {
+    <span class="c">// Register a new category</span>
+    <span class="f">Anvil::registerCategory</span>(<span class="s">'commerce'</span>, [
+        <span class="s">'label'</span> => <span class="s">'Commerce'</span>,
+        <span class="s">'icon'</span> => <span class="s">'shopping-cart'</span>,
+        <span class="s">'order'</span> => <span class="n">50</span>,
+    ]);
+    
+    <span class="c">// Then register blocks in that category</span>
+    <span class="f">Anvil::registerBlockClass</span>(<span class="v">ProductBlock</span>::<span class="k">class</span>);
+});</code></pre>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Default blocks</strong>
+                        VoidForge includes 15 built-in blocks: paragraph, heading, list, quote, code, table, image, gallery, video, columns, spacer, separator, button, html, and embed.
+                    </div>
+                </div>
+            </section>
+            
             <!-- Assets -->
             <section id="assets">
                 <h2>Styles & Scripts</h2>
@@ -877,6 +1018,7 @@
                             <tr><td><code>post_status_changed</code></td><td><span class="badge badge-action">Action</span></td><td>When status changes</td></tr>
                             <tr><td><code>the_content</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify post content</td></tr>
                             <tr><td><code>the_title</code></td><td><span class="badge badge-filter">Filter</span></td><td>Modify post title</td></tr>
+                            <tr><td><code>anvil_register_blocks</code></td><td><span class="badge badge-action">Action</span></td><td>Register custom Anvil blocks</td></tr>
                         </tbody>
                     </table>
                 </div>

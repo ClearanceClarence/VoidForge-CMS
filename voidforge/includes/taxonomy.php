@@ -333,7 +333,7 @@ class Taxonomy
     public static function createTerm(string $taxonomy, array $data): int
     {
         // Allow filtering of term data before creation
-        $data = Plugin::applyFilters('pre_insert_term', $data, $taxonomy);
+        $data = safe_apply_filters('pre_insert_term', $data, $taxonomy);
         
         $table = Database::table('terms');
         
@@ -354,7 +354,7 @@ class Taxonomy
         $id = (int)Database::lastInsertId();
         
         // Fire term created action
-        Plugin::doAction('term_inserted', $id, $taxonomy, $data);
+        safe_do_action('term_inserted', $id, $taxonomy, $data);
         
         return $id;
     }
@@ -370,7 +370,7 @@ class Taxonomy
         }
         
         // Allow filtering of term data before update
-        $data = Plugin::applyFilters('pre_update_term', $data, $id, $term);
+        $data = safe_apply_filters('pre_update_term', $data, $id, $term);
         
         $table = Database::table('terms');
         
@@ -406,7 +406,7 @@ class Taxonomy
         );
         
         // Fire term updated action
-        Plugin::doAction('term_updated', $id, $data, $term);
+        safe_do_action('term_updated', $id, $data, $term);
         
         return true;
     }
@@ -426,7 +426,7 @@ class Taxonomy
         }
         
         // Fire pre-delete action
-        Plugin::doAction('pre_delete_term', $id, $term);
+        safe_do_action('pre_delete_term', $id, $term);
         
         // Update children to have no parent
         Database::execute("UPDATE {$table} SET parent_id = 0 WHERE parent_id = ?", [$id]);
@@ -438,7 +438,7 @@ class Taxonomy
         Database::execute("DELETE FROM {$table} WHERE id = ?", [$id]);
         
         // Fire deleted action
-        Plugin::doAction('term_deleted', $id, $term);
+        safe_do_action('term_deleted', $id, $term);
         
         return true;
     }
@@ -586,7 +586,7 @@ class Taxonomy
         self::updateTermCounts($taxonomy);
         
         // Fire action
-        Plugin::doAction('post_terms_set', $postId, $taxonomy, $termIds, $current);
+        safe_do_action('post_terms_set', $postId, $taxonomy, $termIds, $current);
     }
     
     /**

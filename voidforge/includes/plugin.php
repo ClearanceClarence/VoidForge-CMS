@@ -1400,15 +1400,6 @@ function drop_plugin_table(string $tableName): bool
 // =========================================================================
 
 /**
- * Apply body class filter
- */
-function body_class(array $classes = []): string
-{
-    $classes = Plugin::applyFilters('body_class', $classes);
-    return implode(' ', array_filter($classes));
-}
-
-/**
  * Get the title with filter applied
  */
 function the_title(array $post): string
@@ -1431,15 +1422,6 @@ function the_excerpt(array $post, int $length = 55): string
     }
     
     return Plugin::applyFilters('the_excerpt', $excerpt, $post);
-}
-
-/**
- * Get the content with filter applied
- */
-function the_content(array $post): string
-{
-    $content = $post['content'] ?? '';
-    return Plugin::applyFilters('the_content', $content, $post);
 }
 
 /**

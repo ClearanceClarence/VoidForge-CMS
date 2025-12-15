@@ -194,7 +194,7 @@ class Post
         $args = array_merge($defaults, $args);
         
         // Allow filtering of query args before execution
-        $args = Plugin::applyFilters('pre_get_posts', $args);
+        $args = safe_apply_filters('pre_get_posts', $args);
         
         $where = ['1=1'];
         $params = [];
@@ -253,7 +253,7 @@ class Post
         $posts = Database::query($sql, $params);
         
         // Allow filtering of query results
-        $posts = Plugin::applyFilters('the_posts', $posts, $args);
+        $posts = safe_apply_filters('the_posts', $posts, $args);
         
         return $posts;
     }
@@ -308,7 +308,7 @@ class Post
     public static function create(array $data): int
     {
         // Allow filtering of post data before insertion
-        $data = Plugin::applyFilters('pre_insert_post', $data);
+        $data = safe_apply_filters('pre_insert_post', $data);
         
         // Handle slug - use provided slug or generate from title
         if (!empty($data['slug'])) {
@@ -344,10 +344,10 @@ class Post
         }
         
         // Fire post_inserted action
-        Plugin::doAction('post_inserted', $id, $insertData, $data);
+        safe_do_action('post_inserted', $id, $insertData, $data);
         
         // Fire post type specific action
-        Plugin::doAction('post_inserted_' . $insertData['post_type'], $id, $insertData);
+        safe_do_action('post_inserted_' . $insertData['post_type'], $id, $insertData);
 
         return $id;
     }
@@ -366,7 +366,7 @@ class Post
         $oldStatus = $post['status'];
         
         // Allow filtering of update data
-        $data = Plugin::applyFilters('pre_update_post', $data, $id, $post);
+        $data = safe_apply_filters('pre_update_post', $data, $id, $post);
 
         $updateData = [
             'updated_at' => date('Y-m-d H:i:s'),
@@ -419,16 +419,16 @@ class Post
         
         if ($result) {
             // Fire post_updated action
-            Plugin::doAction('post_updated', $id, $updateData, $post);
+            safe_do_action('post_updated', $id, $updateData, $post);
             
             // Fire post type specific action
-            Plugin::doAction('post_updated_' . $post['post_type'], $id, $updateData, $post);
+            safe_do_action('post_updated_' . $post['post_type'], $id, $updateData, $post);
             
             // Fire status change action if status changed
             $newStatus = $updateData['status'] ?? $oldStatus;
             if ($oldStatus !== $newStatus) {
-                Plugin::doAction('post_status_changed', $id, $newStatus, $oldStatus, $post);
-                Plugin::doAction('post_status_' . $newStatus, $id, $oldStatus, $post);
+                safe_do_action('post_status_changed', $id, $newStatus, $oldStatus, $post);
+                safe_do_action('post_status_' . $newStatus, $id, $oldStatus, $post);
             }
         }
 
@@ -446,7 +446,7 @@ class Post
         }
         
         // Fire pre_delete action (can be used to prevent deletion)
-        Plugin::doAction('pre_delete_post', $id, $post, $permanent);
+        safe_do_action('pre_delete_post', $id, $post, $permanent);
         
         if ($permanent) {
             // Delete taxonomy terms
@@ -465,8 +465,8 @@ class Post
             $result = Database::delete(Database::table('posts'), 'id = ?', [$id]) > 0;
             
             if ($result) {
-                Plugin::doAction('post_deleted', $id, $post);
-                Plugin::doAction('post_deleted_' . $post['post_type'], $id, $post);
+                safe_do_action('post_deleted', $id, $post);
+                safe_do_action('post_deleted_' . $post['post_type'], $id, $post);
             }
             
             return $result;
@@ -495,7 +495,7 @@ class Post
         }
         
         if ($result) {
-            Plugin::doAction('post_trashed', $id, $post);
+            safe_do_action('post_trashed', $id, $post);
         }
         
         return $result;
@@ -533,7 +533,7 @@ class Post
         }
         
         if ($result) {
-            Plugin::doAction('post_restored', $id, $post);
+            safe_do_action('post_restored', $id, $post);
         }
         
         return $result;
@@ -861,7 +861,7 @@ class Post
     public static function setMeta(int $postId, string $key, $value): void
     {
         // Allow filtering of meta value before save
-        $value = Plugin::applyFilters('pre_update_post_meta', $value, $postId, $key);
+        $value = safe_apply_filters('pre_update_post_meta', $value, $postId, $key);
         
         if (is_array($value) || is_object($value)) {
             $value = json_encode($value);
@@ -884,7 +884,7 @@ class Post
         }
         
         // Fire action after meta updated
-        Plugin::doAction('post_meta_updated', $postId, $key, $value);
+        safe_do_action('post_meta_updated', $postId, $key, $value);
     }
 
     /**
@@ -892,12 +892,12 @@ class Post
      */
     public static function deleteMeta(int $postId, string $key): bool
     {
-        Plugin::doAction('pre_delete_post_meta', $postId, $key);
+        safe_do_action('pre_delete_post_meta', $postId, $key);
         
         $result = Database::delete(Database::table('postmeta'), 'post_id = ? AND meta_key = ?', [$postId, $key]) > 0;
         
         if ($result) {
-            Plugin::doAction('post_meta_deleted', $postId, $key);
+            safe_do_action('post_meta_deleted', $postId, $key);
         }
         
         return $result;
@@ -922,6 +922,19 @@ class Post
             return null;
         }
         return Media::find($post['featured_image_id']);
+    }
+
+    /**
+     * Get featured image URL (convenience method for themes)
+     * @return string|null
+     */
+    public static function featuredImage(array $post): ?string
+    {
+        $media = self::getFeaturedImage($post);
+        if (!$media) {
+            return null;
+        }
+        return Media::getUrl($media);
     }
 
     /**
@@ -956,7 +969,47 @@ class Post
         }
         
         // Allow filtering of permalink
-        return Plugin::applyFilters('the_permalink', $url, $post);
+        return safe_apply_filters('the_permalink', $url, $post);
+    }
+
+    /**
+     * Get adjacent (previous or next) post
+     * @param int $postId Current post ID
+     * @param string $direction 'prev' or 'next'
+     * @param string $postType Post type to filter by
+     * @return array|null
+     */
+    public static function getAdjacent(int $postId, string $direction = 'prev', string $postType = 'post'): ?array
+    {
+        $table = Database::table('posts');
+        $post = self::find($postId);
+        
+        if (!$post) {
+            return null;
+        }
+        
+        $createdAt = $post['created_at'];
+        
+        if ($direction === 'prev') {
+            // Get previous post (older)
+            $sql = "SELECT * FROM {$table} 
+                    WHERE post_type = ? 
+                    AND status = 'published' 
+                    AND created_at < ? 
+                    ORDER BY created_at DESC 
+                    LIMIT 1";
+        } else {
+            // Get next post (newer)
+            $sql = "SELECT * FROM {$table} 
+                    WHERE post_type = ? 
+                    AND status = 'published' 
+                    AND created_at > ? 
+                    ORDER BY created_at ASC 
+                    LIMIT 1";
+        }
+        
+        $results = Database::query($sql, [$postType, $createdAt]);
+        return $results[0] ?? null;
     }
 
     // =====================================================

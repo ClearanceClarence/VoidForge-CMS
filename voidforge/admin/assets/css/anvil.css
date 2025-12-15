@@ -1,0 +1,1511 @@
+/**
+ * Anvil Block Editor Styles - VoidForge CMS
+ * A modular block-based content editor
+ * 
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   Anvil Editor Container
+   ========================================================================== */
+
+.anvil-editor-container {
+    position: relative;
+}
+
+.anvil-editor {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Toolbar
+   ========================================================================== */
+
+.anvil-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.anvil-toolbar-left,
+.anvil-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.anvil-toolbar-center {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.anvil-toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-toolbar-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.anvil-toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.anvil-toolbar-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.anvil-toolbar-btn-primary {
+    width: auto;
+    padding: 0 0.875rem;
+    gap: 0.375rem;
+    background: var(--forge-primary);
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.anvil-toolbar-btn-primary:hover:not(:disabled) {
+    background: var(--forge-primary-dark);
+    color: #fff;
+}
+
+.anvil-toolbar-btn-primary svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   Canvas
+   ========================================================================== */
+
+.anvil-canvas {
+    min-height: 400px;
+    padding: 1.5rem;
+    background: var(--bg-card);
+}
+
+.anvil-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.anvil-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.anvil-empty-state svg {
+    color: var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.anvil-empty-state h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.anvil-empty-state p {
+    margin: 0 0 1.5rem;
+    font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   Block
+   ========================================================================== */
+
+.anvil-block {
+    position: relative;
+    margin: 0.5rem 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all 0.15s;
+}
+
+.anvil-block:hover {
+    border-color: var(--forge-primary-light);
+}
+
+.anvil-block.is-selected {
+    border-color: var(--forge-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.anvil-block-ghost {
+    opacity: 0.4;
+}
+
+.anvil-block-chosen {
+    box-shadow: var(--shadow-lg);
+}
+
+.anvil-block-drag {
+    opacity: 0.8;
+}
+
+/* Block Toolbar */
+.anvil-block-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.anvil-block-toolbar-left,
+.anvil-block-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.anvil-block-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--text-muted);
+    cursor: grab;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.anvil-block:hover .anvil-block-drag-handle {
+    opacity: 1;
+}
+
+.anvil-block-drag-handle:active {
+    cursor: grabbing;
+}
+
+.anvil-block-type {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.anvil-block-type svg {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+}
+
+.anvil-block-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-block-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.anvil-block-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.anvil-block-btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Block Content */
+.anvil-block-content {
+    padding: 1rem;
+}
+
+/* Block Inserter */
+.anvil-block-inserter {
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    transform: translateX(-50%);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.anvil-block:hover .anvil-block-inserter {
+    opacity: 1;
+}
+
+.anvil-block-inserter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: var(--forge-primary);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: all 0.15s;
+}
+
+.anvil-block-inserter-btn:hover {
+    background: var(--forge-primary-dark);
+    transform: scale(1.1);
+}
+
+/* ==========================================================================
+   Block Library Panel
+   ========================================================================== */
+
+.anvil-block-library {
+    position: fixed;
+    top: 0;
+    right: -360px;
+    width: 360px;
+    height: 100vh;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.25s ease;
+}
+
+.anvil-block-library.is-open {
+    right: 0;
+}
+
+.anvil-library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.anvil-library-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.anvil-library-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-library-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.anvil-library-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.anvil-library-search svg {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.anvil-library-search-input {
+    flex: 1;
+    padding: 0;
+    font-size: 0.875rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+}
+
+.anvil-library-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.anvil-library-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.anvil-library-category {
+    margin-bottom: 1.5rem;
+}
+
+.anvil-library-category-header {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    padding: 0 0.25rem;
+}
+
+.anvil-library-blocks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.anvil-library-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.75rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-library-block:hover {
+    border-color: var(--forge-primary);
+    background: var(--bg-hover);
+}
+
+.anvil-library-block-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    color: var(--forge-primary);
+}
+
+.anvil-library-block-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.anvil-library-block-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+/* ==========================================================================
+   Settings Panel
+   ========================================================================== */
+
+.anvil-block-settings {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 320px;
+    height: 100vh;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.25s ease;
+}
+
+.anvil-block-settings.is-open {
+    right: 0;
+}
+
+.anvil-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.anvil-settings-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.anvil-settings-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-settings-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.anvil-settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+}
+
+.anvil-settings-block-info {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.anvil-settings-block-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--forge-primary);
+    border-radius: 6px;
+    color: #fff;
+}
+
+.anvil-settings-block-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.anvil-settings-block-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.anvil-settings-field {
+    margin-bottom: 1.25rem;
+}
+
+.anvil-settings-field label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.anvil-settings-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    transition: border-color 0.15s;
+}
+
+.anvil-settings-input:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+}
+
+.anvil-settings-align {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.anvil-settings-align-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-settings-align-btn:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+.anvil-settings-align-btn.active {
+    background: var(--forge-primary);
+    border-color: var(--forge-primary);
+    color: #fff;
+}
+
+/* ==========================================================================
+   Overlay
+   ========================================================================== */
+
+.anvil-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s;
+}
+
+.anvil-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ==========================================================================
+   Common Button
+   ========================================================================== */
+
+.anvil-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.anvil-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--forge-primary);
+}
+
+.anvil-btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.anvil-btn-primary {
+    background: var(--forge-primary);
+    border-color: var(--forge-primary);
+    color: #fff;
+}
+
+.anvil-btn-primary:hover {
+    background: var(--forge-primary-dark);
+    border-color: var(--forge-primary-dark);
+}
+
+.anvil-btn-secondary {
+    background: var(--bg-card-header);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+.anvil-btn-secondary:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Block-Specific Styles
+   ========================================================================== */
+
+/* Paragraph */
+.anvil-paragraph-editor {
+    min-height: 1.5em;
+    line-height: 1.7;
+    outline: none;
+}
+
+.anvil-paragraph-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+}
+
+/* Heading */
+.anvil-heading-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.anvil-heading-level {
+    flex-shrink: 0;
+    width: 50px;
+    padding: 0.375rem;
+    font-size: 0.75rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+}
+
+.anvil-heading-editor {
+    flex: 1;
+    min-height: 1.2em;
+    font-weight: 600;
+    outline: none;
+}
+
+.anvil-heading-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+}
+
+.anvil-heading-h1 { font-size: 2rem; }
+.anvil-heading-h2 { font-size: 1.5rem; }
+.anvil-heading-h3 { font-size: 1.25rem; }
+.anvil-heading-h4 { font-size: 1.125rem; }
+.anvil-heading-h5 { font-size: 1rem; }
+.anvil-heading-h6 { font-size: 0.875rem; }
+
+/* List */
+.anvil-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-list-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.anvil-list-type-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-list-type-btn:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+.anvil-list-type-btn.active {
+    background: var(--forge-primary);
+    border-color: var(--forge-primary);
+    color: #fff;
+}
+
+.anvil-list-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.anvil-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.anvil-list-marker {
+    flex-shrink: 0;
+    width: 1.5rem;
+    padding-top: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.anvil-list-item-content {
+    flex: 1;
+    min-height: 1.5em;
+    padding: 0.375rem 0.5rem;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius);
+    outline: none;
+}
+
+.anvil-list-item-content:focus {
+    background: var(--bg-input);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.anvil-list-item-remove {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin-top: 0.25rem;
+    font-size: 1rem;
+    line-height: 1;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s;
+}
+
+.anvil-list-item:hover .anvil-list-item-remove {
+    opacity: 1;
+}
+
+.anvil-list-item-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.anvil-list-add {
+    align-self: flex-start;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-list-add:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+/* Quote */
+.anvil-quote-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-left: 1rem;
+    border-left: 4px solid var(--forge-primary);
+}
+
+.anvil-quote-content {
+    min-height: 2em;
+    font-size: 1.125rem;
+    font-style: italic;
+    line-height: 1.6;
+    outline: none;
+}
+
+.anvil-quote-content:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+}
+
+.anvil-quote-citation {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+}
+
+.anvil-quote-citation:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+}
+
+/* Code */
+.anvil-code-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.anvil-code-language {
+    align-self: flex-start;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+}
+
+.anvil-code-editor {
+    min-height: 120px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    background: #1e293b;
+    border: none;
+    border-radius: var(--border-radius);
+    color: #e2e8f0;
+    resize: vertical;
+}
+
+.anvil-code-editor:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
+/* Image */
+.anvil-image-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    background: var(--bg-card-header);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-image-placeholder:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+.anvil-image-placeholder svg {
+    opacity: 0.5;
+}
+
+.anvil-image-preview {
+    text-align: center;
+}
+
+.anvil-image-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+}
+
+.anvil-image-preview figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.anvil-image-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.anvil-image-caption,
+.anvil-image-alt {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.anvil-image-caption:focus,
+.anvil-image-alt:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+}
+
+/* Gallery */
+.anvil-gallery-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.anvil-gallery-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.anvil-gallery-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.anvil-gallery-controls select {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.anvil-gallery-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.anvil-gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.anvil-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.anvil-gallery-item-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.anvil-gallery-item:hover .anvil-gallery-item-remove {
+    opacity: 1;
+}
+
+.anvil-gallery-item-remove:hover {
+    background: #ef4444;
+}
+
+.anvil-gallery-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    aspect-ratio: 1;
+    background: var(--bg-card-header);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-gallery-add:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+.anvil-gallery-add span {
+    font-size: 0.75rem;
+}
+
+/* Video */
+.anvil-video-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-video-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    background: var(--bg-card-header);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-video-placeholder:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
+
+.anvil-video-wrapper video {
+    width: 100%;
+    border-radius: var(--border-radius);
+}
+
+.anvil-video-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Spacer */
+.anvil-spacer-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.anvil-spacer-preview {
+    position: relative;
+    background: repeating-linear-gradient(
+        45deg,
+        var(--bg-card-header),
+        var(--bg-card-header) 10px,
+        var(--border-color) 10px,
+        var(--border-color) 11px
+    );
+    border-radius: var(--border-radius);
+}
+
+.anvil-spacer-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+}
+
+.anvil-spacer-slider {
+    width: 100%;
+    accent-color: var(--forge-primary);
+}
+
+/* Separator */
+.anvil-separator-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-separator {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 1rem 0;
+}
+
+.anvil-separator-wide {
+    border-top-width: 4px;
+}
+
+.anvil-separator-dots {
+    border: none;
+    text-align: center;
+}
+
+.anvil-separator-dots::before {
+    content: '• • •';
+    color: var(--text-muted);
+    letter-spacing: 0.5em;
+}
+
+.anvil-separator-controls {
+    display: flex;
+    justify-content: center;
+}
+
+.anvil-separator-controls select {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+/* Button */
+.anvil-button-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-button-text,
+.anvil-button-url {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.anvil-button-text:focus,
+.anvil-button-url:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+}
+
+.anvil-button-preview {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius);
+}
+
+/* HTML */
+.anvil-html-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.anvil-html-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.anvil-html-tab {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.anvil-html-tab:hover {
+    color: var(--text-primary);
+}
+
+.anvil-html-tab.active {
+    background: var(--bg-card);
+    color: var(--forge-primary);
+}
+
+.anvil-html-editor {
+    min-height: 150px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    color: var(--text-primary);
+    resize: vertical;
+}
+
+.anvil-html-editor:focus {
+    outline: none;
+}
+
+.anvil-html-preview {
+    min-height: 150px;
+    padding: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* Embed */
+.anvil-embed-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-embed-url {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.anvil-embed-url:focus {
+    outline: none;
+    border-color: var(--forge-primary);
+}
+
+.anvil-embed-preview {
+    position: relative;
+    padding-top: 56.25%;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.anvil-embed-preview iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.anvil-embed-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-muted);
+}
+
+/* Columns */
+.anvil-columns-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-columns-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.anvil-columns-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.anvil-columns-controls select {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.anvil-columns-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.anvil-column {
+    min-height: 100px;
+    padding: 1rem;
+    background: var(--bg-card-header);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.anvil-column-empty {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Table */
+.anvil-table-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.anvil-table-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.anvil-table-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.anvil-table-editor {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.anvil-table-editor th,
+.anvil-table-editor td {
+    padding: 0;
+    border: 1px solid var(--border-color);
+}
+
+.anvil-table-editor th {
+    background: var(--bg-card-header);
+}
+
+.anvil-table-editor input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+}
+
+.anvil-table-editor input:focus {
+    outline: none;
+    background: var(--bg-hover);
+}
+
+.anvil-table-row-actions {
+    width: 32px;
+    border: none !important;
+    background: transparent !important;
+}
+
+.anvil-table-remove-row {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s;
+}
+
+.anvil-table-editor tr:hover .anvil-table-remove-row {
+    opacity: 1;
+}
+
+.anvil-table-remove-row:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Unknown block */
+.anvil-unknown-block {
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-card-header);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .anvil-block-library {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .anvil-block-settings {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .anvil-toolbar-btn-primary span {
+        display: none;
+    }
+    
+    .anvil-toolbar-btn-primary {
+        width: 40px;
+        padding: 0;
+    }
+}

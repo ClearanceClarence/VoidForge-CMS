@@ -1,0 +1,37 @@
+{
+    "name": "Flavor",
+    "version": "1.0.0",
+    "description": "A clean, modern theme designed to showcase Anvil block editor capabilities",
+    "author": "VoidForge",
+    "author_url": "https://voidforge.dev",
+    "license": "MIT",
+    "requires": "0.2.0",
+    "tags": ["minimal", "blog", "portfolio", "blocks"],
+    "settings": {
+        "accent_color": {
+            "label": "Accent Color",
+            "type": "color",
+            "default": "#6366f1"
+        },
+        "content_width": {
+            "label": "Content Width",
+            "type": "select",
+            "options": {
+                "narrow": "Narrow (680px)",
+                "default": "Default (780px)",
+                "wide": "Wide (920px)"
+            },
+            "default": "default"
+        },
+        "show_author": {
+            "label": "Show Author on Posts",
+            "type": "checkbox",
+            "default": true
+        },
+        "show_date": {
+            "label": "Show Date on Posts",
+            "type": "checkbox",
+            "default": true
+        }
+    }
+}

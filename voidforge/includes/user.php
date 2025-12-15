@@ -114,7 +114,9 @@ class User
     public static function login(string $username, string $password): bool
     {
         // Fire pre-login action
-        Plugin::doAction('pre_user_login', $username);
+        if (class_exists('Plugin')) {
+            safe_do_action('pre_user_login', $username);
+        }
         
         $table = Database::table('users');
         $user = Database::queryOne(
@@ -123,7 +125,10 @@ class User
         );
         
         // Allow custom authentication via filter
-        $authenticated = Plugin::applyFilters('authenticate', null, $username, $password, $user);
+        $authenticated = null;
+        if (class_exists('Plugin')) {
+            $authenticated = safe_apply_filters('authenticate', null, $username, $password, $user);
+        }
         
         // If filter returned a result, use it; otherwise do default check
         if ($authenticated === null) {
@@ -131,7 +136,9 @@ class User
         }
 
         if (!$authenticated || !$user) {
-            Plugin::doAction('user_login_failed', $username);
+            if (class_exists('Plugin')) {
+                safe_do_action('user_login_failed', $username);
+            }
             return false;
         }
 
@@ -142,7 +149,9 @@ class User
         Database::update(Database::table('users'), ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
         
         // Fire logged in action
-        Plugin::doAction('user_logged_in', $user['id'], $user);
+        if (class_exists('Plugin')) {
+            safe_do_action('user_logged_in', $user['id'], $user);
+        }
 
         return true;
     }
@@ -169,8 +178,8 @@ class User
         self::$currentUser = null;
         
         // Fire logged out action
-        if ($userId) {
-            Plugin::doAction('user_logged_out', $userId, $user);
+        if ($userId && class_exists('Plugin')) {
+            safe_do_action('user_logged_out', $userId, $user);
         }
     }
 
@@ -216,7 +225,9 @@ class User
     public static function create(array $data): int
     {
         // Allow filtering of user data before insertion
-        $data = Plugin::applyFilters('pre_insert_user', $data);
+        if (class_exists('Plugin')) {
+            $data = safe_apply_filters('pre_insert_user', $data);
+        }
         
         $insertData = [
             'username' => $data['username'],
@@ -230,7 +241,9 @@ class User
         $id = Database::insert(Database::table('users'), $insertData);
         
         // Fire user created action
-        Plugin::doAction('user_inserted', $id, $insertData);
+        if (class_exists('Plugin')) {
+            safe_do_action('user_inserted', $id, $insertData);
+        }
         
         return $id;
     }
@@ -248,7 +261,9 @@ class User
         $oldRole = $user['role'];
         
         // Allow filtering of update data
-        $data = Plugin::applyFilters('pre_update_user', $data, $id, $user);
+        if (class_exists('Plugin')) {
+            $data = safe_apply_filters('pre_update_user', $data, $id, $user);
+        }
         
         $updateData = [];
 
@@ -274,13 +289,13 @@ class User
 
         $result = Database::update(Database::table('users'), $updateData, 'id = ?', [$id]) > 0;
         
-        if ($result) {
+        if ($result && class_exists('Plugin')) {
             // Fire user updated action
-            Plugin::doAction('user_updated', $id, $updateData, $user);
+            safe_do_action('user_updated', $id, $updateData, $user);
             
             // Fire role changed action if role changed
             if (isset($updateData['role']) && $oldRole !== $updateData['role']) {
-                Plugin::doAction('user_role_changed', $id, $updateData['role'], $oldRole, $user);
+                safe_do_action('user_role_changed', $id, $updateData['role'], $oldRole, $user);
             }
         }
 
@@ -309,12 +324,14 @@ class User
         }
         
         // Fire pre-delete action
-        Plugin::doAction('pre_delete_user', $id, $user);
+        if (class_exists('Plugin')) {
+            safe_do_action('pre_delete_user', $id, $user);
+        }
 
         $result = Database::delete(Database::table('users'), 'id = ?', [$id]) > 0;
         
-        if ($result) {
-            Plugin::doAction('user_deleted', $id, $user);
+        if ($result && class_exists('Plugin')) {
+            safe_do_action('user_deleted', $id, $user);
         }
         
         return $result;

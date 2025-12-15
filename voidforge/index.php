@@ -28,12 +28,16 @@ require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/theme.php';
 require_once CMS_ROOT . '/includes/menu.php';
 require_once CMS_ROOT . '/includes/comment.php';
+require_once CMS_ROOT . '/includes/taxonomy.php';
+require_once CMS_ROOT . '/includes/anvil.php';
 
 // Initialize
 Post::init();
 Plugin::init();
 Theme::init();
 Menu::init();
+Taxonomy::init();
+Anvil::init();
 
 // Load active theme functions
 Theme::loadFunctions();
@@ -98,6 +102,78 @@ if (preg_match('#^api/(.+)$#', $path, $apiMatches)) {
 // Process scheduled tasks (cron)
 Plugin::processCronJobs();
 
+// Handle comment submission
+if ($path === 'comment-submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verify CSRF token
+    if (!verifyCsrf()) {
+        $error = urlencode('Invalid security token. Please try again.');
+        header('Location: ' . SITE_URL . '?comment_error=' . $error);
+        exit;
+    }
+    
+    // Get post ID
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $post = $postId ? Post::find($postId) : null;
+    
+    if (!$post || $post['status'] !== 'published') {
+        header('Location: ' . SITE_URL);
+        exit;
+    }
+    
+    // Check if comments are open
+    if (!Comment::areOpen($post)) {
+        $redirect = Post::permalink($post) . '?comment_error=' . urlencode('Comments are closed for this post.') . '#respond';
+        header('Location: ' . $redirect);
+        exit;
+    }
+    
+    // Get current user if logged in
+    $currentUser = User::current();
+    
+    // Prepare comment data
+    $commentData = [
+        'post_id' => $postId,
+        'parent_id' => (int) ($_POST['parent_id'] ?? 0),
+        'content' => trim($_POST['content'] ?? ''),
+        'user_id' => $currentUser ? $currentUser['id'] : null,
+        'author_name' => $currentUser ? ($currentUser['display_name'] ?? $currentUser['username']) : trim($_POST['author_name'] ?? ''),
+        'author_email' => $currentUser ? $currentUser['email'] : trim($_POST['author_email'] ?? ''),
+        'author_url' => '',
+        'author_ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+    
+    // Validate
+    $errors = Comment::validate($commentData);
+    if (!empty($errors)) {
+        $redirect = Post::permalink($post) . '?comment_error=' . urlencode(implode(' ', $errors)) . '#respond';
+        header('Location: ' . $redirect);
+        exit;
+    }
+    
+    // If replying, check parent exists
+    if ($commentData['parent_id'] > 0) {
+        $parent = Comment::find($commentData['parent_id']);
+        if (!$parent || $parent['post_id'] !== $postId) {
+            $redirect = Post::permalink($post) . '?comment_error=' . urlencode('Invalid parent comment.') . '#respond';
+            header('Location: ' . $redirect);
+            exit;
+        }
+    }
+    
+    // Create the comment
+    $commentId = Comment::create($commentData);
+    
+    if ($commentId) {
+        $redirect = Post::permalink($post) . '?comment_success=1#comments';
+        header('Location: ' . $redirect);
+        exit;
+    } else {
+        $redirect = Post::permalink($post) . '?comment_error=' . urlencode('Failed to submit comment.') . '#respond';
+        header('Location: ' . $redirect);
+        exit;
+    }
+}
+
 // Get custom post types for routing
 $customPostTypes = getOption('custom_post_types');
 if (!is_array($customPostTypes)) {
@@ -136,32 +212,51 @@ if (!empty($_GET['s'])) {
     loadTemplate('search', ['searchQuery' => $searchQuery]);
     
 } elseif (empty($path)) {
-    // Homepage
+    // Homepage - check homepage_display setting
+    $homepageDisplay = getOption('homepage_display', 'landing');
     $homepageId = getOption('homepage_id', 0);
     
-    if ($homepageId > 0) {
-        // Static homepage is set - load that page
+    if ($homepageDisplay === 'page' && $homepageId > 0) {
+        // Static page is set as homepage
         $post = Post::find($homepageId);
         if ($post && $post['status'] === 'published') {
-            // Check for home.php template first, then page.php, then index.php
-            if (Theme::hasTemplate('home')) {
-                loadTemplate('home', ['post' => $post]);
-            } elseif (Theme::hasTemplate('page')) {
-                loadTemplate('page', ['post' => $post]);
-            } else {
-                loadTemplate('index', ['post' => $post]);
-            }
+            loadTemplate('page', ['post' => $post]);
         } else {
             http_response_code(404);
             loadTemplate('404');
         }
+    } elseif ($homepageDisplay === 'landing' && Theme::hasTemplate('home')) {
+        // Show landing page (home.php template)
+        loadTemplate('home', ['post' => null]);
     } else {
-        // No static homepage set - check for home.php (landing page), else show posts listing
-        if (Theme::hasTemplate('home')) {
-            loadTemplate('home', ['post' => null]);
-        } else {
-            loadTemplate('index');
-        }
+        // Default: Show posts listing
+        $postsPerPage = getOption('posts_per_page', 10);
+        $currentPage = max(1, (int)($_GET['page'] ?? 1));
+        
+        $posts = Post::query([
+            'post_type' => 'post',
+            'status' => 'published',
+            'limit' => $postsPerPage,
+            'offset' => ($currentPage - 1) * $postsPerPage,
+            'orderby' => 'created_at',
+            'order' => 'DESC'
+        ]);
+        
+        $totalPosts = Post::count([
+            'post_type' => 'post',
+            'status' => 'published'
+        ]);
+        
+        $pagination = [
+            'current_page' => $currentPage,
+            'total_pages' => ceil($totalPosts / $postsPerPage),
+            'total_posts' => $totalPosts
+        ];
+        
+        loadTemplate('index', [
+            'posts' => $posts,
+            'pagination' => $pagination
+        ]);
     }
     
 } elseif (preg_match('#^post/([^/]+)$#', $path, $matches)) {

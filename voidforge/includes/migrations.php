@@ -280,5 +280,19 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '0.1.8');
+setOption('cms_version', '0.2.0');
 setOption('last_update', date('Y-m-d H:i:s'));
+
+// v0.2.0: Ensure comment options exist
+if (getOption('comments_enabled') === null) {
+    setOption('comments_enabled', '1');
+}
+if (getOption('comment_moderation') === null) {
+    setOption('comment_moderation', 'manual');
+}
+if (getOption('comment_post_types') === null) {
+    setOption('comment_post_types', ['post']);
+}
+if (getOption('comment_max_depth') === null) {
+    setOption('comment_max_depth', '3');
+}

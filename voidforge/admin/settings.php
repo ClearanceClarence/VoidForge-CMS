@@ -25,9 +25,11 @@ $pageTitle = 'Settings';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     setOption('site_title', trim($_POST['site_title'] ?? ''));
     setOption('site_description', trim($_POST['site_description'] ?? ''));
+    setOption('homepage_display', $_POST['homepage_display'] ?? 'landing');
     setOption('homepage_id', (int)($_POST['homepage_id'] ?? 0));
     setOption('posts_per_page', (int)($_POST['posts_per_page'] ?? 10));
     setOption('excerpt_length', (int)($_POST['excerpt_length'] ?? 55));
+    setOption('default_editor', $_POST['default_editor'] ?? 'anvil');
     
     // Handle date format - check for custom
     $dateFormat = $_POST['date_format'] ?? 'M j, Y';
@@ -67,9 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
 
 $siteTitle = getOption('site_title', '');
 $siteDescription = getOption('site_description', '');
+$homepageDisplay = getOption('homepage_display', 'landing');
 $homepageId = getOption('homepage_id', 0);
 $postsPerPage = getOption('posts_per_page', 10);
 $excerptLength = getOption('excerpt_length', 55);
+$defaultEditor = getOption('default_editor', 'anvil');
 $dateFormat = getOption('date_format', 'M j, Y');
 $timeFormat = getOption('time_format', 'H:i');
 $revisionSettings = getOption('revision_settings', ['post' => 10, 'page' => 10]);
@@ -955,21 +959,51 @@ function switchTab(tabId, evt) {
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <div class="form-grid">
+                    <div class="form-grid form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">Homepage</label>
-                            <select name="homepage_id" class="form-select">
-                                <option value="0">— None (show demo page) —</option>
+                            <label class="form-label">Homepage Display</label>
+                            <select name="homepage_display" class="form-select" id="homepageDisplay" onchange="toggleHomepageOptions()">
+                                <option value="posts" <?= $homepageDisplay === 'posts' ? 'selected' : '' ?>>
+                                    Latest Posts
+                                </option>
+                                <option value="landing" <?= $homepageDisplay === 'landing' ? 'selected' : '' ?>>
+                                    Landing Page (home.php)
+                                </option>
+                                <option value="page" <?= $homepageDisplay === 'page' ? 'selected' : '' ?>>
+                                    Static Page
+                                </option>
+                            </select>
+                            <span class="form-hint">Choose what to show on your homepage</span>
+                        </div>
+                        <div class="form-group" id="homepagePageSelect" style="<?= $homepageDisplay !== 'page' ? 'opacity: 0.5;' : '' ?>">
+                            <label class="form-label">Select Page</label>
+                            <select name="homepage_id" class="form-select" <?= $homepageDisplay !== 'page' ? 'disabled' : '' ?>>
+                                <option value="0">— Select a page —</option>
                                 <?php foreach ($allPages as $page): ?>
                                 <option value="<?= $page['id'] ?>" <?= $homepageId == $page['id'] ? 'selected' : '' ?>>
                                     <?= esc($page['title']) ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                            <span class="form-hint">Select a page to display on your homepage, or choose "None" to show the demo landing page</span>
+                            <span class="form-hint">Only used when "Static Page" is selected</span>
                         </div>
                     </div>
                 </div>
+                <script>
+                function toggleHomepageOptions() {
+                    const display = document.getElementById('homepageDisplay').value;
+                    const pageSelect = document.getElementById('homepagePageSelect');
+                    const selectEl = pageSelect.querySelector('select');
+                    
+                    if (display === 'page') {
+                        pageSelect.style.opacity = '1';
+                        selectEl.disabled = false;
+                    } else {
+                        pageSelect.style.opacity = '0.5';
+                        selectEl.disabled = true;
+                    }
+                }
+                </script>
             </div>
             
             <div class="settings-card">
@@ -992,11 +1026,25 @@ function switchTab(tabId, evt) {
                 <div class="settings-card-body">
                     <div class="form-grid form-grid-2">
                         <div class="form-group">
+                            <label class="form-label">Default Editor</label>
+                            <select name="default_editor" class="form-select">
+                                <option value="anvil" <?= $defaultEditor === 'anvil' ? 'selected' : '' ?>>
+                                    Anvil (Block Editor)
+                                </option>
+                                <option value="classic" <?= $defaultEditor === 'classic' ? 'selected' : '' ?>>
+                                    Classic (HTML)
+                                </option>
+                            </select>
+                            <span class="form-hint">Choose between block-based or classic HTML editor</span>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Posts Per Page</label>
                             <input type="number" name="posts_per_page" class="form-input" 
                                    value="<?= $postsPerPage ?>" min="1" max="100">
                             <span class="form-hint">Number of posts shown on archive pages</span>
                         </div>
+                    </div>
+                    <div class="form-grid form-grid-2">
                         <div class="form-group">
                             <label class="form-label">Excerpt Length</label>
                             <input type="number" name="excerpt_length" class="form-input" 

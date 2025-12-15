@@ -55,7 +55,7 @@ class Menu
     public static function create(array $data): int
     {
         // Allow filtering of menu data before creation
-        $data = Plugin::applyFilters('pre_save_menu', $data, null);
+        $data = safe_apply_filters('pre_save_menu', $data, null);
         
         $table = Database::table('menus');
         
@@ -67,7 +67,7 @@ class Menu
         ]);
         
         // Fire menu created action
-        Plugin::doAction('menu_saved', $id, $data);
+        safe_do_action('menu_saved', $id, $data);
         
         return $id;
     }
@@ -78,7 +78,7 @@ class Menu
     public static function update(int $id, array $data): bool
     {
         // Allow filtering of menu data before update
-        $data = Plugin::applyFilters('pre_save_menu', $data, $id);
+        $data = safe_apply_filters('pre_save_menu', $data, $id);
         
         $table = Database::table('menus');
         
@@ -96,7 +96,7 @@ class Menu
         $result = Database::update($table, $updateData, "id = ?", [$id]) > 0;
         
         if ($result) {
-            Plugin::doAction('menu_saved', $id, $data);
+            safe_do_action('menu_saved', $id, $data);
         }
         
         return $result;
@@ -122,7 +122,7 @@ class Menu
         $result = Database::delete($menusTable, "id = ?", [$id]) > 0;
         
         if ($result) {
-            Plugin::doAction('menu_deleted', $id, $menu);
+            safe_do_action('menu_deleted', $id, $menu);
         }
         
         return $result;
@@ -227,7 +227,7 @@ class Menu
         $tree = self::buildTree($items);
         
         // Allow filtering of menu items
-        return Plugin::applyFilters('menu_items', $tree, $menuId);
+        return safe_apply_filters('menu_items', $tree, $menuId);
     }
 
     /**
@@ -403,7 +403,7 @@ class Menu
             }
             
             // Allow filtering of menu item classes
-            $classes = Plugin::applyFilters('menu_item_classes', $classes, $item, $depth);
+            $classes = safe_apply_filters('menu_item_classes', $classes, $item, $depth);
             
             $itemAttr = ' class="' . esc(implode(' ', $classes)) . '"';
             

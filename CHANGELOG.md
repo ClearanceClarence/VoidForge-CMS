@@ -7,6 +7,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2025-12-15
+
+### 🔨 Anvil Block Editor
+
+A powerful new block-based content editor for posts, pages, and custom post types.
+
+#### Core Features
+- **15 Block Types** — Paragraph, Heading, List, Quote, Code, Image, Gallery, Video, Columns, Spacer, Separator, Button, HTML, Embed, Table
+- **4 Block Categories** — Text, Media, Layout, Embeds with iconography
+- **Drag & Drop** — Reorder blocks with smooth animations (SortableJS)
+- **Block Library Panel** — Searchable block picker with category filtering
+- **Settings Panel** — Inline block configuration without modals
+- **Undo/Redo** — Full history support (50 levels) with Ctrl+Z/Ctrl+Y
+- **Media Integration** — Seamless connection to VoidForge media library
+
+#### Class-Based Block Architecture
+- **Refactored from monolithic to modular** — Each block is now a separate PHP class
+- **AnvilBlock Base Class** — Abstract base class with common functionality
+- **15 Individual Block Classes** — Located in `/includes/anvil/blocks/`
+- **Plugin API** — Register custom blocks via `Anvil::registerBlockClass()`
+
+```php
+// Register a custom block class
+class AlertBlock extends AnvilBlock {
+    public static function getType(): string { return 'alert'; }
+    public static function getLabel(): string { return 'Alert'; }
+    public static function getCategory(): string { return 'layout'; }
+    public static function getIcon(): string { return 'alert-circle'; }
+    
+    public static function getAttributes(): array {
+        return [
+            'content' => ['type' => 'string', 'default' => ''],
+            'type' => ['type' => 'string', 'default' => 'info']
+        ];
+    }
+    
+    public static function render(array $attrs): string {
+        return '<div class="alert alert-' . esc($attrs['type']) . '">' . 
+               esc($attrs['content']) . '</div>';
+    }
+}
+
+Anvil::registerBlockClass(AlertBlock::class);
+```
+
+#### Block Types
+
+| Block | Category | Description |
+|-------|----------|-------------|
+| `paragraph` | Text | Rich text paragraph with alignment and drop cap |
+| `heading` | Text | H1-H6 headings with anchor support |
+| `list` | Text | Ordered and unordered lists |
+| `quote` | Text | Blockquote with citation |
+| `code` | Text | Syntax-highlighted code block with language label |
+| `table` | Text | Data tables with headers |
+| `image` | Media | Single image with caption, link, and alignment |
+| `gallery` | Media | Image gallery with columns (2-6) |
+| `video` | Media | Video embed (YouTube, Vimeo, self-hosted) |
+| `columns` | Layout | Multi-column layouts (2-4 columns) |
+| `spacer` | Layout | Vertical spacing (10-200px) |
+| `separator` | Layout | Horizontal divider (default, wide, dots) |
+| `button` | Layout | CTA button (primary, secondary, outline) |
+| `html` | Embed | Custom HTML code |
+| `embed` | Embed | oEmbed for external content |
+
+### 🎨 Flavor Theme
+
+A new clean, modern theme designed specifically to showcase all Anvil block editor capabilities.
+
+#### Theme Features
+- **Block Showcase Landing Page** — Demonstrates all 15 block types with live examples
+- **Comprehensive Block Styling** — CSS for every block type with proper spacing and typography
+- **Google Fonts** — Inter (UI), Merriweather (body), JetBrains Mono (code)
+- **Responsive Design** — Mobile-first with proper breakpoints
+- **Theme Settings** — Accent color, content width, show/hide author & date
+
+#### Theme Settings (via Admin → Theme Settings)
+| Setting | Type | Description |
+|---------|------|-------------|
+| Accent Color | Color picker | Primary accent color (default: #6366f1) |
+| Content Width | Select | Narrow (680px), Default (780px), Wide (920px) |
+| Show Author | Toggle | Display author on posts |
+| Show Date | Toggle | Display date on posts |
+| Custom CSS | Textarea | Additional custom styles |
+
+#### Template Files
+- `home.php` — Block showcase landing page with hero, features, and examples
+- `single.php` — Single post with reading time, prev/next navigation
+- `page.php` — Static page template
+- `index.php` — Archive/blog listing
+- `header.php` — Site header with logo and navigation
+- `footer.php` — Site footer
+- `404.php` — Error page
+- `functions.php` — Theme helper functions
+
+### 🛠️ Theme Settings Improvements
+
+- **Simplified Flavor Settings** — Clean form with only relevant options
+- **Removed Legacy Settings** — No more hero/stats/features settings for Flavor
+- **Theme-Specific Forms** — Different themes show different settings
+- **Proper Default Values** — Settings now properly read from theme.json
+
+### 📚 Documentation Updates
+
+- **Plugin Development Guide** — Updated with class-based block registration
+- **Theme Development Guide** — Updated with Flavor theme patterns
+
+### 🐛 Bug Fixes
+
+- Fixed `Theme::getSettings()` not existing — now uses `getOption('theme_settings_'.$theme)`
+- Fixed `Menu::get()` not existing — now uses `Menu::getMenuByLocation()`
+- Fixed `Post::getThumbnail()` not existing — now uses `Post::featuredImage()`
+- Fixed `Post::adjacent()` not existing — now uses `Post::getAdjacent()`
+- Fixed `Taxonomy::termLink()` not existing — now uses `Taxonomy::getTermUrl()`
+- Fixed theme settings not applying to frontend
+
+### 📁 New Files
+
+```
+includes/anvil/
+├── AnvilBlock.php              # Abstract base class
+└── blocks/
+    ├── ParagraphBlock.php
+    ├── HeadingBlock.php
+    ├── ListBlock.php
+    ├── QuoteBlock.php
+    ├── CodeBlock.php
+    ├── TableBlock.php
+    ├── ImageBlock.php
+    ├── GalleryBlock.php
+    ├── VideoBlock.php
+    ├── ColumnsBlock.php
+    ├── SpacerBlock.php
+    ├── SeparatorBlock.php
+    ├── ButtonBlock.php
+    ├── HtmlBlock.php
+    └── EmbedBlock.php
+
+themes/flavor/
+├── theme.json                  # Theme metadata and settings schema
+├── style.css                   # 17KB comprehensive stylesheet
+├── functions.php               # Theme helper functions
+├── home.php                    # Block showcase landing page
+├── header.php
+├── footer.php
+├── single.php
+├── page.php
+├── index.php
+├── 404.php
+└── assets/
+    ├── css/
+    └── js/
+```
+
+### 📝 Modified Files
+
+- `includes/anvil.php` — Refactored to use class-based blocks
+- `includes/theme.php` — Default theme changed to 'flavor'
+- `install.php` — Default theme set to 'flavor', version 0.2.0
+- `admin/theme-settings.php` — Separate forms for different themes
+- `README.md` — Updated features and directory structure
+
+---
+
 ## [0.1.8] - 2025-12-13
 
 ### 🪝 Comprehensive Hooks & Filters System
@@ -1126,6 +1290,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.0 | 2025-12-15 | Anvil block editor with 15 blocks, class-based architecture, Flavor theme with block showcase |
 | 0.1.8 | 2025-12-13 | Comments system with threading, moderation, guest commenting, admin management |
 | 0.1.7 | 2025-12-12 | Bulk actions (trash, publish, draft, taxonomy assignment), Quick Edit (inline editing with AJAX) |
 | 0.1.6.2 | 2025-12-12 | Login screen editor with 80+ settings, 12 presets, pattern backgrounds, live preview |
