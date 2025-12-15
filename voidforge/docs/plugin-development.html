@@ -531,8 +531,9 @@
             </a>
             
             <nav>
-                <a href="plugin-development.html" class="active">Plugins</a>
                 <a href="theme-development.html">Themes</a>
+                <a href="plugin-development.html" class="active">Plugins</a>
+                <a href="rest-api.html">REST API</a>
                 <a href="../admin/" class="btn-primary">Admin Panel</a>
             </nav>
             
@@ -689,7 +690,7 @@
 
 <span class="c">// Example: Send email when post is published</span>
 <span class="f">Plugin::addAction</span>(<span class="s">'post_status_published'</span>, <span class="k">function</span>(<span class="v">$post</span>, <span class="v">$oldStatus</span>) {
-    <span class="f">mail</span>(<span class="s">'admin@site.com'</span>, <span class="s">'New Post'</span>, <span class="v">$post</span>[<span class="s">'title'</span>] . <span class="s">' was published'</span>);
+    <span class="f">mail</span>(<span class="s">'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dbbabfb6b2b59ba8b2afbef5b8b4b6">[email&#160;protected]</a>'</span>, <span class="s">'New Post'</span>, <span class="v">$post</span>[<span class="s">'title'</span>] . <span class="s">' was published'</span>);
 });</code></pre>
                 
                 <h3>Triggering Actions</h3>
@@ -1160,7 +1161,7 @@
         </main>
     </div>
     
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Active link tracking
         const sections = document.querySelectorAll('section');
         const links = document.querySelectorAll('.nav-group a');
@@ -1176,12 +1177,4 @@
         }
         
         window.addEventListener('scroll', updateActive);
-        updateActive();
-        
-        // Close mobile menu on click
-        links.forEach(l => l.addEventListener('click', () => {
-            document.querySelector('aside').classList.remove('open');
-        }));
-    </script>
-</body>
-</html>
+        updateActive()

@@ -7,6 +7,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2025-12-15
+
+### 🔗 REST API
+
+A complete REST API for programmatic access to VoidForge content.
+
+#### API Features
+- **Full CRUD Operations** — Create, read, update, delete for posts, pages, media, users, and taxonomies
+- **API Key Authentication** — Secure access via `X-API-Key` and `X-API-Secret` headers
+- **Granular Permissions** — Control read/write/delete access per API key
+- **Admin Interface** — New page at Admin → Tools → API Keys for key management
+- **JSON Responses** — Standard REST responses with pagination and filtering
+
+#### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/posts` | List posts with filtering |
+| GET | `/api/v1/posts/{id}` | Get single post |
+| POST | `/api/v1/posts` | Create post |
+| PUT | `/api/v1/posts/{id}` | Update post |
+| DELETE | `/api/v1/posts/{id}` | Delete post |
+| GET | `/api/v1/pages` | List pages |
+| GET | `/api/v1/media` | List media |
+| POST | `/api/v1/media` | Upload media (base64) |
+| GET | `/api/v1/users` | List users |
+| GET | `/api/v1/taxonomies/{type}` | List taxonomy terms |
+
+#### Query Parameters
+- `per_page` — Items per page (default: 10, max: 100)
+- `page` — Page number
+- `status` — Filter by status (published, draft, etc.)
+- `post_type` — Filter by post type
+- `orderby` — Sort field (date, title, id)
+- `order` — Sort direction (asc, desc)
+
+### 🎨 Modern Installer
+
+Completely redesigned installation wizard with step-by-step flow.
+
+#### Installer Features
+- **Step 1: Requirements** — System check with pass/fail badges for PHP version, extensions, and directory permissions
+- **Step 2: Configuration** — Database settings, site info, and admin account setup in organized cards
+- **Step 3: Complete** — Success confirmation with links to admin and frontend
+- **Visual Design** — Purple gradient header, modern card layout, smooth animations
+
+### 🏠 Dashboard Redesign
+
+New modern admin dashboard with improved visual design.
+
+#### Dashboard Features
+- **Hero Section** — Purple gradient with time-based greeting and date display
+- **Stats Row** — 6 colored number cards (Posts, Pages, Drafts, Media, Comments, Users)
+- **Quick Actions** — 4 large gradient icon buttons (New Post, New Page, Upload, Settings)
+- **Two-Column Layout** — Posts/Pages lists on left, Comments/Media/System info on right
+- **Status Pills** — Color-coded badges for published, draft, and scheduled posts
+
+### 🎯 Modal Confirmations
+
+Replaced all JavaScript `alert()` and `confirm()` dialogs with elegant modal dialogs.
+
+#### Modal Features
+- **Confirmation Modal** — Clean dialog for trash/delete actions with item name display
+- **Toast Notifications** — Slide-in notifications for validation feedback
+- **Keyboard Support** — Escape key to cancel, click outside to close
+- **Consistent Styling** — Matches admin design language
+
+### 🐛 Bug Fixes
+
+#### Critical Fixes
+- **Nested Forms Bug** — Fixed post duplication when using bulk trash (forms were nested inside bulk form)
+- **Database Connection Handling** — Properly redirects to installer when database doesn't exist
+- **Constant Redefinition** — Fixed `CMS_VERSION` and `CMS_NAME` warnings during installation
+- **Missing SESSION_NAME** — Added to generated config.php to prevent fatal errors
+- **PHP 8.1 Compatibility** — Fixed null email causing deprecation warnings in dashboard
+
+#### JavaScript Fixes
+- **Variable Scoping** — Moved global variables to top of script block
+- **Bulk Action Confirmation** — Added flag to prevent modal loop on form submit
+- **Form ID Mismatch** — Fixed `bulkForm` vs `bulkActionsForm` reference
+
+### 📁 New Files
+
+```
+admin/
+└── api-keys.php              # API key management interface
+
+includes/
+└── rest-api.php              # REST API implementation
+```
+
+### 📝 Modified Files
+
+- `install.php` — Complete redesign with modern UI, added `trashed_at` column to schema
+- `admin/index.php` — Dashboard redesign with gradient hero and stat cards
+- `admin/posts.php` — Modal confirmations, removed nested forms, toast notifications
+- `includes/config.php` (generated) — Added `SESSION_NAME` constant
+
+---
+
 ## [0.2.0] - 2025-12-15
 
 ### 🔨 Anvil Block Editor
@@ -1290,6 +1390,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.1 | 2025-12-15 | REST API with API key management, modern installer redesign, dashboard redesign, modal confirmations |
 | 0.2.0 | 2025-12-15 | Anvil block editor with 15 blocks, class-based architecture, Flavor theme with block showcase |
 | 0.1.8 | 2025-12-13 | Comments system with threading, moderation, guest commenting, admin management |
 | 0.1.7 | 2025-12-12 | Bulk actions (trash, publish, draft, taxonomy assignment), Quick Edit (inline editing with AJAX) |

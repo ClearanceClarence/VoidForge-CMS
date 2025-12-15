@@ -11,6 +11,11 @@ if (file_exists(CMS_ROOT . '/includes/comment.php')) {
     require_once CMS_ROOT . '/includes/comment.php';
 }
 
+// Load REST API class
+if (file_exists(CMS_ROOT . '/includes/rest-api.php')) {
+    require_once CMS_ROOT . '/includes/rest-api.php';
+}
+
 // Fire admin_init action
 Plugin::doAction('admin_init');
 

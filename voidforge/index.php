@@ -19,7 +19,16 @@ if (!defined('DB_NAME') || DB_NAME === '' || !defined('DB_HOST') || DB_HOST === 
     exit;
 }
 
-require_once CMS_ROOT . '/includes/database.php';
+// Try to connect to database - if it fails, redirect to installer
+try {
+    require_once CMS_ROOT . '/includes/database.php';
+    // Test connection by checking if users table exists
+    Database::query("SELECT 1 FROM " . Database::table('users') . " LIMIT 1");
+} catch (Exception $e) {
+    header('Location: install.php');
+    exit;
+}
+
 require_once CMS_ROOT . '/includes/functions.php';
 require_once CMS_ROOT . '/includes/user.php';
 require_once CMS_ROOT . '/includes/post.php';
@@ -30,6 +39,7 @@ require_once CMS_ROOT . '/includes/menu.php';
 require_once CMS_ROOT . '/includes/comment.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
 require_once CMS_ROOT . '/includes/anvil.php';
+require_once CMS_ROOT . '/includes/rest-api.php';
 
 // Initialize
 Post::init();
@@ -38,6 +48,7 @@ Theme::init();
 Menu::init();
 Taxonomy::init();
 Anvil::init();
+RestAPI::init();
 
 // Load active theme functions
 Theme::loadFunctions();

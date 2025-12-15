@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API — VoidForge CMS</title>
+    <meta name="description" content="Complete REST API documentation for VoidForge CMS. Learn authentication, endpoints, request/response formats, and code examples.">
+    <link rel="icon" href="../favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            --purple-dark: #7c3aed;
+            --cyan: #06b6d4;
+            --cyan-light: #22d3ee;
+            
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            
+            --white: #ffffff;
+            --gray-50: #fafafa;
+            --gray-100: #f4f4f5;
+            --gray-200: #e4e4e7;
+            --gray-300: #d4d4d8;
+            --gray-400: #a1a1aa;
+            --gray-500: #71717a;
+            --gray-600: #52525b;
+            --gray-700: #3f3f46;
+            --gray-800: #27272a;
+            --gray-900: #18181b;
+            --gray-950: #09090b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: 15px;
+            min-height: 100vh;
+        }
+        
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--gray-900);
+        }
+        
+        .logo-mark { width: 32px; height: 32px; }
+        
+        .logo span {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        nav a {
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+        
+        nav a:hover { color: var(--gray-900); background: var(--gray-100); }
+        nav a.active { color: var(--purple); background: rgba(139, 92, 246, 0.08); }
+        nav a.btn-primary { background: var(--gray-900); color: white; margin-left: 8px; }
+        nav a.btn-primary:hover { background: var(--gray-700); }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 64px 24px 0;
+            gap: 48px;
+        }
+        
+        aside {
+            position: sticky;
+            top: 88px;
+            height: fit-content;
+            max-height: calc(100vh - 104px);
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+        
+        aside::-webkit-scrollbar { width: 0; }
+        
+        .nav-group { margin-bottom: 24px; }
+        
+        .nav-group-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-400);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        
+        .nav-group a {
+            display: block;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 6px;
+            border-left: 2px solid transparent;
+            margin-left: -2px;
+            transition: all 0.15s;
+        }
+        
+        .nav-group a:hover { color: var(--gray-900); background: var(--gray-100); }
+        .nav-group a.active {
+            color: var(--purple);
+            background: rgba(139, 92, 246, 0.06);
+            border-left-color: var(--purple);
+        }
+        
+        main { max-width: 720px; padding: 24px 0 80px; }
+        
+        .page-header { margin-bottom: 48px; }
+        
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+        
+        .page-header p {
+            font-size: 17px;
+            color: var(--gray-500);
+        }
+        
+        section {
+            margin-bottom: 48px;
+            scroll-margin-top: 88px;
+        }
+        
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin: 24px 0 12px;
+        }
+        
+        h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin: 16px 0 8px;
+        }
+        
+        p { margin-bottom: 16px; }
+        
+        ul, ol { margin: 0 0 16px 24px; }
+        li { margin-bottom: 6px; }
+        
+        code {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 13px;
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--purple-dark);
+        }
+        
+        pre {
+            background: var(--gray-900);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--gray-300);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        
+        /* Syntax highlighting */
+        .c { color: #6b7280; }          /* comments */
+        .k { color: #c084fc; }          /* keywords */
+        .s { color: #86efac; }          /* strings */
+        .n { color: #93c5fd; }          /* numbers */
+        .f { color: #67e8f9; }          /* functions */
+        .v { color: #fca5a5; }          /* variables */
+        .t { color: #d4d4d8; }          /* text/html */
+        .a { color: #fdba74; }          /* attributes */
+        .m { color: #f472b6; }          /* methods */
+        
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--gray-600);
+            background: var(--gray-100);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td code {
+            font-size: 12px;
+        }
+        
+        .callout {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .callout-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .callout-content {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .callout-content strong { font-weight: 600; }
+        .callout-content a { color: inherit; }
+        
+        .callout-info {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #1e40af;
+        }
+        
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #92400e;
+        }
+        
+        .callout-success {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #065f46;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Source Code Pro', monospace;
+            text-transform: uppercase;
+        }
+        
+        .method-get { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .method-post { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .method-put { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+        .method-delete { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+        
+        .endpoint {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .endpoint-path {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+        
+        .endpoint-desc {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin: 0;
+        }
+        
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            aside { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="../admin/" class="logo">
+                <svg class="logo-mark" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#logo-grad)"/>
+                    <path d="M8 8L16 24L24 8" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#8b5cf6"/>
+                            <stop offset="1" stop-color="#06b6d4"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>VoidForge</span>
+            </a>
+            <nav>
+                <a href="theme-development.html">Themes</a>
+                <a href="plugin-development.html">Plugins</a>
+                <a href="rest-api.html" class="active">REST API</a>
+                <a href="../admin/" class="btn-primary">Admin</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="layout">
+        <aside>
+            <div class="nav-group">
+                <div class="nav-group-title">Getting Started</div>
+                <a href="#introduction">Introduction</a>
+                <a href="#authentication">Authentication</a>
+                <a href="#api-keys">API Key Management</a>
+                <a href="#base-url">Base URL</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Endpoints</div>
+                <a href="#posts">Posts</a>
+                <a href="#pages">Pages</a>
+                <a href="#media">Media</a>
+                <a href="#users">Users</a>
+                <a href="#taxonomies">Taxonomies</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Reference</div>
+                <a href="#query-params">Query Parameters</a>
+                <a href="#responses">Response Format</a>
+                <a href="#errors">Error Handling</a>
+                <a href="#examples">Code Examples</a>
+            </div>
+        </aside>
+        
+        <main>
+            <div class="page-header">
+                <h1>REST API</h1>
+                <p>Programmatic access to your VoidForge CMS content via a RESTful JSON API.</p>
+            </div>
+            
+            <!-- Introduction -->
+            <section id="introduction">
+                <h2>Introduction</h2>
+                <p>The VoidForge REST API provides full CRUD (Create, Read, Update, Delete) operations for posts, pages, media, users, and taxonomies. All requests and responses use JSON format.</p>
+                
+                <h3>Features</h3>
+                <ul>
+                    <li>Full CRUD operations for all content types</li>
+                    <li>API key authentication with granular permissions</li>
+                    <li>Pagination and filtering support</li>
+                    <li>JSON request and response format</li>
+                    <li>Consistent error handling</li>
+                </ul>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Version:</strong> This documentation covers API v1, included in VoidForge CMS 0.2.1+
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Authentication -->
+            <section id="authentication">
+                <h2>Authentication</h2>
+                <p>All API requests require authentication using an API key and secret. Include these in your request headers:</p>
+                
+<pre><code><span class="a">X-API-Key</span>: <span class="s">your_api_key_here</span>
+<span class="a">X-API-Secret</span>: <span class="s">your_api_secret_here</span>
+<span class="a">Content-Type</span>: <span class="s">application/json</span></code></pre>
+                
+                <h3>Example Request</h3>
+<pre><code><span class="f">curl</span> <span class="s">-X GET</span> <span class="s">"https://yoursite.com/api/v1/posts"</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Key: vf_abc123..."</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Secret: vfs_xyz789..."</span></code></pre>
+                
+                <div class="callout callout-warning">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4m0 4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Security:</strong> Never expose your API secret in client-side code. Always make API calls from a server.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- API Keys -->
+            <section id="api-keys">
+                <h2>API Key Management</h2>
+                <p>Create and manage API keys from the admin panel at <strong>Admin → Tools → API Keys</strong>.</p>
+                
+                <h3>Creating an API Key</h3>
+                <ol>
+                    <li>Go to Admin → Tools → API Keys</li>
+                    <li>Click "Generate New Key"</li>
+                    <li>Enter a descriptive name (e.g., "Mobile App", "External Service")</li>
+                    <li>Select permissions (Read, Write, Delete)</li>
+                    <li>Optionally set an expiration date</li>
+                    <li>Copy and securely store both the Key and Secret</li>
+                </ol>
+                
+                <h3>Permissions</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Permission</th><th>Allows</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>read</code></td><td>GET requests to retrieve content</td></tr>
+                            <tr><td><code>write</code></td><td>POST and PUT requests to create/update content</td></tr>
+                            <tr><td><code>delete</code></td><td>DELETE requests to remove content</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Important:</strong> The API Secret is only shown once when created. Store it securely!
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Base URL -->
+            <section id="base-url">
+                <h2>Base URL</h2>
+                <p>All API endpoints are relative to the base URL:</p>
+                
+<pre><code><span class="s">https://yoursite.com/api/v1/</span></code></pre>
+                
+                <p>For example, to get all posts:</p>
+<pre><code><span class="m">GET</span> <span class="s">https://yoursite.com/api/v1/posts</span></code></pre>
+            </section>
+            
+            <!-- Posts -->
+            <section id="posts">
+                <h2>Posts</h2>
+                <p>Manage blog posts and custom post type content.</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/posts</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a list of posts with optional filtering and pagination.</p>
+                </div>
+                
+                <h4>Query Parameters</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>per_page</code></td><td>integer</td><td>Items per page (default: 10, max: 100)</td></tr>
+                            <tr><td><code>page</code></td><td>integer</td><td>Page number (default: 1)</td></tr>
+                            <tr><td><code>status</code></td><td>string</td><td>Filter by status: published, draft, trash</td></tr>
+                            <tr><td><code>post_type</code></td><td>string</td><td>Filter by post type (default: post)</td></tr>
+                            <tr><td><code>orderby</code></td><td>string</td><td>Sort field: date, title, id</td></tr>
+                            <tr><td><code>order</code></td><td>string</td><td>Sort direction: asc, desc</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h4>Example Request</h4>
+<pre><code><span class="f">curl</span> <span class="s">"https://yoursite.com/api/v1/posts?per_page=5&status=published"</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Key: your_key"</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Secret: your_secret"</span></code></pre>
+                
+                <h4>Response</h4>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: [
+    {
+      <span class="s">"id"</span>: <span class="n">1</span>,
+      <span class="s">"title"</span>: <span class="s">"Hello World"</span>,
+      <span class="s">"slug"</span>: <span class="s">"hello-world"</span>,
+      <span class="s">"content"</span>: <span class="s">"&lt;p&gt;Welcome to VoidForge!&lt;/p&gt;"</span>,
+      <span class="s">"excerpt"</span>: <span class="s">"Welcome to VoidForge!"</span>,
+      <span class="s">"status"</span>: <span class="s">"published"</span>,
+      <span class="s">"post_type"</span>: <span class="s">"post"</span>,
+      <span class="s">"author_id"</span>: <span class="n">1</span>,
+      <span class="s">"created_at"</span>: <span class="s">"2024-12-15 10:30:00"</span>,
+      <span class="s">"updated_at"</span>: <span class="s">"2024-12-15 10:30:00"</span>,
+      <span class="s">"published_at"</span>: <span class="s">"2024-12-15 10:30:00"</span>,
+      <span class="s">"url"</span>: <span class="s">"https://yoursite.com/hello-world"</span>
+    }
+  ],
+  <span class="s">"pagination"</span>: {
+    <span class="s">"total"</span>: <span class="n">25</span>,
+    <span class="s">"per_page"</span>: <span class="n">5</span>,
+    <span class="s">"current_page"</span>: <span class="n">1</span>,
+    <span class="s">"total_pages"</span>: <span class="n">5</span>
+  }
+}</code></pre>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/posts/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a single post by ID.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/posts</span>
+                    </div>
+                    <p class="endpoint-desc">Create a new post. Requires <code>write</code> permission.</p>
+                </div>
+                
+                <h4>Request Body</h4>
+<pre><code>{
+  <span class="s">"title"</span>: <span class="s">"My New Post"</span>,
+  <span class="s">"content"</span>: <span class="s">"&lt;p&gt;Post content here...&lt;/p&gt;"</span>,
+  <span class="s">"excerpt"</span>: <span class="s">"A short summary"</span>,
+  <span class="s">"status"</span>: <span class="s">"published"</span>,
+  <span class="s">"post_type"</span>: <span class="s">"post"</span>
+}</code></pre>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-put">PUT</span>
+                        <span class="endpoint-path">/posts/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Update an existing post. Requires <code>write</code> permission.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-delete">DELETE</span>
+                        <span class="endpoint-path">/posts/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Delete a post (moves to trash). Requires <code>delete</code> permission.</p>
+                </div>
+            </section>
+            
+            <!-- Pages -->
+            <section id="pages">
+                <h2>Pages</h2>
+                <p>Manage static pages. Pages use the same structure as posts with <code>post_type: page</code>.</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/pages</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a list of pages.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/pages/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a single page by ID.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/pages</span>
+                    </div>
+                    <p class="endpoint-desc">Create a new page.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-put">PUT</span>
+                        <span class="endpoint-path">/pages/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Update an existing page.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-delete">DELETE</span>
+                        <span class="endpoint-path">/pages/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Delete a page.</p>
+                </div>
+            </section>
+            
+            <!-- Media -->
+            <section id="media">
+                <h2>Media</h2>
+                <p>Manage uploaded files and images.</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/media</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a list of media files.</p>
+                </div>
+                
+                <h4>Response</h4>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: [
+    {
+      <span class="s">"id"</span>: <span class="n">1</span>,
+      <span class="s">"filename"</span>: <span class="s">"photo.jpg"</span>,
+      <span class="s">"url"</span>: <span class="s">"https://yoursite.com/uploads/2024/12/photo.jpg"</span>,
+      <span class="s">"mime_type"</span>: <span class="s">"image/jpeg"</span>,
+      <span class="s">"size"</span>: <span class="n">245678</span>,
+      <span class="s">"width"</span>: <span class="n">1920</span>,
+      <span class="s">"height"</span>: <span class="n">1080</span>,
+      <span class="s">"alt_text"</span>: <span class="s">"A beautiful sunset"</span>,
+      <span class="s">"created_at"</span>: <span class="s">"2024-12-15 10:30:00"</span>
+    }
+  ]
+}</code></pre>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/media/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a single media item by ID.</p>
+                </div>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/media</span>
+                    </div>
+                    <p class="endpoint-desc">Upload a new media file via base64 encoding.</p>
+                </div>
+                
+                <h4>Request Body</h4>
+<pre><code>{
+  <span class="s">"filename"</span>: <span class="s">"photo.jpg"</span>,
+  <span class="s">"data"</span>: <span class="s">"base64_encoded_file_content..."</span>,
+  <span class="s">"alt_text"</span>: <span class="s">"Description of the image"</span>
+}</code></pre>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-delete">DELETE</span>
+                        <span class="endpoint-path">/media/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Delete a media file.</p>
+                </div>
+            </section>
+            
+            <!-- Users -->
+            <section id="users">
+                <h2>Users</h2>
+                <p>Retrieve user information (read-only for security).</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/users</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a list of users (excludes sensitive data).</p>
+                </div>
+                
+                <h4>Response</h4>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: [
+    {
+      <span class="s">"id"</span>: <span class="n">1</span>,
+      <span class="s">"username"</span>: <span class="s">"admin"</span>,
+      <span class="s">"display_name"</span>: <span class="s">"Administrator"</span>,
+      <span class="s">"role"</span>: <span class="s">"admin"</span>,
+      <span class="s">"avatar_url"</span>: <span class="s">"https://gravatar.com/..."</span>,
+      <span class="s">"created_at"</span>: <span class="s">"2024-12-01 09:00:00"</span>
+    }
+  ]
+}</code></pre>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/users/{id}</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve a single user by ID.</p>
+                </div>
+                
+                <div class="callout callout-info">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                    <div class="callout-content">
+                        <strong>Note:</strong> User creation and modification is not available via API for security reasons.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Taxonomies -->
+            <section id="taxonomies">
+                <h2>Taxonomies</h2>
+                <p>Retrieve taxonomy terms (categories, tags, custom taxonomies).</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/taxonomies/{type}</span>
+                    </div>
+                    <p class="endpoint-desc">Retrieve terms for a taxonomy type.</p>
+                </div>
+                
+                <h4>Taxonomy Types</h4>
+                <ul>
+                    <li><code>category</code> — Post categories</li>
+                    <li><code>tag</code> — Post tags</li>
+                    <li><code>{custom}</code> — Any custom taxonomy slug</li>
+                </ul>
+                
+                <h4>Example Request</h4>
+<pre><code><span class="f">curl</span> <span class="s">"https://yoursite.com/api/v1/taxonomies/category"</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Key: your_key"</span> \
+  <span class="s">-H</span> <span class="s">"X-API-Secret: your_secret"</span></code></pre>
+                
+                <h4>Response</h4>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: [
+    {
+      <span class="s">"id"</span>: <span class="n">1</span>,
+      <span class="s">"name"</span>: <span class="s">"Technology"</span>,
+      <span class="s">"slug"</span>: <span class="s">"technology"</span>,
+      <span class="s">"description"</span>: <span class="s">"Tech-related posts"</span>,
+      <span class="s">"parent_id"</span>: <span class="n">0</span>,
+      <span class="s">"count"</span>: <span class="n">15</span>
+    }
+  ]
+}</code></pre>
+            </section>
+            
+            <!-- Query Parameters -->
+            <section id="query-params">
+                <h2>Query Parameters</h2>
+                <p>Common query parameters available on list endpoints:</p>
+                
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>per_page</code></td><td>10</td><td>Number of items per page (max: 100)</td></tr>
+                            <tr><td><code>page</code></td><td>1</td><td>Page number for pagination</td></tr>
+                            <tr><td><code>status</code></td><td>published</td><td>Filter by status</td></tr>
+                            <tr><td><code>orderby</code></td><td>date</td><td>Field to sort by</td></tr>
+                            <tr><td><code>order</code></td><td>desc</td><td>Sort direction (asc/desc)</td></tr>
+                            <tr><td><code>post_type</code></td><td>post</td><td>Filter by post type</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Example with Multiple Parameters</h3>
+<pre><code><span class="m">GET</span> <span class="s">/api/v1/posts?per_page=20&page=2&status=published&orderby=title&order=asc</span></code></pre>
+            </section>
+            
+            <!-- Response Format -->
+            <section id="responses">
+                <h2>Response Format</h2>
+                <p>All API responses follow a consistent JSON structure:</p>
+                
+                <h3>Success Response</h3>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: { ... },
+  <span class="s">"pagination"</span>: {
+    <span class="s">"total"</span>: <span class="n">100</span>,
+    <span class="s">"per_page"</span>: <span class="n">10</span>,
+    <span class="s">"current_page"</span>: <span class="n">1</span>,
+    <span class="s">"total_pages"</span>: <span class="n">10</span>
+  }
+}</code></pre>
+                
+                <h3>Error Response</h3>
+<pre><code>{
+  <span class="s">"success"</span>: <span class="k">false</span>,
+  <span class="s">"error"</span>: <span class="s">"Error message here"</span>
+}</code></pre>
+                
+                <h3>HTTP Status Codes</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Code</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>200</code></td><td>Success</td></tr>
+                            <tr><td><code>201</code></td><td>Created (POST requests)</td></tr>
+                            <tr><td><code>400</code></td><td>Bad Request (invalid parameters)</td></tr>
+                            <tr><td><code>401</code></td><td>Unauthorized (invalid or missing API key)</td></tr>
+                            <tr><td><code>403</code></td><td>Forbidden (insufficient permissions)</td></tr>
+                            <tr><td><code>404</code></td><td>Not Found</td></tr>
+                            <tr><td><code>500</code></td><td>Server Error</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Error Handling -->
+            <section id="errors">
+                <h2>Error Handling</h2>
+                <p>Handle API errors gracefully in your application:</p>
+                
+<pre><code><span class="c">// JavaScript example</span>
+<span class="k">async function</span> <span class="f">getPosts</span>() {
+  <span class="k">try</span> {
+    <span class="k">const</span> <span class="v">response</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>, {
+      <span class="a">headers</span>: {
+        <span class="s">'X-API-Key'</span>: <span class="s">'your_key'</span>,
+        <span class="s">'X-API-Secret'</span>: <span class="s">'your_secret'</span>
+      }
+    });
+    
+    <span class="k">const</span> <span class="v">data</span> = <span class="k">await</span> <span class="v">response</span>.<span class="f">json</span>();
+    
+    <span class="k">if</span> (!<span class="v">data</span>.<span class="a">success</span>) {
+      <span class="k">throw new</span> <span class="f">Error</span>(<span class="v">data</span>.<span class="a">error</span>);
+    }
+    
+    <span class="k">return</span> <span class="v">data</span>.<span class="a">data</span>;
+  } <span class="k">catch</span> (<span class="v">error</span>) {
+    <span class="v">console</span>.<span class="f">error</span>(<span class="s">'API Error:'</span>, <span class="v">error</span>.<span class="a">message</span>);
+  }
+}</code></pre>
+                
+                <h3>Common Errors</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Error</th><th>Cause</th><th>Solution</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>Missing API credentials</code></td><td>Headers not included</td><td>Add X-API-Key and X-API-Secret headers</td></tr>
+                            <tr><td><code>Invalid API key</code></td><td>Key doesn't exist or is inactive</td><td>Check key in Admin → Tools → API Keys</td></tr>
+                            <tr><td><code>Permission denied</code></td><td>Key lacks required permission</td><td>Update key permissions in admin</td></tr>
+                            <tr><td><code>API key expired</code></td><td>Key past expiration date</td><td>Generate a new API key</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Code Examples -->
+            <section id="examples">
+                <h2>Code Examples</h2>
+                
+                <h3>JavaScript (Fetch)</h3>
+<pre><code><span class="c">// Get all published posts</span>
+<span class="k">const</span> <span class="v">response</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>, {
+  <span class="a">headers</span>: {
+    <span class="s">'X-API-Key'</span>: <span class="s">'your_key'</span>,
+    <span class="s">'X-API-Secret'</span>: <span class="s">'your_secret'</span>
+  }
+});
+<span class="k">const</span> <span class="v">posts</span> = <span class="k">await</span> <span class="v">response</span>.<span class="f">json</span>();
+
+<span class="c">// Create a new post</span>
+<span class="k">const</span> <span class="v">newPost</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>, {
+  <span class="a">method</span>: <span class="s">'POST'</span>,
+  <span class="a">headers</span>: {
+    <span class="s">'X-API-Key'</span>: <span class="s">'your_key'</span>,
+    <span class="s">'X-API-Secret'</span>: <span class="s">'your_secret'</span>,
+    <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>
+  },
+  <span class="a">body</span>: <span class="v">JSON</span>.<span class="f">stringify</span>({
+    <span class="a">title</span>: <span class="s">'My New Post'</span>,
+    <span class="a">content</span>: <span class="s">'&lt;p&gt;Hello World!&lt;/p&gt;'</span>,
+    <span class="a">status</span>: <span class="s">'published'</span>
+  })
+});</code></pre>
+                
+                <h3>PHP (cURL)</h3>
+<pre><code><span class="c">// Get all posts</span>
+<span class="v">$ch</span> = <span class="f">curl_init</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_RETURNTRANSFER</span>, <span class="k">true</span>);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_HTTPHEADER</span>, [
+    <span class="s">'X-API-Key: your_key'</span>,
+    <span class="s">'X-API-Secret: your_secret'</span>
+]);
+<span class="v">$response</span> = <span class="f">curl_exec</span>(<span class="v">$ch</span>);
+<span class="v">$posts</span> = <span class="f">json_decode</span>(<span class="v">$response</span>, <span class="k">true</span>);
+
+<span class="c">// Create a post</span>
+<span class="v">$ch</span> = <span class="f">curl_init</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_POST</span>, <span class="k">true</span>);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_RETURNTRANSFER</span>, <span class="k">true</span>);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_HTTPHEADER</span>, [
+    <span class="s">'X-API-Key: your_key'</span>,
+    <span class="s">'X-API-Secret: your_secret'</span>,
+    <span class="s">'Content-Type: application/json'</span>
+]);
+<span class="f">curl_setopt</span>(<span class="v">$ch</span>, <span class="k">CURLOPT_POSTFIELDS</span>, <span class="f">json_encode</span>([
+    <span class="s">'title'</span> => <span class="s">'My New Post'</span>,
+    <span class="s">'content'</span> => <span class="s">'&lt;p&gt;Hello World!&lt;/p&gt;'</span>,
+    <span class="s">'status'</span> => <span class="s">'published'</span>
+]));
+<span class="v">$response</span> = <span class="f">curl_exec</span>(<span class="v">$ch</span>);</code></pre>
+                
+                <h3>Python (Requests)</h3>
+<pre><code><span class="k">import</span> <span class="v">requests</span>
+
+<span class="v">headers</span> = {
+    <span class="s">'X-API-Key'</span>: <span class="s">'your_key'</span>,
+    <span class="s">'X-API-Secret'</span>: <span class="s">'your_secret'</span>
+}
+
+<span class="c"># Get all posts</span>
+<span class="v">response</span> = <span class="v">requests</span>.<span class="f">get</span>(<span class="s">'https://yoursite.com/api/v1/posts'</span>, <span class="a">headers</span>=<span class="v">headers</span>)
+<span class="v">posts</span> = <span class="v">response</span>.<span class="f">json</span>()
+
+<span class="c"># Create a post</span>
+<span class="v">response</span> = <span class="v">requests</span>.<span class="f">post</span>(
+    <span class="s">'https://yoursite.com/api/v1/posts'</span>,
+    <span class="a">headers</span>={**<span class="v">headers</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>},
+    <span class="a">json</span>={
+        <span class="s">'title'</span>: <span class="s">'My New Post'</span>,
+        <span class="s">'content'</span>: <span class="s">'&lt;p&gt;Hello World!&lt;/p&gt;'</span>,
+        <span class="s">'status'</span>: <span class="s">'published'</span>
+    }
+)</code></pre>
+                
+                <div class="callout callout-success">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                    <div class="callout-content">
+                        <strong>Ready to integrate!</strong>
+                        See the <a href="plugin-development.html">Plugin Development Guide</a> for extending the API with custom endpoints.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        const sections = document.querySelectorAll('section');
+        const links = document.querySelectorAll('.nav-group a');
+        
+        function updateActive() {
+            let current = '';
+            sections.forEach(s => {
+                if (s.getBoundingClientRect().top <= 120) current = s.id;
+            });
+            links.forEach(l => {
+                l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+            });
+        }
+        
+        window.addEventListener('scroll', updateActive);
+        updateActive();
+        
+        links.forEach(l => l.addEventListener('click', () => {
+            document.querySelector('aside').classList.remove('open');
+        }));
+    </script>
+</body>
+</html>

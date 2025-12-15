@@ -584,17 +584,13 @@ tr.selected {
 
     <div style="display: flex; gap: 0.5rem;">
         <?php if ($status === 'trash' && $totalTrash > 0): ?>
-        <form method="post" style="display: inline;">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="empty_trash">
-            <button type="submit" class="btn btn-danger btn-sm" data-confirm="Permanently delete all <?= $totalTrash ?> item(s) in trash? This cannot be undone.">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Empty Trash
-            </button>
-        </form>
+        <button type="button" class="btn btn-danger btn-sm" onclick="showConfirmModal('empty_trash', 0, '<?= $totalTrash ?> item(s)')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Empty Trash
+        </button>
         <?php endif; ?>
         <a href="<?= ADMIN_URL ?>/post-edit.php?type=<?= $postType ?>" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -914,41 +910,21 @@ tr.selected {
                                 <td>
                                     <div class="table-actions">
                                         <?php if ($status === 'trash'): ?>
-                                            <form method="post" style="display: inline;">
-                                                <?= csrfField() ?>
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <input type="hidden" name="action" value="restore">
-                                                <button type="submit" class="btn btn-secondary btn-sm">Restore</button>
-                                            </form>
-                                            <form method="post" style="display: inline;">
-                                                <?= csrfField() ?>
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <input type="hidden" name="action" value="delete">
-                                                <button type="submit" class="btn btn-danger btn-sm" data-confirm="Permanently delete this item?">Delete</button>
-                                            </form>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="submitPostAction('restore', <?= $post['id'] ?>)">Restore</button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="showConfirmModal('delete', <?= $post['id'] ?>, '<?= esc(addslashes($post['title'] ?: 'this item')) ?>')">Delete</button>
                                         <?php else: ?>
                                             <a href="<?= ADMIN_URL ?>/post-edit.php?id=<?= $post['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
                                             <button type="button" class="btn btn-sm btn-quick-edit" onclick="openQuickEdit(<?= $post['id'] ?>)">Quick Edit</button>
                                             <?php if ($post['status'] === 'published'): ?>
                                                 <a href="<?= Post::permalink($post) ?>" target="_blank" class="btn btn-secondary btn-sm">View</a>
                                             <?php endif; ?>
-                                            <form method="post" style="display: inline;">
-                                                <?= csrfField() ?>
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <input type="hidden" name="action" value="duplicate">
-                                                <button type="submit" class="btn btn-secondary btn-sm" title="Duplicate">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                            <form method="post" style="display: inline;">
-                                                <?= csrfField() ?>
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <input type="hidden" name="action" value="trash">
-                                                <button type="submit" class="btn btn-secondary btn-sm" data-confirm="Move this item to trash?">Trash</button>
-                                            </form>
+                                            <button type="button" class="btn btn-secondary btn-sm" title="Duplicate" onclick="submitPostAction('duplicate', <?= $post['id'] ?>)">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                                </svg>
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="showConfirmModal('trash', <?= $post['id'] ?>, '<?= esc(addslashes($post['title'] ?: 'this item')) ?>')">Trash</button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -1061,6 +1037,11 @@ tr.selected {
 </div>
 
 <script>
+// Global variables for confirmation modal
+var confirmAction = '';
+var confirmPostId = 0;
+var csrfToken = '<?= csrfToken() ?>';
+
 (function() {
     // =========================================================================
     // Column Resize (existing functionality)
@@ -1196,39 +1177,93 @@ tr.selected {
     };
     
     // Validate bulk action before submit
+    var bulkSubmitConfirmed = false;
     document.getElementById('bulkActionsForm').addEventListener('submit', function(e) {
+        // If already confirmed via modal, allow submit
+        if (bulkSubmitConfirmed) {
+            bulkSubmitConfirmed = false;
+            return;
+        }
+        
         var action = bulkActionSelect.value;
         var checked = document.querySelectorAll('.post-checkbox:checked');
         
         if (!action) {
             e.preventDefault();
-            alert('Please select an action.');
+            showNotification('Please select an action.', 'warning');
             return;
         }
         
         if (checked.length === 0) {
             e.preventDefault();
-            alert('Please select at least one item.');
+            showNotification('Please select at least one item.', 'warning');
             return;
         }
         
-        // Confirm destructive actions
+        // Confirm destructive actions via modal
         if (action === 'trash' || action === 'delete') {
-            var msg = action === 'delete' 
-                ? 'Permanently delete ' + checked.length + ' item(s)? This cannot be undone.'
-                : 'Move ' + checked.length + ' item(s) to trash?';
-            if (!confirm(msg)) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            showBulkConfirmModal(action, checked.length);
         }
     });
+    
+    // Expose function to set confirmed flag
+    window.setBulkConfirmed = function() {
+        bulkSubmitConfirmed = true;
+    };
 })();
+
+// Notification helper
+function showNotification(message, type) {
+    var existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    var toast = document.createElement('div');
+    toast.className = 'toast-notification toast-' + (type || 'info');
+    toast.innerHTML = '<span>' + message + '</span><button onclick="this.parentNode.remove()">&times;</button>';
+    document.body.appendChild(toast);
+    
+    setTimeout(function() { toast.classList.add('show'); }, 10);
+    setTimeout(function() { toast.remove(); }, 4000);
+}
+
+// Bulk confirm modal
+var bulkConfirmAction = '';
+var bulkConfirmCount = 0;
+
+function showBulkConfirmModal(action, count) {
+    bulkConfirmAction = action;
+    bulkConfirmCount = count;
+    
+    var modal = document.getElementById('confirmModal');
+    var title = document.getElementById('confirmTitle');
+    var message = document.getElementById('confirmMessage');
+    var confirmBtn = document.getElementById('confirmBtn');
+    
+    if (action === 'trash') {
+        title.textContent = 'Move to Trash';
+        message.innerHTML = 'Move <strong>' + count + ' item(s)</strong> to trash?';
+        confirmBtn.textContent = 'Move to Trash';
+        confirmBtn.className = 'btn btn-secondary';
+    } else if (action === 'delete') {
+        title.textContent = 'Permanently Delete';
+        message.innerHTML = 'Permanently delete <strong>' + count + ' item(s)</strong>? This cannot be undone.';
+        confirmBtn.textContent = 'Delete Permanently';
+        confirmBtn.className = 'btn btn-danger';
+    }
+    
+    // Switch to bulk mode
+    confirmAction = 'bulk_' + action;
+    confirmPostId = 0;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
 
 // =========================================================================
 // Quick Edit
 // =========================================================================
 var currentQuickEditId = null;
-var csrfToken = '<?= csrfToken() ?>';
 
 function openQuickEdit(postId) {
     // Close any open quick edit first
@@ -1253,7 +1288,7 @@ function openQuickEdit(postId) {
             container.classList.remove('loading');
             
             if (!data.success) {
-                alert(data.error || 'Failed to load post data');
+                showNotification(data.error || 'Failed to load post data', 'error');
                 closeQuickEdit(postId);
                 return;
             }
@@ -1280,7 +1315,7 @@ function openQuickEdit(postId) {
         })
         .catch(function(err) {
             container.classList.remove('loading');
-            alert('Error loading post data');
+            showNotification('Error loading post data', 'error');
             closeQuickEdit(postId);
         });
 }
@@ -1332,7 +1367,7 @@ function saveQuickEdit(postId) {
         container.classList.remove('loading');
         
         if (!data.success) {
-            alert(data.error || 'Failed to save');
+            showNotification(data.error || 'Failed to save', 'error');
             return;
         }
         
@@ -1368,7 +1403,7 @@ function saveQuickEdit(postId) {
     })
     .catch(function(err) {
         container.classList.remove('loading');
-        alert('Error saving: ' + err.message);
+        showNotification('Error saving: ' + err.message, 'error');
     });
 }
 
@@ -1384,6 +1419,273 @@ document.addEventListener('keydown', function(e) {
         closeQuickEdit(currentQuickEditId);
     }
 });
+
+// =========================================================================
+// Confirmation Modal
+// =========================================================================
+
+// Submit single post action without confirmation (for restore, duplicate)
+function submitPostAction(action, postId) {
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+    
+    var csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrf_token';
+    csrf.value = csrfToken;
+    form.appendChild(csrf);
+    
+    var actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
+    
+    var postIdInput = document.createElement('input');
+    postIdInput.type = 'hidden';
+    postIdInput.name = 'post_id';
+    postIdInput.value = postId;
+    form.appendChild(postIdInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function showConfirmModal(action, postId, itemName) {
+    confirmAction = action;
+    confirmPostId = postId;
+    
+    var modal = document.getElementById('confirmModal');
+    var title = document.getElementById('confirmTitle');
+    var message = document.getElementById('confirmMessage');
+    var confirmBtn = document.getElementById('confirmBtn');
+    
+    if (action === 'trash') {
+        title.textContent = 'Move to Trash';
+        message.innerHTML = 'Are you sure you want to move <strong>' + escapeHtml(itemName) + '</strong> to trash?';
+        confirmBtn.textContent = 'Move to Trash';
+        confirmBtn.className = 'btn btn-secondary';
+    } else if (action === 'delete') {
+        title.textContent = 'Permanently Delete';
+        message.innerHTML = 'Are you sure you want to permanently delete <strong>' + escapeHtml(itemName) + '</strong>? This cannot be undone.';
+        confirmBtn.textContent = 'Delete Permanently';
+        confirmBtn.className = 'btn btn-danger';
+    } else if (action === 'empty_trash') {
+        title.textContent = 'Empty Trash';
+        message.innerHTML = 'Are you sure you want to permanently delete <strong>' + escapeHtml(itemName) + '</strong> from trash? This cannot be undone.';
+        confirmBtn.textContent = 'Empty Trash';
+        confirmBtn.className = 'btn btn-danger';
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('active');
+    document.body.style.overflow = '';
+    confirmAction = '';
+    confirmPostId = 0;
+}
+
+function executeConfirmAction() {
+    // Check if this is a bulk action
+    if (confirmAction.startsWith('bulk_')) {
+        // Set flag to bypass confirmation on submit
+        if (typeof setBulkConfirmed === 'function') {
+            setBulkConfirmed();
+        }
+        // Submit the existing bulk form
+        var bulkForm = document.getElementById('bulkActionsForm');
+        if (bulkForm) {
+            hideConfirmModal();
+            bulkForm.submit();
+        }
+        return;
+    }
+    
+    // Create and submit form for single actions
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+    
+    // Add CSRF token
+    var csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrf_token';
+    csrf.value = csrfToken;
+    form.appendChild(csrf);
+    
+    // Add action
+    var actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = confirmAction;
+    form.appendChild(actionInput);
+    
+    // Add post_id for single item actions
+    if (confirmPostId > 0) {
+        var postIdInput = document.createElement('input');
+        postIdInput.type = 'hidden';
+        postIdInput.name = 'post_id';
+        postIdInput.value = confirmPostId;
+        form.appendChild(postIdInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideConfirmModal();
+    }
+});
 </script>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal-backdrop" onclick="if(event.target === this) hideConfirmModal()">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-header">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <button type="button" class="modal-close" onclick="hideConfirmModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMessage">Are you sure?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideConfirmModal()">Cancel</button>
+            <button type="button" id="confirmBtn" class="btn btn-danger" onclick="executeConfirmAction()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Confirmation Modal Styles */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal-backdrop.active {
+    display: flex;
+}
+.modal-dialog {
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    animation: modalSlideIn 0.2s ease-out;
+}
+.modal-sm { max-width: 400px; }
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.modal-close {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+.modal-body {
+    padding: 1.25rem;
+}
+.modal-body p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.modal-body strong {
+    color: var(--text-primary);
+}
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-body);
+    border-radius: 0 0 12px 12px;
+}
+
+/* Toast Notifications */
+.toast-notification {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    font-size: 0.875rem;
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+.toast-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+.toast-notification button {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.toast-notification button:hover { color: var(--text-primary); }
+.toast-warning {
+    border-left: 3px solid var(--forge-warning);
+}
+.toast-error {
+    border-left: 3px solid var(--forge-danger);
+}
+.toast-success {
+    border-left: 3px solid var(--forge-success);
+}
+</style>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

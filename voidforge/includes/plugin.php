@@ -798,15 +798,27 @@ class Plugin
 
     /**
      * Register a REST API route
+     * 
+     * Routes are stored per-method to allow different handlers for GET/POST/etc on same path
      */
     public static function registerRestRoute(string $namespace, string $route, array $config): void
     {
-        $key = $namespace . '/' . ltrim($route, '/');
-        self::$restRoutes[$key] = array_merge([
-            'methods' => ['GET'],
-            'callback' => null,
-            'permission_callback' => null,
-        ], $config);
+        $routePath = $namespace . '/' . ltrim($route, '/');
+        $methods = (array)($config['methods'] ?? ['GET']);
+        
+        // Initialize route if not exists
+        if (!isset(self::$restRoutes[$routePath])) {
+            self::$restRoutes[$routePath] = [];
+        }
+        
+        // Register handler for each method
+        foreach ($methods as $method) {
+            $method = strtoupper($method);
+            self::$restRoutes[$routePath][$method] = [
+                'callback' => $config['callback'] ?? null,
+                'permission_callback' => $config['permission_callback'] ?? null,
+            ];
+        }
     }
 
     /**
@@ -829,14 +841,20 @@ class Plugin
             return false;
         }
         
-        foreach (self::$restRoutes as $route => $config) {
+        $requestMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+        
+        foreach (self::$restRoutes as $route => $methodHandlers) {
             $pattern = preg_replace('/\{([^}]+)\}/', '(?P<$1>[^/]+)', $route);
             if (preg_match('#^' . $pattern . '$#', $path, $matches)) {
-                $method = $_SERVER['REQUEST_METHOD'];
                 
-                if (!in_array($method, (array)$config['methods'])) {
+                // Check if this method is supported for this route
+                if (!isset($methodHandlers[$requestMethod])) {
+                    $allowedMethods = array_keys($methodHandlers);
+                    header('Allow: ' . implode(', ', $allowedMethods));
                     self::sendJsonError(['message' => 'Method not allowed'], 405);
                 }
+                
+                $config = $methodHandlers[$requestMethod];
                 
                 // Allow filtering before dispatch (for auth, rate limiting)
                 $error = self::applyFilters('rest_pre_dispatch', null, $path, $config);
@@ -851,8 +869,26 @@ class Plugin
                 }
 
                 // Check permission
-                if ($config['permission_callback'] && !call_user_func($config['permission_callback'])) {
-                    self::sendJsonError(['message' => 'Forbidden'], 403);
+                if ($config['permission_callback']) {
+                    $permissionResult = call_user_func($config['permission_callback']);
+                    if (!$permissionResult) {
+                        // Check if user is authenticated at all
+                        // If not authenticated, return 401; if authenticated but lacking permission, return 403
+                        $isAuthenticated = false;
+                        
+                        // Check for RestAPI authentication
+                        if (class_exists('RestAPI') && method_exists('RestAPI', 'getCurrentUserId')) {
+                            $isAuthenticated = RestAPI::getCurrentUserId() !== null;
+                        } elseif (class_exists('User') && method_exists('User', 'isLoggedIn')) {
+                            $isAuthenticated = User::isLoggedIn();
+                        }
+                        
+                        if (!$isAuthenticated) {
+                            self::sendJsonError(['message' => 'Authentication required'], 401);
+                        } else {
+                            self::sendJsonError(['message' => 'Forbidden'], 403);
+                        }
+                    }
                 }
 
                 // Extract params
@@ -866,7 +902,9 @@ class Plugin
                     
                     self::sendJsonSuccess($result);
                 } catch (\Throwable $e) {
-                    self::sendJsonError(['message' => $e->getMessage()], 500);
+                    $code = $e->getCode() ?: 500;
+                    if ($code < 100 || $code > 599) $code = 500;
+                    self::sendJsonError(['message' => $e->getMessage()], $code);
                 }
             }
         }

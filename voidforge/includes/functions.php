@@ -563,6 +563,12 @@ function initDefaultAdminMenus(): void
         'url' => ADMIN_URL . '/plugins.php',
         'capability' => 'admin',
     ]);
+    
+    registerAdminSubmenu('tools', 'api-keys', [
+        'label' => 'API Keys',
+        'url' => ADMIN_URL . '/api-keys.php',
+        'capability' => 'admin',
+    ]);
 }
 
 /**
