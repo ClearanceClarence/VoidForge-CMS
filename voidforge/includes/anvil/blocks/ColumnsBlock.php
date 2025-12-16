@@ -17,8 +17,8 @@ class ColumnsBlock extends AnvilBlock
     protected static string $icon = 'columns';
     
     protected static array $attributes = [
-        'columns' => ['type' => 'array', 'default' => [[], []]],
         'columnCount' => ['type' => 'integer', 'default' => 2],
+        'columns' => ['type' => 'array', 'default' => []],
         'verticalAlign' => ['type' => 'string', 'default' => 'top'],
     ];
     
@@ -28,7 +28,7 @@ class ColumnsBlock extends AnvilBlock
     {
         $classes = self::buildClasses($attrs, 'columns');
         $columnCount = max(2, min(6, (int)($attrs['columnCount'] ?? 2)));
-        $columns = $attrs['columns'] ?? array_fill(0, $columnCount, []);
+        $columns = $attrs['columns'] ?? [];
         $vAlign = $attrs['verticalAlign'] ?? 'top';
         
         $alignValue = match($vAlign) {
@@ -44,9 +44,15 @@ class ColumnsBlock extends AnvilBlock
         );
         
         $colsHtml = '';
-        foreach ($columns as $colBlocks) {
-            $colContent = is_array($colBlocks) ? Anvil::renderBlocks($colBlocks) : '';
-            $colsHtml .= '<div class="anvil-column">' . $colContent . '</div>';
+        for ($i = 0; $i < $columnCount; $i++) {
+            $colBlocks = $columns[$i] ?? [];
+            $colContent = '';
+            
+            if (is_array($colBlocks) && !empty($colBlocks)) {
+                $colContent = Anvil::renderBlocks($colBlocks);
+            }
+            
+            $colsHtml .= '<div class="anvil-column" data-column-index="' . $i . '">' . $colContent . '</div>';
         }
         
         return sprintf(

@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] - 2025-12-16
+
+### 🎨 Anvil Live — Visual Frontend Editor
+
+A powerful Elementor-style visual page builder that lets you edit pages directly on the frontend with real-time preview.
+
+#### Core Features
+- **Frontend Editing** — Edit posts and pages directly on the live site
+- **Drag & Drop Blocks** — Drag blocks from sidebar to canvas with visual drop indicators
+- **Inline Text Editing** — Click any text block to edit directly with rich text toolbar
+- **Real-time Preview** — See changes instantly as you edit
+- **Device Preview** — Preview desktop (1200px), tablet (768px), and mobile (375px) layouts
+- **Autosave** — Automatic saving every 30 seconds with unsaved changes warning
+
+#### Visual Drag & Drop System
+- **Drop Indicator Line** — Purple line with circular ends shows exact drop position
+- **Drag Ghost** — Floating preview element follows cursor during drag
+- **Block Reordering** — Drag blocks by handle (⋮⋮) to reorder
+- **Column Drop Targets** — Drop blocks directly into columns with "Drop here" overlay
+
+#### Rich Text Toolbar
+- **Formatting** — Bold, Italic, Underline, Strikethrough
+- **Links** — Insert and remove hyperlinks with popup dialog
+- **Alignment** — Left, Center, Right text alignment
+- **Clear Formatting** — Remove all formatting from selection
+
+#### Columns Block — Full Implementation
+- **2-6 Columns** — Configurable column count via settings panel
+- **Nested Blocks** — Add any block type inside columns
+- **Click to Add** — Click empty column to open block picker
+- **Drag to Column** — Drag blocks directly into columns
+- **Move Between Columns** — Drag blocks in/out of columns freely
+- **Vertical Alignment** — Top, Center, Bottom alignment options
+- **Responsive Stacking** — Columns stack vertically on mobile
+
+#### Block Operations
+- **Add Blocks** — Click in sidebar or drag to canvas
+- **Duplicate** — Clone any block including nested content
+- **Delete** — Remove blocks with keyboard (Delete/Backspace) or button
+- **Settings** — Configure block attributes in sidebar panel
+- **Move** — Drag blocks to reorder or move into/out of columns
+
+#### Keyboard Shortcuts
+- `Ctrl+S` — Save content
+- `Ctrl+Z` — Undo
+- `Ctrl+Shift+Z` — Redo
+- `Delete` — Delete selected block
+- `Escape` — Deselect block, close modals
+
+#### State Management
+- **Undo/Redo Stack** — 50 levels of history
+- **Dirty State Tracking** — Warning before leaving with unsaved changes
+- **Block Synchronization** — Real-time sync between DOM and data model
+
+#### REST API Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/anvil-live/save` | Save post content and title |
+| POST | `/api/v1/anvil-live/autosave` | Autosave draft content |
+| GET | `/api/v1/anvil-live/preview` | Get preview data |
+
+#### How to Access
+1. Navigate to any post or page on the frontend
+2. Add `?anvil-live=edit` to the URL
+3. Or click "Edit with Anvil Live" button in admin bar
+
+### 🐛 Bug Fixes
+- **Inline Editing** — Fixed `makeBlocksEditable()` not called on initial page load
+- **Justify Buttons** — Fixed text alignment buttons not working (custom implementation for contenteditable)
+- **Column Insertion** — Fixed blocks not inserting into columns (column context management)
+- **Drag vs Click** — Fixed sidebar blocks triggering drag on simple click
+- **Block Operations in Columns** — Fixed duplicate, delete, settings for nested blocks
+
+### 📁 New Files
+
+```
+includes/
+├── anvil-live.php                    # Main Anvil Live class
+└── anvil-live/
+    ├── editor-ui.php                 # Sidebar, toolbar, modals HTML
+    └── assets/
+        ├── css/anvil-live.css        # Editor styles (517 lines)
+        └── js/anvil-live.js          # Editor JavaScript (1900+ lines)
+```
+
+### 📝 Modified Files
+
+- `includes/anvil/blocks/ColumnsBlock.php` — Added `data-column-index` attribute
+- `index.php` — Integrated Anvil Live initialization
+
+---
+
 ## [0.2.1] - 2025-12-15
 
 ### 🔗 REST API
@@ -1390,6 +1482,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.2 | 2025-12-16 | Anvil Live visual frontend editor, drag-drop blocks, inline editing, columns support |
 | 0.2.1 | 2025-12-15 | REST API with API key management, modern installer redesign, dashboard redesign, modal confirmations |
 | 0.2.0 | 2025-12-15 | Anvil block editor with 15 blocks, class-based architecture, Flavor theme with block showcase |
 | 0.1.8 | 2025-12-13 | Comments system with threading, moderation, guest commenting, admin management |

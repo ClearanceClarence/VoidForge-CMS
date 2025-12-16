@@ -891,8 +891,21 @@ class Plugin
                     }
                 }
 
-                // Extract params
+                // Extract params from URL
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                
+                // For POST/PUT/PATCH, merge in the request body
+                if (in_array($requestMethod, ['POST', 'PUT', 'PATCH'])) {
+                    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+                    if (strpos($contentType, 'application/json') !== false) {
+                        $rawBody = file_get_contents('php://input');
+                        $jsonData = json_decode($rawBody, true) ?? [];
+                        $params = array_merge($params, $jsonData);
+                    } else {
+                        // Form data
+                        $params = array_merge($params, $_POST);
+                    }
+                }
                 
                 try {
                     $result = call_user_func($config['callback'], $params);

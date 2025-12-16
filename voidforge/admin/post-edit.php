@@ -804,6 +804,23 @@ include ADMIN_PATH . '/includes/header.php';
                     <?php endif; ?>
                     
                     <?php 
+                    // Anvil Live frontend editor button
+                    if ($post && class_exists('AnvilLive') && AnvilLive::isAvailable($postType)):
+                        $anvilLiveUrl = AnvilLive::getEditUrl($post);
+                    ?>
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                        <a href="<?= esc($anvilLiveUrl) ?>" target="_blank" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; font-size: 0.8125rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                            Edit with Anvil Live
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php 
                     // Fire post_submitbox_actions for plugins to add actions
                     Plugin::doAction('post_submitbox_actions', $post, $postType); 
                     ?>

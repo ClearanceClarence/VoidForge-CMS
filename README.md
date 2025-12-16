@@ -7,7 +7,7 @@
 <br>
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.2.1-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.2.2-8b5cf6?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
 
@@ -47,6 +47,19 @@
 | **Undo/Redo** | Full history support (50 levels) |
 | **Class-Based Architecture** | Extensible blocks via PHP classes |
 | **Media Integration** | Seamless media library connection |
+
+<br>
+
+### 🎨 Anvil Live — Visual Editor
+
+| Feature | Description |
+|:--------|:------------|
+| **Frontend Editing** | Edit posts directly on the live site |
+| **Drag & Drop** | Visual drop indicators and column targeting |
+| **Inline Text Editing** | Click to edit with rich text toolbar |
+| **Device Preview** | Desktop, tablet, and mobile views |
+| **Columns Support** | Drag blocks into/out of columns |
+| **Autosave** | Auto-save with unsaved changes warning |
 
 <br>
 
@@ -332,6 +345,87 @@ Anvil::registerBlockClass(AlertBlock::class);
 
 <br>
 
+## 🎨 Anvil Live — Visual Frontend Editor
+
+<div align="center">
+
+*Edit your pages directly on the frontend with real-time preview*
+
+</div>
+
+<br>
+
+<table>
+<tr>
+<td align="center" width="25%">
+
+**🖱️ Drag & Drop**
+
+Drag blocks from sidebar · Visual drop indicators · Column targeting
+
+*Purple line shows drop position*
+
+</td>
+<td align="center" width="25%">
+
+**✏️ Inline Editing**
+
+Click text to edit · Rich text toolbar · Bold, italic, links
+
+*Real-time formatting*
+
+</td>
+<td align="center" width="25%">
+
+**📱 Device Preview**
+
+Desktop (1200px) · Tablet (768px) · Mobile (375px)
+
+*Responsive preview modes*
+
+</td>
+<td align="center" width="25%">
+
+**📊 Columns**
+
+2-6 column layouts · Nested blocks · Move between columns
+
+*Full drag-drop support*
+
+</td>
+</tr>
+</table>
+
+<br>
+
+### How to Use
+
+```
+1. Navigate to any post or page on the frontend
+2. Add ?anvil-live=edit to the URL
+3. Drag blocks from the sidebar to the canvas
+4. Click text to edit inline with the rich text toolbar
+5. Press Ctrl+S to save (or click Save button)
+```
+
+<br>
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|:--------:|:-------|
+| `Ctrl+S` | Save content |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Delete` | Delete selected block |
+| `Escape` | Deselect / Close modal |
+
+<br>
+
+---
+
+<br>
+
 ## 📋 Requirements
 
 <div align="center">
@@ -554,7 +648,7 @@ Create plugins using WordPress-style hooks:
  * Version: 1.0.0
  * Author: Your Name
  * Requires PHP: 8.0
- * Requires CMS: 0.2.1
+ * Requires CMS: 0.2.2
  */
 
 // Hook into initialization
@@ -630,7 +724,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.2.1');
+define('CMS_VERSION', '0.2.2');
 define('CMS_NAME', 'VoidForge');
 ```
 

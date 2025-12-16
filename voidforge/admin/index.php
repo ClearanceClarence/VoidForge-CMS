@@ -378,8 +378,10 @@ include ADMIN_PATH . '/includes/header.php';
 .empty-box svg {
     width: 48px;
     height: 48px;
-    color: #FFFFFF;
-    }
+    color: var(--text-muted);
+    opacity: 0.4;
+    margin-bottom: 1rem;
+}
 .empty-box p {
     color: var(--text-muted);
     margin: 0 0 1rem;

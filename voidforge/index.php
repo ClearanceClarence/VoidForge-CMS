@@ -39,6 +39,7 @@ require_once CMS_ROOT . '/includes/menu.php';
 require_once CMS_ROOT . '/includes/comment.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
 require_once CMS_ROOT . '/includes/anvil.php';
+require_once CMS_ROOT . '/includes/anvil-live.php';
 require_once CMS_ROOT . '/includes/rest-api.php';
 
 // Initialize
@@ -48,6 +49,7 @@ Theme::init();
 Menu::init();
 Taxonomy::init();
 Anvil::init();
+AnvilLive::init();
 RestAPI::init();
 
 // Load active theme functions
@@ -194,6 +196,16 @@ if (!is_array($customPostTypes)) {
 // Helper to include theme template
 function loadTemplate(string $template, array $data = []): void
 {
+    // Set global $post for theme functions and Anvil Live
+    if (isset($data['post'])) {
+        $GLOBALS['post'] = $data['post'];
+    }
+    
+    // Check for Anvil Live editor mode
+    if (class_exists('AnvilLive')) {
+        AnvilLive::checkEditorMode($template, $data);
+    }
+    
     // Allow filtering of which template to load
     $template = Plugin::applyFilters('template_include', $template, $data);
     

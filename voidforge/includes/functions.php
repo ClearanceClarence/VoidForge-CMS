@@ -1073,6 +1073,15 @@ function the_content(): string
     
     $content = $post['content'] ?? '';
     
+    // If Anvil Live is editing, don't render blocks normally - let AnvilLive handle it
+    if (class_exists('AnvilLive') && AnvilLive::isEditing()) {
+        // Pass raw content to the filter, AnvilLive will handle rendering
+        if (class_exists('Plugin')) {
+            $content = Plugin::applyFilters('the_content', $content, $post);
+        }
+        return $content;
+    }
+    
     // Check if content is Anvil blocks (JSON)
     if (class_exists('Anvil') && !empty($content) && $content[0] === '[') {
         $blocks = Anvil::parseBlocks($content);
@@ -1123,5 +1132,72 @@ function body_class(): string
     // Apply filter
     $classes = safe_apply_filters('body_class', $classes);
     
+    // Add Anvil Live editor class if in editor mode
+    if (class_exists('AnvilLive') && AnvilLive::isEditorMode()) {
+        $classes[] = 'anvil-live-editing';
+    }
+    
     return implode(' ', array_filter($classes));
+}
+
+// ============================================================================
+// Anvil Live Helper Functions
+// ============================================================================
+
+/**
+ * Get the Anvil Live edit URL for a post
+ */
+function get_anvil_live_edit_url($post): string
+{
+    if (!class_exists('AnvilLive')) {
+        return '';
+    }
+    
+    if (is_int($post)) {
+        $post = Post::find($post);
+    }
+    
+    if (!$post) {
+        return '';
+    }
+    
+    return AnvilLive::getEditUrl($post);
+}
+
+/**
+ * Check if currently in Anvil Live editor mode
+ */
+function is_anvil_live_editing(): bool
+{
+    return class_exists('AnvilLive') && AnvilLive::isEditorMode();
+}
+
+/**
+ * Output the backend "Edit with Anvil Live" button
+ */
+function anvil_live_backend_button($post): string
+{
+    if (!class_exists('AnvilLive')) {
+        return '';
+    }
+    
+    if (is_int($post)) {
+        $post = Post::find($post);
+    }
+    
+    if (!$post) {
+        return '';
+    }
+    
+    return AnvilLive::renderBackendButton($post);
+}
+
+/**
+ * Output the frontend edit bar manually
+ */
+function anvil_live_edit_bar(): void
+{
+    if (class_exists('AnvilLive')) {
+        AnvilLive::maybeRenderEditBar();
+    }
 }
