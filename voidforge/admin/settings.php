@@ -29,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     setOption('homepage_id', (int)($_POST['homepage_id'] ?? 0));
     setOption('posts_per_page', (int)($_POST['posts_per_page'] ?? 10));
     setOption('excerpt_length', (int)($_POST['excerpt_length'] ?? 55));
-    setOption('default_editor', $_POST['default_editor'] ?? 'anvil');
     
     // Handle date format - check for custom
     $dateFormat = $_POST['date_format'] ?? 'M j, Y';
@@ -1026,16 +1025,18 @@ function switchTab(tabId, evt) {
                 <div class="settings-card-body">
                     <div class="form-grid form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">Default Editor</label>
-                            <select name="default_editor" class="form-select">
-                                <option value="anvil" <?= $defaultEditor === 'anvil' ? 'selected' : '' ?>>
-                                    Anvil (Block Editor)
-                                </option>
-                                <option value="classic" <?= $defaultEditor === 'classic' ? 'selected' : '' ?>>
-                                    Classic (HTML)
-                                </option>
-                            </select>
-                            <span class="form-hint">Choose between block-based or classic HTML editor</span>
+                            <label class="form-label">Visual Editor</label>
+                            <div style="padding: 0.75rem; background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: var(--border-radius);">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--forge-primary)" stroke-width="2">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                        <path d="M2 17l10 5 10-5"/>
+                                        <path d="M2 12l10 5 10-5"/>
+                                    </svg>
+                                    <strong style="color: var(--text-primary);">Anvil Live</strong>
+                                </div>
+                                <span style="font-size: 0.8125rem; color: var(--text-muted);">Edit content visually on the frontend using Anvil Live. The backend uses a classic HTML editor.</span>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Posts Per Page</label>
@@ -1452,7 +1453,7 @@ function switchTab(tabId, evt) {
                         </tr>
                         <tr>
                             <td class="sys-label">Uploads Directory</td>
-                            <td class="sys-value"><code><?= str_replace(CMS_ROOT, '', UPLOADS_PATH) ?></code></td>
+                            <td class="sys-value"><code><?= str_replace(CMS_ROOT, '', defined('UPLOADS_PATH') ? UPLOADS_PATH : (defined('UPLOAD_PATH') ? UPLOAD_PATH : CMS_ROOT . '/uploads')) ?></code></td>
                         </tr>
                         <tr>
                             <td class="sys-label">GD Library</td>

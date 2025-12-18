@@ -7,6 +7,594 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.3] - 2025-12-19
+
+### 🎨 Elementor-Style Visual Editor
+
+A major upgrade to the Anvil Live visual editor with comprehensive Elementor-style customization controls, a modern color picker, and professional dark theme UI.
+
+---
+
+### 🌙 Dark Theme Sidebar
+
+Completely redesigned the Anvil Live sidebar with an Elementor-inspired dark theme for better contrast and visual hierarchy.
+
+#### Sidebar Styling
+- **Dark Background** — `#23272e` main background with `#1a1d21` borders
+- **Light Text** — `#e0e0e0` text color for optimal readability on dark backgrounds
+- **Purple Accents** — `#a78bfa` accent color for active states, buttons, and highlights
+- **Tab Bar** — Dark `#1a1d21` background with bottom border separator
+
+#### Input Styling
+- **Dark Inputs** — `#2c313a` background with `#3f4451` borders
+- **Focus States** — `#a78bfa` purple border with subtle glow on focus
+- **Muted Placeholders** — `#6b7280` placeholder text color
+- **Dark Dropdowns** — Select elements styled to match dark theme
+
+#### Block Items
+- **Hover Effects** — Purple border with `rgba(167, 139, 250, 0.15)` background on hover
+- **Purple Icons** — Block category icons in accent purple
+- **Consistent Cards** — `#2c313a` background with subtle borders
+
+---
+
+### 📑 Tabbed Settings Panel
+
+Reorganized block settings into three intuitive tabs following Elementor's proven UX pattern.
+
+#### Tab Structure
+| Tab | Icon | Contents |
+|-----|------|----------|
+| **Content** | Document icon | Block-specific content attributes, accordion items editor |
+| **Style** | Paint drop icon | Typography, colors, borders, shadows, backgrounds |
+| **Advanced** | Gear icon | Spacing, sizing, responsive visibility, animations, transforms, custom attributes |
+
+#### Tab Features
+- **Icon + Label** — Each tab displays an SVG icon with text label
+- **Active State** — Purple highlight with bottom border indicator
+- **Smooth Transitions** — Fade between tab sections
+- **Section Headers** — Collapsible sections with icons and uppercase labels
+- **Empty States** — Helpful messages when no settings are available for a category
+
+---
+
+### ✍️ Typography Controls
+
+Complete typography customization for any block, matching professional page builder capabilities.
+
+#### Font Properties
+| Property | Options | Description |
+|----------|---------|-------------|
+| **Font Size** | Number + unit (px/em/rem/%) | Control text size with flexible units |
+| **Font Weight** | 300-800 (Light to Extra Bold) | 7 weight options including medium and semi-bold |
+| **Line Height** | Text input | Set as number (1.5) or with units |
+| **Letter Spacing** | Number (px) | Adjust character spacing |
+| **Text Transform** | uppercase/lowercase/capitalize/none | Transform text case |
+| **Font Style** | normal/italic | Set italic text |
+
+#### UI Design
+- **2-Column Grid** — Organized layout with size/weight, line-height/letter-spacing pairs
+- **Unit Selectors** — Inline dropdown for font size units
+- **Static Units** — px badge for letter spacing
+
+---
+
+### 🎨 Color Controls
+
+Comprehensive color management with the new modern color picker.
+
+#### Color Options
+| Property | Description |
+|----------|-------------|
+| **Text Color** | Main content text color |
+| **Background Color** | Block background (overridden by Background section if set) |
+| **Link Color** | Anchor tag colors within the block |
+
+#### Features
+- **Color Picker Trigger** — Click to open modern color picker popup
+- **Hex Text Input** — Manual hex/rgba input synced with picker
+- **Transparency Support** — Full alpha channel support
+
+---
+
+### 🔲 Border Controls
+
+Full border customization for blocks.
+
+#### Border Properties
+| Property | Options | Description |
+|----------|---------|-------------|
+| **Border Style** | none/solid/dashed/dotted/double | 5 border styles |
+| **Border Width** | Number (px) | Border thickness in pixels |
+| **Border Color** | Color picker | Border color with transparency |
+| **Border Radius** | Number (px) | Corner rounding in pixels |
+
+---
+
+### 🌫️ Box Shadow Controls
+
+Professional shadow presets with custom shadow builder.
+
+#### Shadow Presets
+| Preset | Shadow Value |
+|--------|--------------|
+| **Small** | `0 1px 2px 0 rgba(0,0,0,0.05)` |
+| **Medium** | `0 4px 6px -1px rgba(0,0,0,0.1)` |
+| **Large** | `0 10px 15px -3px rgba(0,0,0,0.1)` |
+| **Extra Large** | `0 20px 25px -5px rgba(0,0,0,0.1)` |
+| **Custom** | Opens custom shadow builder |
+
+#### Custom Shadow Builder
+- **Horizontal Offset** — X position in pixels
+- **Vertical Offset** — Y position in pixels
+- **Blur Radius** — Shadow blur amount
+- **Spread Radius** — Shadow size expansion
+- **Shadow Color** — Color with transparency support
+
+---
+
+### 🖼️ Background Controls
+
+Advanced background options including solid colors, gradients, and images with overlays.
+
+#### Background Types
+| Type | Options |
+|------|---------|
+| **None** | Transparent background |
+| **Color** | Solid color with transparency |
+| **Gradient** | Linear or radial gradient with two colors |
+| **Image** | Background image with position, size, repeat, and overlay |
+
+#### Gradient Options
+- **Color 1 & 2** — Start and end gradient colors
+- **Gradient Type** — Linear or radial
+- **Angle** — Direction in degrees (0-360) for linear gradients
+
+#### Image Options
+- **Image URL** — Background image source
+- **Position** — 9 position options (center, corners, edges)
+- **Size** — cover/contain/auto
+- **Repeat** — no-repeat/repeat/repeat-x/repeat-y
+- **Overlay Color** — Semi-transparent color overlay
+- **Overlay Opacity** — 0-1 opacity value
+
+---
+
+### 📐 Spacing Controls (Margin & Padding)
+
+Elementor-style margin and padding controls with linked values and unit selection.
+
+#### Spacing Features
+- **4-Value Input** — Top, Right, Bottom, Left inputs for each property
+- **Unit Selection** — px/em/%/rem buttons with active state
+- **Link Toggle** — Chain icon to link all 4 values
+- **Live Preview** — Changes apply immediately in editor
+
+#### Visual Design
+- **2x2 Grid Layout** — Intuitive top/right/bottom/left arrangement
+- **Labels Inside Grid** — TOP, RIGHT, BOTTOM, LEFT labels
+- **Purple Active State** — Selected unit highlighted in accent color
+
+---
+
+### 📱 Responsive Visibility Controls
+
+Control block visibility across device sizes.
+
+#### Visibility Options
+| Option | Breakpoint | Description |
+|--------|------------|-------------|
+| **Hide on Desktop** | ≥1025px | Block hidden on large screens |
+| **Hide on Tablet** | 769px-1024px | Block hidden on medium screens |
+| **Hide on Mobile** | ≤768px | Block hidden on small screens |
+
+#### Implementation
+- **Checkbox Toggles** — Easy on/off for each device type
+- **Device Icons** — Visual icons for desktop/tablet/mobile
+- **CSS Classes** — `.anvil-hide-desktop`, `.anvil-hide-tablet`, `.anvil-hide-mobile`
+- **Media Query Based** — Proper responsive CSS implementation
+
+---
+
+### 📏 Sizing Controls
+
+Control block dimensions with flexible sizing options.
+
+#### Size Properties
+| Property | Description |
+|----------|-------------|
+| **Width** | Block width (px, %, em, auto) |
+| **Height** | Block height |
+| **Max Width** | Maximum width constraint |
+| **Max Height** | Maximum height constraint |
+| **Min Width** | Minimum width constraint |
+| **Min Height** | Minimum height constraint |
+| **Overflow** | visible/hidden/scroll/auto |
+
+---
+
+### ⚡ Motion Effects (Animations)
+
+Professional entrance animations and hover effects.
+
+#### Entrance Animations (17 options)
+| Category | Animations |
+|----------|------------|
+| **Fade** | fadeIn, fadeInUp, fadeInDown, fadeInLeft, fadeInRight |
+| **Zoom** | zoomIn, zoomInUp, zoomInDown |
+| **Slide** | slideInUp, slideInDown, slideInLeft, slideInRight |
+| **Bounce** | bounceIn, bounceInUp |
+| **Rotate** | rotateIn, flipInX, flipInY |
+
+#### Animation Timing
+- **Duration** — Animation length in milliseconds
+- **Delay** — Delay before animation starts
+
+#### Hover Effects (9 options)
+| Effect | Description |
+|--------|-------------|
+| **Grow** | Scale up on hover |
+| **Shrink** | Scale down on hover |
+| **Pulse** | Pulsing scale animation |
+| **Float** | Lift upward on hover |
+| **Sink** | Push downward on hover |
+| **Rotate** | Slight rotation on hover |
+| **Shake** | Horizontal shake effect |
+| **Wobble** | Playful wobble animation |
+| **Buzz** | Vibration effect |
+
+#### Transition Duration
+- **Transition Speed** — Control hover transition timing
+
+---
+
+### 🔄 Transform Controls
+
+CSS transform properties for advanced positioning and effects.
+
+#### Transform Properties
+| Property | Description |
+|----------|-------------|
+| **Rotate** | Rotation in degrees |
+| **Scale** | Size multiplier (1 = normal) |
+| **Translate X** | Horizontal offset in pixels |
+| **Translate Y** | Vertical offset in pixels |
+| **Skew X** | Horizontal skew in degrees |
+| **Skew Y** | Vertical skew in degrees |
+
+---
+
+### 🏷️ Custom Attributes
+
+Add custom CSS identifiers and classes to blocks.
+
+#### Attribute Options
+| Attribute | Description |
+|-----------|-------------|
+| **CSS ID** | Unique HTML id attribute |
+| **CSS Classes** | Space-separated class names |
+| **Z-Index** | Stack order positioning |
+
+---
+
+### 🎨 Modern Color Picker
+
+A completely new Elementor-style color picker replacing the browser's native color input.
+
+#### Color Picker Features
+- **Gradient Picker Area** — Click and drag to select saturation and brightness
+- **Hue Slider** — Rainbow gradient to select color hue
+- **Opacity Slider** — Transparency control with checkered background preview
+- **Current/Previous Preview** — Split preview showing current color and previous (click to restore)
+
+#### Color Input Modes
+| Mode | Fields |
+|------|--------|
+| **HEX** | Hex code + Alpha percentage |
+| **RGB** | Red, Green, Blue values + Alpha |
+| **HSL** | Hue, Saturation, Lightness + Alpha |
+
+#### Color Presets
+- **40 Preset Colors** — 4 rows of common colors
+- **Row 1** — Grayscale (black to white)
+- **Row 2** — Primary colors (rainbow)
+- **Row 3** — Light pastels
+- **Row 4** — Medium tones
+
+#### Actions
+- **Clear Button** — Remove color (set to transparent)
+- **Apply Button** — Close picker and confirm color
+- **Click Outside** — Close picker
+
+#### Technical Features
+- **Automatic Positioning** — Flips up/left if near screen edge
+- **Smooth Animation** — Popup slides in with fade
+- **Color Syncing** — Text input and picker stay synchronized
+- **Full Color Space** — Supports hex, rgb, rgba, hsl, hsla formats
+- **Alpha Channel** — Full transparency support
+- **No Dependencies** — Pure JavaScript, no jQuery required
+- **jQuery Plugin** — Optional `$.fn.anvilColorPicker()` for jQuery users
+
+---
+
+### 🖥️ Frontend Rendering
+
+All new style properties render correctly on the frontend.
+
+#### PHP Implementation
+- **`getBlockStyles()`** — Generates complete CSS from block attributes
+- **`getBlockClasses()`** — Generates CSS classes including animations
+- **`getBlockId()`** — Returns custom CSS ID attribute
+
+#### Rendered Properties
+- Margin, padding, typography, colors
+- Borders, box shadows, backgrounds (color, gradient, image)
+- Sizing, transforms, transitions
+- Animation classes, responsive visibility classes
+- Custom CSS ID, classes, and z-index
+
+---
+
+### 🧱 New Content Blocks
+
+Added 6 new powerful content blocks for creating rich, engaging pages:
+
+#### Accordion Block
+- Collapsible FAQ-style sections with title + content
+- Add/remove items directly in the editor
+- Multiple style options: default, bordered, filled, minimal
+- Option to allow multiple items open at once
+
+#### Alert Block
+- Info, success, warning, and error message boxes
+- Optional title and dismissible button
+- Beautiful icons matching each alert type
+- Perfect for announcements, tips, and warnings
+
+#### Card Block
+- Image + title + description + button layout
+- Hover effects with subtle lift animation
+- Multiple styles: default (shadow), bordered, minimal
+- Great for features, team members, services
+
+#### Testimonial Block
+- Customer quote with author photo, name, role, company
+- Star rating display (0-5 stars)
+- Quote icon decoration
+- Placeholder avatar when no image provided
+
+#### Icon Box Block
+- 20 built-in icons (star, heart, check, zap, shield, etc.)
+- Customizable icon color
+- Left, center, or right alignment
+- Perfect for feature highlights and services
+
+#### Social Links Block
+- 8 platforms: Facebook, Twitter, Instagram, LinkedIn, YouTube, GitHub, TikTok, Email
+- Size options: small, medium, large
+- Style options: default, bordered, filled, minimal
+- Brand colors on hover
+
+---
+
+### 🐛 Bug Fixes
+
+- **Double `>` in Block Wrapper** — Fixed extra `>` character appearing in front of all blocks in the visual editor
+- **Block Rendering** — All blocks now render correctly without stray characters
+- **Settings Panel Rendering** — Fixed missing settings for new block types
+- **Accordion Items Editor** — Fixed accordion item add/remove functionality
+- **Social Links URLs** — Fixed URL normalization for social media links
+
+---
+
+### 📁 New CSS (anvil-live.css additions)
+
+```css
+/* Dark theme sidebar: ~200 lines */
+/* Tabbed settings panel: ~150 lines */
+/* Modern color picker: ~280 lines */
+/* Responsive visibility classes: ~15 lines */
+/* Animation keyframes & classes: ~120 lines */
+/* Hover effect classes: ~60 lines */
+```
+
+**Total CSS Added:** ~825 lines
+
+---
+
+### 📁 New JavaScript (anvil-live.js additions)
+
+```javascript
+/* Typography controls: ~80 lines */
+/* Color controls: ~45 lines */
+/* Border controls: ~50 lines */
+/* Box shadow controls: ~60 lines */
+/* Background controls: ~140 lines */
+/* Sizing controls: ~55 lines */
+/* Animation controls: ~90 lines */
+/* Transform controls: ~55 lines */
+/* Custom attributes controls: ~30 lines */
+/* Responsive controls: ~35 lines */
+/* Style control handlers: ~100 lines */
+/* Modern color picker: ~550 lines */
+/* Block styles generator: ~120 lines */
+/* Block classes generator: ~25 lines */
+```
+
+**Total JavaScript Added:** ~1,435 lines
+
+---
+
+### 📁 Modified Files
+
+```
+includes/
+├── anvil.php                           — Added getBlockStyles(), getBlockClasses(), getBlockId()
+│                                         Updated renderBlock() to apply all styles
+│                                         Added background, sizing, transform, animation support
+└── anvil-live/
+    ├── assets/
+    │   ├── css/anvil-live.css         — Dark theme, color picker, animations (+825 lines)
+    │   └── js/anvil-live.js           — All new controls & color picker (+1,435 lines)
+    └── editor-ui.php                   — No changes needed (dynamic HTML in JS)
+
+themes/flavor/
+└── style.css                           — Styles for new block types
+```
+
+---
+
+### 🎯 Usage Examples
+
+#### Typography
+```
+Font Size: 24px
+Font Weight: Bold (700)
+Line Height: 1.6
+Letter Spacing: 1px
+Text Transform: uppercase
+```
+
+#### Background Gradient
+```
+Type: Gradient
+Color 1: #6366f1
+Color 2: #a855f7
+Gradient Type: Linear
+Angle: 135°
+```
+
+#### Box Shadow
+```
+Preset: Custom
+X: 0px
+Y: 10px
+Blur: 25px
+Spread: -5px
+Color: rgba(99, 102, 241, 0.3)
+```
+
+#### Animation
+```
+Entrance: fadeInUp
+Duration: 1000ms
+Delay: 200ms
+Hover Effect: grow
+Transition: 300ms
+```
+
+---
+
+### 📊 File Size Changes
+
+| File | Before | After | Change |
+|------|--------|-------|--------|
+| `anvil-live.js` | 2,985 lines | 4,160 lines | +1,175 lines |
+| `anvil-live.css` | 585 lines | 960 lines | +375 lines |
+| `anvil.php` | ~450 lines | ~550 lines | +100 lines |
+
+---
+
+## [0.2.2] - 2025-12-16
+
+### 🎨 Anvil Live — Visual Frontend Editor
+
+A powerful Elementor-style visual page builder that lets you edit pages directly on the frontend with real-time preview.
+
+#### Core Features
+- **Frontend Editing** — Edit posts and pages directly on the live site
+- **Drag & Drop Blocks** — Drag blocks from sidebar to canvas with visual drop indicators
+- **Inline Text Editing** — Click any text block to edit directly with rich text toolbar
+- **Real-time Preview** — See changes instantly as you edit
+- **Device Preview** — Preview desktop (1200px), tablet (768px), and mobile (375px) layouts
+- **Autosave** — Automatic saving every 30 seconds with unsaved changes warning
+
+#### Visual Drag & Drop System
+- **Drop Indicator Line** — Purple line with circular ends shows exact drop position
+- **Drag Ghost** — Floating preview element follows cursor during drag
+- **Block Reordering** — Drag blocks by handle (⋮⋮) to reorder
+- **Column Drop Targets** — Drop blocks directly into columns with "Drop here" overlay
+
+#### Rich Text Toolbar
+- **Formatting** — Bold, Italic, Underline, Strikethrough
+- **Links** — Insert and remove hyperlinks with popup dialog
+- **Alignment** — Left, Center, Right text alignment
+- **Clear Formatting** — Remove all formatting from selection
+
+#### Columns Block — Full Implementation
+- **2-6 Columns** — Configurable column count via settings panel
+- **Nested Blocks** — Add any block type inside columns
+- **Click to Add** — Click empty column to open block picker
+- **Drag to Column** — Drag blocks directly into columns
+- **Move Between Columns** — Drag blocks in/out of columns freely
+- **Vertical Alignment** — Top, Center, Bottom alignment options
+- **Responsive Stacking** — Columns stack vertically on mobile
+
+### 🐛 Bug Fixes
+- **Inline Editing** — Fixed `makeBlocksEditable()` not called on initial page load
+- **Justify Buttons** — Fixed text alignment buttons not working
+- **Column Insertion** — Fixed blocks not inserting into columns
+- **Drag vs Click** — Fixed sidebar blocks triggering drag on simple click
+- **Block Operations in Columns** — Fixed duplicate, delete, settings for nested blocks
+
+---
+
+## [0.2.1] - 2025-12-15
+
+### 🔗 REST API
+- Full CRUD Operations for posts, pages, media, users, taxonomies
+- API Key Authentication with granular permissions
+- Admin Interface at Admin → Tools → API Keys
+
+### 🎨 Modern Installer
+- Step-by-step installation wizard
+- System requirements check
+- Purple gradient design
+
+### 🏠 Dashboard Redesign
+- Hero section with time-based greeting
+- Stats row with colored cards
+- Quick action buttons
+
+---
+
+## [0.2.0] - 2025-12-15
+
+### 🔨 Anvil Block Editor
+- 15 Block Types with drag & drop
+- Class-based block architecture
+- Full undo/redo support (50 levels)
+
+### 🎨 Flavor Theme
+- Block showcase landing page
+- Comprehensive block styling
+- Theme settings support
+
+---
+
+## Version History
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| 0.2.3 | 2025-12-19 | Elementor-style settings (typography, colors, borders, shadows, backgrounds, sizing, animations, transforms), modern color picker, dark theme sidebar, tabbed settings panel, 6 new blocks |
+| 0.2.2 | 2025-12-16 | Anvil Live visual frontend editor, drag-drop blocks, inline editing, columns support |
+| 0.2.1 | 2025-12-15 | REST API with API key management, modern installer redesign, dashboard redesign |
+| 0.2.0 | 2025-12-15 | Anvil block editor with 15 blocks, class-based architecture, Flavor theme |
+| 0.1.8 | 2025-12-13 | Comments system with threading, moderation, guest commenting |
+| 0.1.7 | 2025-12-12 | Bulk actions, Quick Edit inline editing |
+| 0.1.6 | 2025-12-12 | Login screen editor, repeater/group fields, admin columns, scheduled publishing |
+| 0.1.5 | 2025-12-11 | Duplicate post, taxonomies system, menu builder |
+| 0.1.4 | 2025-12-09 | Menu builder system, themes page redesign |
+| 0.1.3 | 2025-12-09 | Post revisions system |
+| 0.1.2 | 2025-12-09 | Theme system, Media/Thumbnails modal redesign |
+| 0.1.1 | 2025-12-08 | VoidForge rebrand, Custom fields, 80+ icons |
+| 0.1.0 | 2025-12-08 | Initial release |
+
+---
+
+**VoidForge CMS** — Modern Content Management
+
+
 ## [0.2.2] - 2025-12-16
 
 ### 🎨 Anvil Live — Visual Frontend Editor

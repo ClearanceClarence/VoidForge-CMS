@@ -145,8 +145,12 @@ class User
         $_SESSION['user_id'] = $user['id'];
         self::$currentUser = $user;
 
-        // Update last login
-        Database::update(Database::table('users'), ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+        // Update last login (wrapped in try-catch in case column doesn't exist yet)
+        try {
+            Database::update(Database::table('users'), ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [$user['id']]);
+        } catch (Exception $e) {
+            // Column might not exist yet - will be added by migrations
+        }
         
         // Fire logged in action
         if (class_exists('Plugin')) {

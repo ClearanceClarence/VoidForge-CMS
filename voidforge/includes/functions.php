@@ -5,6 +5,29 @@
 
 defined('CMS_ROOT') or die('Direct access not allowed');
 
+// Backwards compatibility: Define constants that may be missing from older config.php files
+if (!defined('UPLOADS_PATH')) {
+    define('UPLOADS_PATH', defined('UPLOAD_PATH') ? UPLOAD_PATH : CMS_ROOT . '/uploads');
+}
+if (!defined('UPLOADS_URL')) {
+    define('UPLOADS_URL', defined('UPLOAD_URL') ? UPLOAD_URL : SITE_URL . '/uploads');
+}
+if (!defined('THEMES_PATH')) {
+    define('THEMES_PATH', defined('THEME_PATH') ? THEME_PATH : CMS_ROOT . '/themes');
+}
+if (!defined('THEMES_URL')) {
+    define('THEMES_URL', SITE_URL . '/themes');
+}
+if (!defined('PLUGINS_PATH')) {
+    define('PLUGINS_PATH', defined('PLUGIN_PATH') ? PLUGIN_PATH : CMS_ROOT . '/plugins');
+}
+if (!defined('PLUGINS_URL')) {
+    define('PLUGINS_URL', SITE_URL . '/plugins');
+}
+if (!defined('INCLUDES_PATH')) {
+    define('INCLUDES_PATH', CMS_ROOT . '/includes');
+}
+
 /**
  * Safe wrapper for Plugin::doAction - only calls if Plugin class exists
  */

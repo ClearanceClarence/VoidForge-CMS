@@ -280,8 +280,19 @@ try {
 }
 
 // Update version in options
-setOption('cms_version', '0.2.0');
+setOption('cms_version', '0.2.3');
 setOption('last_update', date('Y-m-d H:i:s'));
+
+// v0.2.3: Add last_login column to users table
+$usersTable = Database::table('users');
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$usersTable} LIKE 'last_login'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$usersTable} ADD COLUMN last_login DATETIME DEFAULT NULL AFTER bio");
+    }
+} catch (Exception $e) {
+    // Column might already exist
+}
 
 // v0.2.0: Ensure comment options exist
 if (getOption('comments_enabled') === null) {

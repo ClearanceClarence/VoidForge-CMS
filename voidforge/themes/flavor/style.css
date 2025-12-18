@@ -841,6 +841,524 @@ ol.anvil-block-list li::marker {
 }
 
 /* ========================================
+   Accordion Block
+   ======================================== */
+.anvil-block-accordion {
+    margin: 2em 0;
+}
+
+.anvil-accordion-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+
+.anvil-accordion-item[open] {
+    border-color: var(--color-primary);
+}
+
+.anvil-accordion-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--color-surface);
+    transition: background var(--transition);
+    list-style: none;
+}
+
+.anvil-accordion-title::-webkit-details-marker {
+    display: none;
+}
+
+.anvil-accordion-title:hover {
+    background: var(--color-surface-hover);
+}
+
+.anvil-accordion-icon {
+    transition: transform var(--transition);
+    color: var(--color-text-muted);
+}
+
+.anvil-accordion-item[open] .anvil-accordion-icon {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+}
+
+.anvil-accordion-content {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+/* Accordion Styles */
+.anvil-accordion--bordered .anvil-accordion-item {
+    border-width: 2px;
+}
+
+.anvil-accordion--filled .anvil-accordion-title {
+    background: var(--color-primary);
+    color: white;
+}
+
+.anvil-accordion--filled .anvil-accordion-icon {
+    color: rgba(255,255,255,0.7);
+}
+
+.anvil-accordion--minimal .anvil-accordion-item {
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+}
+
+/* ========================================
+   Alert Block
+   ======================================== */
+.anvil-block-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 2em 0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid;
+}
+
+.anvil-alert-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.anvil-alert-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.anvil-alert-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.anvil-alert-content {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.anvil-alert-dismiss {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--transition);
+    padding: 0;
+}
+
+.anvil-alert-dismiss:hover {
+    opacity: 1;
+}
+
+/* Alert Types */
+.anvil-alert--info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+.anvil-alert--info .anvil-alert-icon {
+    color: #3b82f6;
+}
+
+.anvil-alert--success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.anvil-alert--success .anvil-alert-icon {
+    color: #22c55e;
+}
+
+.anvil-alert--warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.anvil-alert--warning .anvil-alert-icon {
+    color: #f59e0b;
+}
+
+.anvil-alert--error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.anvil-alert--error .anvil-alert-icon {
+    color: #ef4444;
+}
+
+/* ========================================
+   Card Block
+   ======================================== */
+.anvil-block-card {
+    margin: 2em 0;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.anvil-block-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.anvil-card-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.anvil-card-body {
+    padding: 1.5rem;
+}
+
+.anvil-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: var(--color-text);
+}
+
+.anvil-card-content {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.anvil-card-button {
+    display: inline-block;
+    padding: 0.625rem 1.25rem;
+    background: var(--color-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: background var(--transition);
+}
+
+.anvil-card-button:hover {
+    background: var(--color-primary-hover);
+    color: white;
+}
+
+/* Card Styles */
+.anvil-card--bordered {
+    box-shadow: none;
+    border: 2px solid var(--color-border);
+}
+
+.anvil-card--bordered:hover {
+    border-color: var(--color-primary);
+    transform: none;
+}
+
+.anvil-card--minimal {
+    box-shadow: none;
+    background: transparent;
+}
+
+.anvil-card--minimal .anvil-card-body {
+    padding: 1rem 0;
+}
+
+/* ========================================
+   Testimonial Block
+   ======================================== */
+.anvil-block-testimonial {
+    margin: 2em 0;
+    padding: 2rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    position: relative;
+}
+
+.anvil-testimonial-stars {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.anvil-star--filled {
+    color: #fbbf24;
+}
+
+.anvil-star--empty {
+    color: var(--color-border);
+}
+
+.anvil-testimonial-quote {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+    border: none;
+    position: relative;
+}
+
+.anvil-testimonial-quote-icon {
+    position: absolute;
+    top: -1rem;
+    left: -0.5rem;
+    opacity: 0.1;
+    color: var(--color-primary);
+}
+
+.anvil-testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.anvil-testimonial-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.anvil-testimonial-avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary);
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.anvil-testimonial-author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.anvil-testimonial-name {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.anvil-testimonial-meta {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+/* Testimonial Styles */
+.anvil-testimonial--bordered {
+    background: transparent;
+    border: 2px solid var(--color-border);
+}
+
+.anvil-testimonial--filled {
+    background: var(--color-primary);
+    color: white;
+}
+
+.anvil-testimonial--filled .anvil-testimonial-quote,
+.anvil-testimonial--filled .anvil-testimonial-name {
+    color: white;
+}
+
+.anvil-testimonial--filled .anvil-testimonial-meta {
+    color: rgba(255,255,255,0.8);
+}
+
+.anvil-testimonial--filled .anvil-testimonial-author {
+    border-color: rgba(255,255,255,0.2);
+}
+
+/* ========================================
+   Icon Box Block
+   ======================================== */
+.anvil-block-iconbox {
+    margin: 2em 0;
+    padding: 2rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.anvil-block-iconbox:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.anvil-iconbox-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: currentColor;
+    background: linear-gradient(135deg, currentColor 0%, currentColor 100%);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+}
+
+.anvil-iconbox-icon svg {
+    color: white;
+    stroke: white;
+}
+
+.anvil-iconbox-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: var(--color-text);
+}
+
+.anvil-iconbox-content {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+/* Icon Box Alignment */
+.anvil-iconbox--align-center {
+    text-align: center;
+}
+
+.anvil-iconbox--align-center .anvil-iconbox-icon {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.anvil-iconbox--align-left {
+    text-align: left;
+}
+
+.anvil-iconbox--align-right {
+    text-align: right;
+}
+
+.anvil-iconbox--align-right .anvil-iconbox-icon {
+    margin-left: auto;
+}
+
+/* Icon Box Styles */
+.anvil-iconbox--bordered {
+    background: transparent;
+    border: 2px solid var(--color-border);
+}
+
+.anvil-iconbox--minimal {
+    background: transparent;
+    padding: 1rem 0;
+}
+
+.anvil-iconbox--minimal:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* ========================================
+   Social Links Block
+   ======================================== */
+.anvil-block-sociallinks {
+    margin: 2em 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.anvil-sociallinks--align-center {
+    justify-content: center;
+}
+
+.anvil-sociallinks--align-left {
+    justify-content: flex-start;
+}
+
+.anvil-sociallinks--align-right {
+    justify-content: flex-end;
+}
+
+.anvil-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: all var(--transition);
+}
+
+.anvil-social-link:hover {
+    background: var(--social-color, var(--color-primary));
+    color: white;
+    transform: translateY(-2px);
+}
+
+.anvil-social-link svg {
+    stroke: currentColor;
+}
+
+/* Size Variations */
+.anvil-sociallinks--size-small .anvil-social-link {
+    width: 36px;
+    height: 36px;
+}
+
+.anvil-sociallinks--size-large .anvil-social-link {
+    width: 52px;
+    height: 52px;
+}
+
+/* Style Variations */
+.anvil-sociallinks--bordered .anvil-social-link {
+    background: transparent;
+    border: 2px solid var(--color-border);
+}
+
+.anvil-sociallinks--bordered .anvil-social-link:hover {
+    border-color: var(--social-color, var(--color-primary));
+}
+
+.anvil-sociallinks--filled .anvil-social-link {
+    background: var(--social-color, var(--color-primary));
+    color: white;
+}
+
+.anvil-sociallinks--filled .anvil-social-link:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.anvil-sociallinks--minimal .anvil-social-link {
+    background: transparent;
+    width: auto;
+    height: auto;
+    padding: 0.5rem;
+}
+
+.anvil-sociallinks-empty {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* ========================================
    Print Styles
    ======================================== */
 @media print {

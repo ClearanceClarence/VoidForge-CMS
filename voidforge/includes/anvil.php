@@ -287,12 +287,225 @@ class Anvil
         }
         
         // Use render callback (from block class or custom callback)
+        $content = '';
         if (is_callable($blockDef['render_callback'])) {
-            return call_user_func($blockDef['render_callback'], $attrs, $block);
+            $content = call_user_func($blockDef['render_callback'], $attrs, $block);
+        } else {
+            // Fallback to default render
+            $content = self::defaultRender($type, $attrs, $block);
         }
         
-        // Fallback to default render
-        return self::defaultRender($type, $attrs, $block);
+        // Get comprehensive styles, classes, and ID
+        $styles = self::getBlockStyles($attrs);
+        $classes = self::getBlockClasses($attrs);
+        $cssId = self::getBlockId($attrs);
+        
+        // Apply wrapper if there are any styles, classes, or ID
+        if ($styles || $classes || $cssId) {
+            $idAttr = $cssId ? ' id="' . esc($cssId) . '"' : '';
+            $classAttr = $classes ? ' class="anvil-block-wrapper ' . esc($classes) . '"' : ' class="anvil-block-wrapper"';
+            $styleAttr = $styles ? ' style="' . esc($styles) . '"' : '';
+            
+            $content = sprintf('<div%s%s%s>%s</div>', $idAttr, $classAttr, $styleAttr, $content);
+        }
+        
+        return $content;
+    }
+    
+    /**
+     * Generate CSS style string for margin and padding
+     */
+    private static function getSpacingStyle(array $attrs): string
+    {
+        return self::getBlockStyles($attrs);
+    }
+    
+    /**
+     * Generate comprehensive CSS styles from block attributes
+     */
+    private static function getBlockStyles(array $attrs): string
+    {
+        $styles = [];
+        
+        // Generate margin styles
+        if (!empty($attrs['margin']) && is_array($attrs['margin'])) {
+            $m = $attrs['margin'];
+            $unit = $m['unit'] ?? 'px';
+            if (!empty($m['top'])) $styles[] = "margin-top:{$m['top']}{$unit}";
+            if (!empty($m['right'])) $styles[] = "margin-right:{$m['right']}{$unit}";
+            if (!empty($m['bottom'])) $styles[] = "margin-bottom:{$m['bottom']}{$unit}";
+            if (!empty($m['left'])) $styles[] = "margin-left:{$m['left']}{$unit}";
+        }
+        
+        // Generate padding styles
+        if (!empty($attrs['padding']) && is_array($attrs['padding'])) {
+            $p = $attrs['padding'];
+            $unit = $p['unit'] ?? 'px';
+            if (!empty($p['top'])) $styles[] = "padding-top:{$p['top']}{$unit}";
+            if (!empty($p['right'])) $styles[] = "padding-right:{$p['right']}{$unit}";
+            if (!empty($p['bottom'])) $styles[] = "padding-bottom:{$p['bottom']}{$unit}";
+            if (!empty($p['left'])) $styles[] = "padding-left:{$p['left']}{$unit}";
+        }
+        
+        // Typography styles
+        if (!empty($attrs['typography']) && is_array($attrs['typography'])) {
+            $t = $attrs['typography'];
+            if (!empty($t['fontSize'])) $styles[] = "font-size:{$t['fontSize']}" . ($t['fontSizeUnit'] ?? 'px');
+            if (!empty($t['fontWeight'])) $styles[] = "font-weight:{$t['fontWeight']}";
+            if (!empty($t['lineHeight'])) $styles[] = "line-height:{$t['lineHeight']}";
+            if (!empty($t['letterSpacing'])) $styles[] = "letter-spacing:{$t['letterSpacing']}px";
+            if (!empty($t['textTransform'])) $styles[] = "text-transform:{$t['textTransform']}";
+            if (!empty($t['fontStyle'])) $styles[] = "font-style:{$t['fontStyle']}";
+        }
+        
+        // Color styles
+        if (!empty($attrs['colors']) && is_array($attrs['colors'])) {
+            $c = $attrs['colors'];
+            if (!empty($c['textColor'])) $styles[] = "color:{$c['textColor']}";
+            if (!empty($c['backgroundColor'])) $styles[] = "background-color:{$c['backgroundColor']}";
+        }
+        
+        // Border styles
+        if (!empty($attrs['border']) && is_array($attrs['border'])) {
+            $b = $attrs['border'];
+            if (!empty($b['style']) && $b['style'] !== 'none') {
+                $styles[] = "border-style:{$b['style']}";
+                if (!empty($b['width'])) $styles[] = "border-width:{$b['width']}px";
+                if (!empty($b['color'])) $styles[] = "border-color:{$b['color']}";
+            }
+            if (!empty($b['radius'])) $styles[] = "border-radius:{$b['radius']}px";
+        }
+        
+        // Box shadow styles
+        if (!empty($attrs['boxShadow']) && is_array($attrs['boxShadow'])) {
+            $s = $attrs['boxShadow'];
+            $preset = $s['preset'] ?? '';
+            
+            if ($preset && $preset !== 'custom') {
+                $shadowPresets = [
+                    'sm' => '0 1px 2px 0 rgba(0,0,0,0.05)',
+                    'md' => '0 4px 6px -1px rgba(0,0,0,0.1)',
+                    'lg' => '0 10px 15px -3px rgba(0,0,0,0.1)',
+                    'xl' => '0 20px 25px -5px rgba(0,0,0,0.1)'
+                ];
+                if (isset($shadowPresets[$preset])) {
+                    $styles[] = "box-shadow:{$shadowPresets[$preset]}";
+                }
+            } elseif ($preset === 'custom') {
+                $x = $s['x'] ?? 0;
+                $y = $s['y'] ?? 4;
+                $blur = $s['blur'] ?? 6;
+                $spread = $s['spread'] ?? 0;
+                $color = $s['color'] ?? 'rgba(0,0,0,0.1)';
+                $styles[] = "box-shadow:{$x}px {$y}px {$blur}px {$spread}px {$color}";
+            }
+        }
+        
+        // Z-index
+        if (!empty($attrs['customAttributes']['zIndex'])) {
+            $styles[] = "z-index:{$attrs['customAttributes']['zIndex']}";
+        }
+        
+        // Background styles
+        if (!empty($attrs['background']) && is_array($attrs['background'])) {
+            $bg = $attrs['background'];
+            $bgType = $bg['type'] ?? '';
+            
+            if ($bgType === 'color' && !empty($bg['color'])) {
+                $styles[] = "background-color:{$bg['color']}";
+            } elseif ($bgType === 'gradient') {
+                $c1 = $bg['gradientColor1'] ?? '#6366f1';
+                $c2 = $bg['gradientColor2'] ?? '#a855f7';
+                $angle = $bg['gradientAngle'] ?? 135;
+                $gtype = $bg['gradientType'] ?? 'linear';
+                if ($gtype === 'linear') {
+                    $styles[] = "background:linear-gradient({$angle}deg, {$c1}, {$c2})";
+                } else {
+                    $styles[] = "background:radial-gradient(circle, {$c1}, {$c2})";
+                }
+            } elseif ($bgType === 'image' && !empty($bg['imageUrl'])) {
+                $pos = $bg['imagePosition'] ?? 'center center';
+                $size = $bg['imageSize'] ?? 'cover';
+                $repeat = $bg['imageRepeat'] ?? 'no-repeat';
+                $styles[] = "background-image:url('{$bg['imageUrl']}')";
+                $styles[] = "background-position:{$pos}";
+                $styles[] = "background-size:{$size}";
+                $styles[] = "background-repeat:{$repeat}";
+            }
+        }
+        
+        // Sizing styles
+        if (!empty($attrs['sizing']) && is_array($attrs['sizing'])) {
+            $sz = $attrs['sizing'];
+            if (!empty($sz['width'])) $styles[] = "width:{$sz['width']}";
+            if (!empty($sz['height'])) $styles[] = "height:{$sz['height']}";
+            if (!empty($sz['maxWidth'])) $styles[] = "max-width:{$sz['maxWidth']}";
+            if (!empty($sz['maxHeight'])) $styles[] = "max-height:{$sz['maxHeight']}";
+            if (!empty($sz['minWidth'])) $styles[] = "min-width:{$sz['minWidth']}";
+            if (!empty($sz['minHeight'])) $styles[] = "min-height:{$sz['minHeight']}";
+            if (!empty($sz['overflow'])) $styles[] = "overflow:{$sz['overflow']}";
+        }
+        
+        // Transform styles
+        if (!empty($attrs['transform']) && is_array($attrs['transform'])) {
+            $tr = $attrs['transform'];
+            $transforms = [];
+            if (!empty($tr['rotate'])) $transforms[] = "rotate({$tr['rotate']}deg)";
+            if (!empty($tr['scale']) && $tr['scale'] != 1) $transforms[] = "scale({$tr['scale']})";
+            if (!empty($tr['translateX'])) $transforms[] = "translateX({$tr['translateX']}px)";
+            if (!empty($tr['translateY'])) $transforms[] = "translateY({$tr['translateY']}px)";
+            if (!empty($tr['skewX'])) $transforms[] = "skewX({$tr['skewX']}deg)";
+            if (!empty($tr['skewY'])) $transforms[] = "skewY({$tr['skewY']}deg)";
+            if (!empty($transforms)) {
+                $styles[] = "transform:" . implode(' ', $transforms);
+            }
+        }
+        
+        // Animation/transition styles
+        if (!empty($attrs['animation']) && is_array($attrs['animation'])) {
+            $anim = $attrs['animation'];
+            if (!empty($anim['transitionDuration'])) {
+                $styles[] = "transition:all {$anim['transitionDuration']}ms ease";
+            }
+        }
+        
+        return implode(';', $styles);
+    }
+    
+    /**
+     * Get additional CSS classes from block attributes
+     */
+    private static function getBlockClasses(array $attrs): string
+    {
+        $classes = [];
+        
+        // Custom CSS classes
+        if (!empty($attrs['customAttributes']['cssClasses'])) {
+            $classes[] = $attrs['customAttributes']['cssClasses'];
+        }
+        
+        // Responsive visibility classes
+        if (!empty($attrs['responsive'])) {
+            if (!empty($attrs['responsive']['hideDesktop'])) $classes[] = 'anvil-hide-desktop';
+            if (!empty($attrs['responsive']['hideTablet'])) $classes[] = 'anvil-hide-tablet';
+            if (!empty($attrs['responsive']['hideMobile'])) $classes[] = 'anvil-hide-mobile';
+        }
+        
+        // Animation classes
+        if (!empty($attrs['animation'])) {
+            if (!empty($attrs['animation']['entrance'])) $classes[] = "anvil-anim-{$attrs['animation']['entrance']}";
+            if (!empty($attrs['animation']['hover'])) $classes[] = "anvil-hover-{$attrs['animation']['hover']}";
+        }
+        
+        return implode(' ', $classes);
+    }
+    
+    /**
+     * Get custom CSS ID from block attributes
+     */
+    private static function getBlockId(array $attrs): string
+    {
+        return $attrs['customAttributes']['cssId'] ?? '';
     }
     
     /**

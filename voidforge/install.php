@@ -134,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
                     `role` ENUM('admin','editor','author','subscriber') DEFAULT 'subscriber',
                     `avatar_url` VARCHAR(255),
                     `bio` TEXT,
+                    `last_login` DATETIME DEFAULT NULL,
                     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -314,15 +315,18 @@ define('SITE_URL', " . var_export($siteUrl, true) . ");
 define('ADMIN_URL', SITE_URL . '/admin');
 
 // CMS
-define('CMS_VERSION', '0.2.1');
-define('CMS_NAME', 'VoidForge CMS');
+define('CMS_VERSION', '0.2.3');
+define('CMS_NAME', 'VoidForge');
 
 // Paths  
 define('ADMIN_PATH', CMS_ROOT . '/admin');
-define('THEME_PATH', CMS_ROOT . '/themes');
-define('PLUGIN_PATH', CMS_ROOT . '/plugins');
-define('UPLOAD_PATH', CMS_ROOT . '/uploads');
-define('UPLOAD_URL', SITE_URL . '/uploads');
+define('INCLUDES_PATH', CMS_ROOT . '/includes');
+define('THEMES_PATH', CMS_ROOT . '/themes');
+define('PLUGINS_PATH', CMS_ROOT . '/plugins');
+define('UPLOADS_PATH', CMS_ROOT . '/uploads');
+define('UPLOADS_URL', SITE_URL . '/uploads');
+define('THEMES_URL', SITE_URL . '/themes');
+define('PLUGINS_URL', SITE_URL . '/plugins');
 
 // Security
 define('AUTH_KEY', '" . bin2hex(random_bytes(32)) . "');

@@ -13,6 +13,7 @@ require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
 require_once CMS_ROOT . '/includes/anvil.php';
+require_once CMS_ROOT . '/includes/anvil-live.php';
 
 Post::init();
 Anvil::init();
@@ -39,28 +40,8 @@ if (!$typeConfig) {
     redirect(ADMIN_URL . '/');
 }
 
-// Get the editor preference (can be overridden per-post via URL param)
-$defaultEditor = getOption('default_editor', 'anvil');
-$currentEditor = $_GET['editor'] ?? $defaultEditor;
-
-// Detect if existing content is blocks or HTML
-if ($post && !empty($post['content'])) {
-    $trimmed = trim($post['content']);
-    if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
-        $parsed = json_decode($post['content'], true);
-        if (is_array($parsed) && json_last_error() === JSON_ERROR_NONE) {
-            // Content is blocks - use anvil unless explicitly switching
-            if (!isset($_GET['editor'])) {
-                $currentEditor = 'anvil';
-            }
-        }
-    } else {
-        // Content is HTML - use classic unless explicitly switching
-        if (!isset($_GET['editor'])) {
-            $currentEditor = 'classic';
-        }
-    }
-}
+// Classic editor is always used in backend
+// Anvil Live (frontend editor) is accessed via button
 
 $pageTitle = $post ? 'Edit ' . $typeConfig['singular'] : 'New ' . $typeConfig['singular'];
 $errors = [];
@@ -608,83 +589,160 @@ include ADMIN_PATH . '/includes/header.php';
             ?>
             
             <?php if (Post::typeSupports($postType, 'editor')): ?>
-            <!-- Editor Toggle -->
-            <div class="editor-toggle" style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem; gap: 0.5rem; align-items: center;">
-                <span style="font-size: 0.75rem; color: var(--text-muted);">Editor:</span>
-                <?php 
-                $editorUrl = ADMIN_URL . '/post-edit.php?';
-                if ($post) {
-                    $editorUrl .= 'id=' . $post['id'] . '&';
-                } else {
-                    $editorUrl .= 'type=' . $postType . '&';
+            <?php 
+            // Get content - convert blocks to HTML if needed for display
+            $editorContent = $post['content'] ?? $_POST['content'] ?? '';
+            $hasBlockContent = false;
+            if (!empty($editorContent)) {
+                $trimmed = trim($editorContent);
+                if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
+                    $blocks = json_decode($editorContent, true);
+                    if (is_array($blocks) && json_last_error() === JSON_ERROR_NONE) {
+                        $hasBlockContent = true;
+                        // Convert blocks to HTML for classic editor display
+                        $editorContent = Anvil::renderBlocks($blocks);
+                    }
                 }
-                ?>
-                <a href="<?= $editorUrl ?>editor=anvil" 
-                   class="editor-toggle-btn <?= $currentEditor === 'anvil' ? 'active' : '' ?>"
-                   style="padding: 0.25rem 0.625rem; font-size: 0.75rem; border-radius: 4px; text-decoration: none;
-                          background: <?= $currentEditor === 'anvil' ? 'var(--forge-primary)' : 'var(--bg-card)' ?>; 
-                          color: <?= $currentEditor === 'anvil' ? '#fff' : 'var(--text-muted)' ?>;
-                          border: 1px solid <?= $currentEditor === 'anvil' ? 'var(--forge-primary)' : 'var(--border-color)' ?>;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    Blocks
-                </a>
-                <a href="<?= $editorUrl ?>editor=classic" 
-                   class="editor-toggle-btn <?= $currentEditor === 'classic' ? 'active' : '' ?>"
-                   style="padding: 0.25rem 0.625rem; font-size: 0.75rem; border-radius: 4px; text-decoration: none;
-                          background: <?= $currentEditor === 'classic' ? 'var(--forge-primary)' : 'var(--bg-card)' ?>; 
-                          color: <?= $currentEditor === 'classic' ? '#fff' : 'var(--text-muted)' ?>;
-                          border: 1px solid <?= $currentEditor === 'classic' ? 'var(--forge-primary)' : 'var(--border-color)' ?>;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                    Classic
-                </a>
-            </div>
+            }
             
-            <?php if ($currentEditor === 'anvil'): ?>
-            <!-- Anvil Block Editor -->
-            <div id="anvilEditor" class="anvil-editor" data-post-id="<?= $post['id'] ?? 0 ?>">
-                <!-- Editor will be initialized by JavaScript -->
+            // Check if Anvil Live is available for this post
+            $anvilLiveAvailable = $post && class_exists('AnvilLive') && AnvilLive::isAvailable($postType);
+            $anvilLiveUrl = $anvilLiveAvailable ? AnvilLive::getEditUrl($post) : '';
+            ?>
+            
+            <!-- Edit with Anvil Button (prominent, above editor) -->
+            <?php if ($post): ?>
+            <div class="anvil-editor-cta" style="margin-bottom: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: var(--border-radius-lg);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9375rem;">Visual Block Editor</div>
+                            <div style="font-size: 0.8125rem; color: var(--text-muted);">Edit with drag-and-drop blocks on the frontend</div>
+                        </div>
+                    </div>
+                    <a href="<?= esc($anvilLiveUrl) ?>" target="_blank" class="btn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; font-weight: 500;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        Edit with Anvil
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </a>
+                </div>
+                <?php if ($hasBlockContent): ?>
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(124, 58, 237, 0.2); font-size: 0.75rem; color: var(--text-muted);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    This content uses Anvil blocks. The HTML preview below is read-only. Use "Edit with Anvil" to modify block content.
+                </div>
+                <?php endif; ?>
             </div>
-            <input type="hidden" id="content" name="content" value="<?= esc($post['content'] ?? $_POST['content'] ?? '') ?>">
             <?php else: ?>
+            <!-- For new posts, show info about Anvil Live -->
+            <div class="anvil-editor-cta" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-header); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; background: var(--border-color); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-secondary); font-size: 0.9375rem;">Visual Block Editor</div>
+                        <div style="font-size: 0.8125rem; color: var(--text-muted);">Save this <?= strtolower(esc($typeConfig['singular'])) ?> first, then use "Edit with Anvil" for visual editing</div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
             <!-- Classic HTML Editor -->
-            <div class="card">
-                <div class="card-header">
+            <div class="card" style="position: relative;">
+                <?php if ($hasBlockContent): ?>
+                <!-- Overlay for Anvil Block Content -->
+                <div class="anvil-content-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(124, 58, 237, 0.03); backdrop-filter: blur(2px); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--border-radius-lg);">
+                    <div style="text-align: center; padding: 2rem; max-width: 400px;">
+                        <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3 style="margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Anvil Block Content</h3>
+                        <p style="margin: 0 0 1.5rem; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">
+                            This page was created with Anvil Live visual editor. Use the button below to edit the content.
+                        </p>
+                        <a href="<?= esc($anvilLiveUrl) ?>" target="_blank" class="btn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600; font-size: 0.9375rem; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                            Edit with Anvil Live
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                        </a>
+                        <div style="margin-top: 1rem;">
+                            <button type="button" onclick="removeAnvilOverlay()" style="background: none; border: none; color: var(--text-muted); font-size: 0.8125rem; cursor: pointer; text-decoration: underline;">
+                                View HTML (read-only)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h3 class="card-title">Content</h3>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        HTML Editor
+                    </span>
                 </div>
                 <div class="card-body" style="padding: 0;">
-                    <?php
-                    // Get content - convert blocks to HTML if needed
-                    $editorContent = $post['content'] ?? $_POST['content'] ?? '';
-                    if (!empty($editorContent)) {
-                        $trimmed = trim($editorContent);
-                        if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
-                            $blocks = json_decode($editorContent, true);
-                            if (is_array($blocks) && json_last_error() === JSON_ERROR_NONE) {
-                                // Convert blocks to HTML for classic editor
-                                $editorContent = Anvil::renderBlocks($blocks);
-                            }
-                        }
-                    }
-                    ?>
                     <textarea id="content" name="content" class="classic-editor" 
                               style="width: 100%; min-height: 400px; padding: 1rem; border: none; 
                                      font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; 
                                      line-height: 1.6; resize: vertical; background: var(--bg-card);
                                      color: var(--text-primary);"
-                              placeholder="Write your content here... HTML is supported."><?= esc($editorContent) ?></textarea>
+                              placeholder="Write your content here... HTML is supported."
+                              <?= $hasBlockContent ? 'readonly' : '' ?>><?= esc($editorContent) ?></textarea>
                 </div>
+                <?php if ($hasBlockContent): ?>
+                <div class="card-footer" style="padding: 0.75rem 1rem; background: var(--bg-card-header); border-top: 1px solid var(--border-color);">
+                    <button type="button" onclick="enableHtmlEditing()" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        Edit HTML Directly
+                    </button>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.75rem;">
+                        Warning: Editing HTML will convert blocks to plain HTML
+                    </span>
+                </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
             <?php endif; ?>
             
             <?php 
@@ -803,22 +861,6 @@ include ADMIN_PATH . '/includes/header.php';
                     </div>
                     <?php endif; ?>
                     
-                    <?php 
-                    // Anvil Live frontend editor button
-                    if ($post && class_exists('AnvilLive') && AnvilLive::isAvailable($postType)):
-                        $anvilLiveUrl = AnvilLive::getEditUrl($post);
-                    ?>
-                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
-                        <a href="<?= esc($anvilLiveUrl) ?>" target="_blank" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; font-size: 0.8125rem;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                                <path d="M2 17l10 5 10-5"/>
-                                <path d="M2 12l10 5 10-5"/>
-                            </svg>
-                            Edit with Anvil Live
-                        </a>
-                    </div>
-                    <?php endif; ?>
                     
                     <?php 
                     // Fire post_submitbox_actions for plugins to add actions
@@ -1230,10 +1272,6 @@ include ADMIN_PATH . '/includes/header.php';
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<?php if ($currentEditor === 'anvil'): ?>
-<link rel="stylesheet" href="<?= ADMIN_URL ?>/assets/css/anvil.css">
-<script src="<?= ADMIN_URL ?>/assets/js/anvil.js"></script>
-<?php endif; ?>
 
 <script>
 const titleInput = document.getElementById('title');
@@ -1243,54 +1281,40 @@ const contentInput = document.getElementById('content');
 let selectedMediaId = null;
 let selectedMediaUrl = null;
 
-// Initialize Anvil Block Editor (only if using block editor)
-let anvilEditor = null;
-<?php if ($currentEditor === 'anvil'): ?>
-const anvilContainer = document.getElementById('anvilEditor');
-if (anvilContainer && typeof AnvilEditor !== 'undefined') {
-    // Get registered blocks from PHP
-    const editorData = <?= json_encode(Anvil::getEditorData()) ?>;
-    
-    // Parse existing content
-    let initialBlocks = [];
-    if (contentInput && contentInput.value) {
-        try {
-            const parsed = JSON.parse(contentInput.value);
-            if (Array.isArray(parsed)) {
-                initialBlocks = parsed;
+// Enable HTML editing for block content (converts to HTML)
+function enableHtmlEditing() {
+    const editor = document.getElementById('content');
+    if (editor && editor.hasAttribute('readonly')) {
+        if (confirm('Warning: Editing the HTML directly will convert the block content to plain HTML. The visual block structure will be lost.\n\nContinue?')) {
+            editor.removeAttribute('readonly');
+            editor.style.opacity = '1';
+            // Hide the card footer with the edit button
+            const cardFooter = editor.closest('.card').querySelector('.card-footer');
+            if (cardFooter) {
+                cardFooter.style.display = 'none';
             }
-        } catch (e) {
-            // Content is HTML, convert to blocks
-            if (contentInput.value.trim()) {
-                initialBlocks = [{
-                    id: 'block_' + Date.now(),
-                    type: 'html',
-                    attributes: {
-                        content: contentInput.value
-                    }
-                }];
+            // Remove the overlay
+            removeAnvilOverlay();
+            // Update the info notice
+            const ctaNotice = document.querySelector('.anvil-editor-cta');
+            if (ctaNotice) {
+                const noticeDiv = ctaNotice.querySelector('div[style*="border-top"]');
+                if (noticeDiv) {
+                    noticeDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 0.25rem;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>HTML editing enabled. Saving will convert blocks to plain HTML.';
+                    noticeDiv.style.color = '#f59e0b';
+                }
             }
         }
     }
-    
-    // Initialize editor
-    anvilEditor = new AnvilEditor(anvilContainer, {
-        initialContent: initialBlocks,
-        blocks: editorData.blocks,
-        categories: editorData.categories,
-        onChange: function(blocks) {
-            if (contentInput) {
-                contentInput.value = JSON.stringify(blocks);
-            }
-        },
-        onMediaSelect: function(callback) {
-            // Store callback and open media modal
-            window.anvilMediaCallback = callback;
-            openMediaModal();
-        }
-    });
 }
-<?php endif; ?>
+
+// Remove the Anvil content overlay to show HTML
+function removeAnvilOverlay() {
+    const overlay = document.querySelector('.anvil-content-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
 
 // Auto-generate slug
 if (titleInput) {
