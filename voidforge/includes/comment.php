@@ -467,6 +467,86 @@ class Comment
     }
 
     /**
+     * Delete all comments for a post
+     */
+    public static function deleteByPost(int $postId): int
+    {
+        $table = Database::table('comments');
+        
+        // Get count before deletion for return value
+        $count = self::count(['post_id' => $postId]);
+        
+        if ($count === 0) {
+            return 0;
+        }
+        
+        // Delete all comments for this post (including replies, which have same post_id)
+        $result = Database::delete($table, 'post_id = ?', [$postId]);
+        
+        if ($result > 0) {
+            safe_do_action('comments_deleted_for_post', $postId, $result);
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Count orphaned comments (comments with no existing post)
+     */
+    public static function countOrphaned(): int
+    {
+        try {
+            $commentsTable = Database::table('comments');
+            $postsTable = Database::table('posts');
+            
+            // Simple query: count comments where post_id doesn't exist in posts table
+            $result = Database::query(
+                "SELECT COUNT(*) as cnt FROM {$commentsTable} c 
+                 WHERE NOT EXISTS (SELECT 1 FROM {$postsTable} p WHERE p.id = c.post_id)"
+            );
+            
+            return (int) ($result[0]['cnt'] ?? 0);
+        } catch (Exception $e) {
+            return -1; // Return -1 to indicate error
+        }
+    }
+
+    /**
+     * Delete all orphaned comments (comments with no existing post)
+     */
+    public static function deleteOrphaned(): int
+    {
+        try {
+            $commentsTable = Database::table('comments');
+            $postsTable = Database::table('posts');
+            
+            // Get orphaned post IDs first
+            $orphaned = Database::query(
+                "SELECT DISTINCT c.post_id FROM {$commentsTable} c 
+                 WHERE NOT EXISTS (SELECT 1 FROM {$postsTable} p WHERE p.id = c.post_id)"
+            );
+            
+            if (empty($orphaned)) {
+                return 0;
+            }
+            
+            $totalDeleted = 0;
+            foreach ($orphaned as $row) {
+                $deleted = Database::delete($commentsTable, 'post_id = ?', [(int)$row['post_id']]);
+                $totalDeleted += $deleted;
+            }
+            
+            if ($totalDeleted > 0) {
+                safe_do_action('orphaned_comments_deleted', $totalDeleted);
+            }
+            
+            return $totalDeleted;
+        } catch (Exception $e) {
+            return -1;
+        }
+    }
+
+    /**
      * Approve a comment
      */
     public static function approve(int $id): bool

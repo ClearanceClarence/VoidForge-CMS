@@ -540,68 +540,190 @@ include ADMIN_PATH . '/includes/header.php';
 
 .plugins-table tbody tr:hover .table-actions { opacity: 1; }
 
-/* Empty State */
-.empty-state {
+/* Empty State - Enhanced Design */
+.plugins-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     padding: 5rem 2rem;
-    background: var(--bg-card);
-    border: 2px dashed var(--border-color);
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-header) 100%);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
+    min-height: 400px;
 }
 
-.empty-state svg {
-    width: 72px;
-    height: 72px;
-    color: #cbd5e1;
-    margin-bottom: 1.5rem;
+.plugins-empty-icon {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 50%;
+    margin-bottom: 1.75rem;
+    position: relative;
 }
 
-.empty-state h2 {
+.plugins-empty-icon::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 2px dashed rgba(99, 102, 241, 0.25);
+    animation: spin 20s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.plugins-empty-icon svg {
+    width: 48px;
+    height: 48px;
+    color: var(--forge-primary);
+    opacity: 0.85;
+}
+
+.plugins-empty-content {
+    max-width: 420px;
+}
+
+.plugins-empty-content h2 {
     font-size: 1.375rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.625rem 0;
 }
 
-.empty-state p {
+.plugins-empty-content p {
+    font-size: 0.9375rem;
     color: var(--text-muted);
+    line-height: 1.6;
     margin: 0 0 2rem 0;
 }
 
-/* Upload Modal */
+.plugins-empty-content code {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--forge-primary);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.plugins-empty-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.plugins-empty-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.plugins-empty-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.plugins-empty-action svg {
+    width: 20px;
+    height: 20px;
+}
+
+.plugins-empty-hint {
+    font-size: 0.8125rem;
+    color: var(--text-dim);
+}
+
+.plugins-empty-hint a {
+    color: var(--forge-primary);
+    text-decoration: none;
+}
+
+.plugins-empty-hint a:hover {
+    text-decoration: underline;
+}
+
+/* Upload Modal - Enhanced */
 .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(15, 23, 42, 0.7);
     z-index: 1000;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
+    padding: 1rem;
 }
 
-.modal-overlay.active { display: flex; }
+.modal-overlay.active { 
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 .modal-box {
     background: var(--bg-card);
     border-radius: 20px;
-    padding: 2rem;
+    padding: 0;
     max-width: 480px;
-    width: 90%;
+    width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.25s ease;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-card-header);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.modal-header h3 svg {
+    width: 20px;
+    height: 20px;
+    color: var(--forge-primary);
 }
 
 .modal-close {
@@ -610,8 +732,8 @@ include ADMIN_PATH . '/includes/header.php';
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-card-header);
-    border: none;
+    background: transparent;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     color: var(--text-muted);
     cursor: pointer;
@@ -619,43 +741,81 @@ include ADMIN_PATH . '/includes/header.php';
 }
 
 .modal-close:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.modal-close svg {
+    width: 18px;
+    height: 18px;
+}
+
+.modal-body {
+    padding: 1.5rem;
 }
 
 .upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     border: 2px dashed var(--border-color);
     border-radius: 16px;
     padding: 3rem 2rem;
     text-align: center;
     transition: all 0.2s;
     cursor: pointer;
+    background: linear-gradient(180deg, transparent 0%, var(--bg-card-header) 100%);
 }
 
 .upload-zone:hover,
 .upload-zone.dragover {
     border-color: var(--forge-primary);
-    background: rgba(99, 102, 241, 0.05);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.03) 0%, rgba(99, 102, 241, 0.08) 100%);
 }
 
 .upload-zone svg {
-    width: 48px;
-    height: 48px;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
+    width: 52px;
+    height: 52px;
+    color: var(--forge-primary);
+    opacity: 0.6;
+    margin-bottom: 1.25rem;
+    transition: all 0.2s;
+}
+
+.upload-zone:hover svg,
+.upload-zone.dragover svg {
+    opacity: 1;
+    transform: translateY(-3px);
 }
 
 .upload-zone h4 {
-    font-size: 1rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.375rem 0;
 }
 
 .upload-zone p {
     font-size: 0.875rem;
     color: var(--text-muted);
+    margin: 0 0 1rem 0;
+}
+
+.upload-zone .upload-hint {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.upload-zone .upload-hint svg {
+    width: 14px;
+    height: 14px;
     margin: 0;
+    opacity: 0.5;
 }
 
 .upload-zone input[type="file"] {
@@ -749,11 +909,110 @@ include ADMIN_PATH . '/includes/header.php';
     margin: 0;
 }
 
+/* Delete Confirmation Modal */
+.delete-modal {
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+}
+
+.delete-modal-icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    margin: 0 auto 1.25rem;
+}
+
+.delete-modal-icon svg {
+    width: 36px;
+    height: 36px;
+    color: #ef4444;
+}
+
+.delete-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.625rem 0;
+}
+
+.delete-modal-text {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 1.75rem 0;
+}
+
+.delete-modal-text strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.delete-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.delete-modal-btn.cancel {
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.delete-modal-btn.cancel:hover {
+    background: var(--bg-card);
+    border-color: var(--text-muted);
+}
+
+.delete-modal-btn.delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.delete-modal-btn.delete:hover {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+.delete-modal-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
 @media (max-width: 768px) {
     .plugins-header { flex-direction: column; align-items: flex-start; }
     .plugins-toolbar { flex-direction: column; align-items: flex-start; }
     .plugins-grid { grid-template-columns: 1fr; }
     .hooks-grid { grid-template-columns: 1fr; }
+    
+    .delete-modal-actions {
+        flex-direction: column;
+    }
+    
+    .delete-modal-btn {
+        width: 100%;
+    }
 }
 </style>
 
@@ -808,22 +1067,29 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 
     <?php if (empty($plugins)): ?>
-    <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-        </svg>
-        <h2>No Plugins Found</h2>
-        <p>Upload a plugin or add one to the <code>/plugins</code> directory.</p>
-        <button type="button" class="btn-upload" onclick="openUploadModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+    <div class="plugins-empty-state">
+        <div class="plugins-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
             </svg>
-            Upload Plugin
-        </button>
+        </div>
+        <div class="plugins-empty-content">
+            <h2>No Plugins Installed</h2>
+            <p>Extend VoidForge with plugins to add new features, integrations, and functionality. Upload a ZIP file or place plugins in the <code>/plugins</code> directory.</p>
+            <div class="plugins-empty-actions">
+                <button type="button" class="plugins-empty-action" onclick="openUploadModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload Plugin
+                </button>
+                <span class="plugins-empty-hint">or <a href="#devDocs" onclick="document.getElementById('devDocs').classList.add('open')">learn to create your own</a></span>
+            </div>
+        </div>
     </div>
     
     <?php elseif ($view === 'cards'): ?>
@@ -1055,7 +1321,14 @@ include ADMIN_PATH . '/includes/header.php';
 <div class="modal-overlay" id="uploadModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3>Upload Plugin</h3>
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Plugin
+            </h3>
             <button type="button" class="modal-close" onclick="closeUploadModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
@@ -1063,30 +1336,56 @@ include ADMIN_PATH . '/includes/header.php';
                 </svg>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data">
-            <?= csrfField() ?>
-            <label class="upload-zone" id="uploadZone">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                <h4>Drop ZIP file here</h4>
-                <p>or click to browse</p>
-                <input type="file" name="plugin_zip" accept=".zip" onchange="this.form.submit()">
-            </label>
-        </form>
+        <div class="modal-body">
+            <form method="POST" enctype="multipart/form-data">
+                <?= csrfField() ?>
+                <label class="upload-zone" id="uploadZone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    <h4>Drop your plugin ZIP here</h4>
+                    <p>or click to browse your computer</p>
+                    <span class="upload-hint">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        ZIP file containing plugin folder
+                    </span>
+                    <input type="file" name="plugin_zip" accept=".zip" onchange="this.form.submit()">
+                </label>
+            </form>
+        </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay" id="deleteModal">
-    <div class="modal-box" style="text-align: center;">
-        <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Delete Plugin?</h3>
-        <p style="color: var(--text-muted); margin: 0 0 1.5rem 0;">Are you sure you want to delete "<span id="deletePluginName"></span>"? This will remove all plugin files.</p>
-        <div style="display: flex; gap: 0.75rem; justify-content: center;">
-            <button type="button" class="plugin-btn" onclick="closeDeleteModal()">Cancel</button>
-            <a href="#" id="deletePluginLink" class="plugin-btn danger">Delete Plugin</a>
+    <div class="modal-box delete-modal">
+        <div class="delete-modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        </div>
+        <h3 class="delete-modal-title">Delete Plugin?</h3>
+        <p class="delete-modal-text">Are you sure you want to delete "<strong id="deletePluginName"></strong>"? This will permanently remove all plugin files and cannot be undone.</p>
+        <div class="delete-modal-actions">
+            <button type="button" class="delete-modal-btn cancel" onclick="closeDeleteModal()">
+                Cancel
+            </button>
+            <a href="#" id="deletePluginLink" class="delete-modal-btn delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Delete Plugin
+            </a>
         </div>
     </div>
 </div>

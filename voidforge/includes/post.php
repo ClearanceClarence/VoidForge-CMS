@@ -457,6 +457,14 @@ class Post
                     // Taxonomy tables might not exist
                 }
             }
+            // Delete comments
+            if (class_exists('Comment')) {
+                try {
+                    Comment::deleteByPost($id);
+                } catch (Exception $e) {
+                    // Comments table might not exist
+                }
+            }
             // Delete meta
             Database::delete(Database::table('postmeta'), 'post_id = ?', [$id]);
             // Delete revisions

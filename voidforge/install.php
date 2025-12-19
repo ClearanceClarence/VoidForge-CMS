@@ -4,12 +4,7 @@
  * Modern, beautiful installation wizard
  */
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Define constants only if not already defined
-if (!defined('CMS_VERSION')) define('CMS_VERSION', '0.2.1');
-if (!defined('CMS_NAME')) define('CMS_NAME', 'VoidForge CMS');
+// Define CMS_ROOT first (needed for includes)
 if (!defined('CMS_ROOT')) define('CMS_ROOT', __DIR__);
 
 // Check if already installed
@@ -30,6 +25,10 @@ if (file_exists(CMS_ROOT . '/includes/config.php')) {
         }
     }
 }
+
+// Define fallbacks only if config.php didn't define them
+if (!defined('CMS_VERSION')) define('CMS_VERSION', '0.2.3.1');
+if (!defined('CMS_NAME')) define('CMS_NAME', 'VoidForge CMS');
 
 if ($isInstalled) {
     header('Location: admin/');
@@ -454,51 +453,148 @@ foreach ($requirements as $req) {
         }
 
         /* Steps */
+        /* Steps Progress */
         .steps {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            padding: 1.5rem 2rem;
+            align-items: center;
+            padding: 2rem;
             background: var(--card);
             border-bottom: 1px solid var(--border);
+            position: relative;
         }
-        .step-item {
+        
+        .steps-container {
             display: flex;
             align-items: center;
+            gap: 0;
+            position: relative;
+        }
+        
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            background: var(--bg);
-            border: 1px solid var(--border);
-            transition: all 0.2s;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
         }
-        .step-item.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-color: transparent;
-        }
-        .step-item.done {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border-color: var(--success);
-        }
-        .step-num {
-            width: 24px;
-            height: 24px;
+        
+        .step-circle {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: currentColor;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 1rem;
             font-weight: 600;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            position: relative;
         }
-        .step-item.active .step-num { background: rgba(255,255,255,0.3); }
-        .step-item.done .step-num { background: var(--success); }
+        
+        .step-circle svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .step-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .step-connector {
+            width: 80px;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+        
+        .step-connector::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+        
+        /* Active Step */
+        .step-item.active .step-circle {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .step-item.active .step-label {
+            color: var(--primary);
+        }
+        
+        /* Completed Step */
+        .step-item.done .step-circle {
+            background: var(--success);
+            border-color: transparent;
+            color: white;
+        }
+        
+        .step-item.done .step-label {
+            color: var(--success);
+        }
+        
+        .step-item.done + .step-connector::after {
+            width: 100%;
+        }
+        
+        /* Pulse animation for active step */
+        .step-item.active .step-circle::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            opacity: 0.5;
+            animation: stepPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes stepPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 640px) {
+            .steps {
+                padding: 1.5rem 1rem;
+            }
+            .step-item {
+                padding: 0 1rem;
+            }
+            .step-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 0.875rem;
+            }
+            .step-label {
+                font-size: 0.6875rem;
+            }
+            .step-connector {
+                width: 40px;
+            }
+        }
 
         /* Content */
         .installer-content {
@@ -744,7 +840,6 @@ foreach ($requirements as $req) {
         }
 
         @media (max-width: 640px) {
-            .steps { flex-wrap: wrap; }
             .form-row { grid-template-columns: 1fr; }
             .success-actions { flex-direction: column; }
         }
@@ -767,17 +862,41 @@ foreach ($requirements as $req) {
 
         <!-- Steps -->
         <div class="steps">
-            <div class="step-item <?= $step >= 1 ? ($step > 1 ? 'done' : 'active') : '' ?>">
-                <span class="step-num"><?= $step > 1 ? '✓' : '1' ?></span>
-                Requirements
-            </div>
-            <div class="step-item <?= $step >= 2 ? ($step > 2 ? 'done' : 'active') : '' ?>">
-                <span class="step-num"><?= $step > 2 ? '✓' : '2' ?></span>
-                Configuration
-            </div>
-            <div class="step-item <?= $step >= 3 ? 'active' : '' ?>">
-                <span class="step-num">3</span>
-                Complete
+            <div class="steps-container">
+                <div class="step-item <?= $step >= 1 ? ($step > 1 ? 'done' : 'active') : '' ?>">
+                    <div class="step-circle">
+                        <?php if ($step > 1): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <?php else: ?>
+                        1
+                        <?php endif; ?>
+                    </div>
+                    <span class="step-label">Requirements</span>
+                </div>
+                
+                <div class="step-connector <?= $step > 1 ? 'done' : '' ?>"></div>
+                
+                <div class="step-item <?= $step >= 2 ? ($step > 2 ? 'done' : 'active') : '' ?>">
+                    <div class="step-circle">
+                        <?php if ($step > 2): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <?php else: ?>
+                        2
+                        <?php endif; ?>
+                    </div>
+                    <span class="step-label">Configuration</span>
+                </div>
+                
+                <div class="step-connector <?= $step > 2 ? 'done' : '' ?>"></div>
+                
+                <div class="step-item <?= $step >= 3 ? 'active' : '' ?>">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Complete</span>
+                </div>
             </div>
         </div>
 

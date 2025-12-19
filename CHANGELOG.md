@@ -7,6 +7,156 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.3.1] - 2025-12-19
+
+### 💬 Comments System Improvements
+
+Major improvements to the comments system including orphaned comment cleanup, frontend redesign, and cascade deletion.
+
+---
+
+### 🧹 Orphaned Comments Cleanup
+
+New feature to detect and remove comments attached to permanently deleted posts.
+
+#### Admin UI
+- **"Clean Up Orphans" Button** — Appears on Comments page when orphans exist
+- **Count Badge** — Shows number of orphaned comments detected
+- **Confirmation Modal** — Warning dialog before permanent deletion
+- **Direct SQL Detection** — Reliable detection across all existing comments
+
+#### Implementation
+- Uses `NOT EXISTS` subquery for reliable orphan detection
+- Handles comments from posts deleted before this update
+- Added `Comment::deleteByPost()` method for targeted deletion
+
+---
+
+### 🔗 Comment Cascade Delete
+
+Comments are now automatically deleted when their parent post is permanently deleted.
+
+#### Changes
+- **Post::delete()** — Now calls `Comment::deleteByPost()` during permanent deletion
+- **Comment class include** — Added to `admin/posts.php` for class availability
+- Only triggers on permanent deletion, not when moving to trash
+
+---
+
+### 🎨 Frontend Comments Redesign
+
+Complete visual overhaul of the public-facing comments section.
+
+#### Comment Display
+- **Card-based design** — Modern cards with hover effects
+- **Larger avatars** — 52px with accent border on hover
+- **Clock icon** — Next to comment dates for visual clarity
+- **Styled reply buttons** — Icon + text with border, fills on hover
+- **Nested replies** — Left border accent indicator with proper indentation
+- **Responsive layout** — Collapses gracefully on mobile
+
+#### Comment Form
+- **Gradient icon header** — Purple gradient circular icon with chat bubble
+- **Two-column layout** — Name and email fields side by side
+- **Enhanced inputs** — Focus states with accent border and glow
+- **Gradient submit button** — Purple gradient with hover lift effect
+- **Logged-in state** — Shows user avatar and name when authenticated
+- **Improved alerts** — Error/success messages with icons
+
+#### Empty State
+- **Friendly messaging** — "No comments yet" with gradient icon bubble
+- **Call to action** — "Be the first to share your thoughts!"
+
+---
+
+### 🎨 Styled Error Pages
+
+Beautiful, branded error pages for database issues.
+
+#### Setup Required Page
+- **Dark gradient background** — Matches VoidForge theme
+- **Glassmorphic card** — Blur effect with subtle border
+- **Purple gradient logo** — Layered box icon
+- **Yellow warning status** — Clear "Setup Required" messaging
+- **Dynamic installer link** — Works from any directory (admin, subdirectories)
+
+#### Database Error Page
+- **Same dark theme styling** — Consistent branding
+- **Red error icon** — Circular X indicator
+- **Monospace error details** — Easy to read error messages
+- **Help text** — Troubleshooting suggestions
+- **Proper HTTP codes** — 503 for setup, 500 for errors
+
+---
+
+### 🚀 Installer Redesign
+
+Modern step indicator for the installation wizard.
+
+#### New Step Indicators
+- **Circular step numbers** — 48px circles with numbers
+- **Connecting lines** — Fill with gradient as steps complete
+- **Labels below circles** — Uppercase with letter spacing
+- **Checkmark SVG** — Replaces number when step completes
+
+#### Visual States
+| State | Appearance |
+|-------|------------|
+| **Upcoming** | Gray circle with border, muted label |
+| **Active** | Purple gradient with glow + pulse animation |
+| **Completed** | Green circle with checkmark, filled connector |
+
+#### Other Fixes
+- **Removed debug output** — No more `error_reporting` warnings
+- **Fixed constant order** — Prevents "already defined" errors
+- **Updated version** — Fallback version now 0.2.3.1
+
+---
+
+### 🎨 Dashboard Theme Colors
+
+Dashboard now fully respects admin theme color customization.
+
+#### Updated Elements
+| Element | CSS Variable |
+|---------|--------------|
+| **Hero gradient** | `--forge-primary`, `--forge-secondary` |
+| **Hero buttons** | `--forge-primary`, `--forge-primary-dark` |
+| **Stat numbers** | `--forge-primary` |
+| **Quick action icons** | `--forge-primary`, `--forge-secondary` gradient |
+| **Comment avatars** | `--forge-primary`, `--forge-secondary` gradient |
+| **Version badge** | `--forge-primary`, `--forge-secondary` gradient |
+| **Activity icons** | `--forge-primary` with color-mix |
+
+#### Empty State Icons
+- **Gradient circular background** — 72px with theme colors
+- **White icons** — 32px centered in gradient circle
+- **Used for** — "No posts yet" and "No pages yet" states
+
+---
+
+### 📁 Files Modified
+
+```
+includes/
+├── database.php        # Styled error pages, dynamic installer links
+├── post.php            # Comment cascade delete
+├── comment.php         # deleteByPost() method
+
+admin/
+├── index.php           # Theme color variables, empty state redesign
+├── posts.php           # Comment class include
+├── comments.php        # Orphan cleanup UI and logic
+
+themes/flavor/
+├── single.php          # Frontend comments redesign
+├── functions.php       # Updated flavor_render_comment()
+
+install.php             # Step indicator redesign, removed debug output
+```
+
+---
+
 ## [0.2.3] - 2025-12-19
 
 ### 🎨 Elementor-Style Visual Editor
@@ -2070,6 +2220,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.3.1 | 2025-12-19 | Orphaned comments cleanup, frontend comments redesign, styled error pages, installer step redesign, dashboard theme colors |
+| 0.2.3 | 2025-12-19 | Elementor-style visual editor with typography, colors, borders, shadows, backgrounds, animations, transforms |
 | 0.2.2 | 2025-12-16 | Anvil Live visual frontend editor, drag-drop blocks, inline editing, columns support |
 | 0.2.1 | 2025-12-15 | REST API with API key management, modern installer redesign, dashboard redesign, modal confirmations |
 | 0.2.0 | 2025-12-15 | Anvil block editor with 15 blocks, class-based architecture, Flavor theme with block showcase |

@@ -13,6 +13,7 @@ require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
+require_once CMS_ROOT . '/includes/comment.php';
 
 Post::init();
 Taxonomy::init();
@@ -305,6 +306,239 @@ include ADMIN_PATH . '/includes/header.php';
 ?>
 
 <style>
+/* Posts Card Header & Search */
+.posts-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1.25rem;
+    background: linear-gradient(to right, var(--bg-card-header), var(--bg-card));
+    border-bottom: 1px solid var(--border-color);
+}
+
+.posts-search-form {
+    flex: 1;
+    max-width: 320px;
+}
+
+.posts-search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.posts-search-input-wrapper:focus-within {
+    border-color: var(--forge-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.posts-search-input-wrapper svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.posts-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    outline: none;
+    min-width: 0;
+}
+
+.posts-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.posts-search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+}
+
+.posts-search-clear:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.posts-search-clear svg {
+    width: 14px;
+    height: 14px;
+}
+
+.posts-columns-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.posts-columns-btn:hover {
+    color: var(--forge-primary);
+    border-color: var(--forge-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.posts-columns-btn svg {
+    color: inherit;
+    opacity: 0.7;
+}
+
+.posts-columns-btn:hover svg {
+    opacity: 1;
+}
+
+/* Posts Empty State */
+.posts-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-header) 100%);
+    border-radius: 0 0 12px 12px;
+    min-height: 320px;
+}
+
+.posts-empty-icon {
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.posts-empty-icon::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px dashed rgba(99, 102, 241, 0.2);
+}
+
+.posts-empty-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--forge-primary);
+    opacity: 0.8;
+}
+
+.posts-empty-content {
+    max-width: 360px;
+}
+
+.posts-empty-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.posts-empty-content p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+}
+
+.posts-empty-content p strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.posts-empty-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.posts-empty-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+}
+
+.posts-empty-action-secondary {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.posts-empty-action-secondary:hover {
+    background: var(--bg-card-header);
+    border-color: var(--text-muted);
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .posts-card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .posts-search-form {
+        max-width: none;
+    }
+    
+    .posts-columns-btn {
+        justify-content: center;
+    }
+    
+    .posts-empty-state {
+        padding: 3rem 1.5rem;
+        min-height: 280px;
+    }
+    
+    .posts-empty-icon {
+        width: 72px;
+        height: 72px;
+    }
+    
+    .posts-empty-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+}
+
 /* Bulk Actions Bar */
 .bulk-actions-bar {
     display: none;
@@ -603,45 +837,101 @@ tr.selected {
 </div>
 
 <div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <form method="get" class="search-box">
+    <div class="card-header posts-card-header">
+        <form method="get" class="posts-search-form">
             <input type="hidden" name="type" value="<?= esc($postType) ?>">
             <?php if ($status): ?>
                 <input type="hidden" name="status" value="<?= esc($status) ?>">
             <?php endif; ?>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            <input type="text" name="s" placeholder="Search..." value="<?= esc($search ?? '') ?>" class="form-input">
+            <div class="posts-search-input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" name="s" placeholder="Search <?= strtolower(esc($typeConfig['label'])) ?>..." value="<?= esc($search ?? '') ?>" class="posts-search-input">
+                <?php if ($search): ?>
+                    <a href="?type=<?= esc($postType) ?><?= $status ? '&status=' . esc($status) : '' ?>" class="posts-search-clear" title="Clear search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </a>
+                <?php endif; ?>
+            </div>
         </form>
-        <a href="<?= ADMIN_URL ?>/column-settings.php?type=<?= esc($postType) ?>" class="btn btn-secondary btn-sm" title="Configure columns">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
+        <a href="<?= ADMIN_URL ?>/column-settings.php?type=<?= esc($postType) ?>" class="posts-columns-btn" title="Configure visible columns">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
             </svg>
-            Columns
+            <span>Columns</span>
         </a>
     </div>
 
     <?php if (empty($posts)): ?>
-        <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
-            <h3>No <?= strtolower(esc($typeConfig['label'])) ?> found</h3>
-            <p>
-                <?php if ($search): ?>
-                    No results for "<?= esc($search) ?>". Try a different search.
-                <?php elseif ($status === 'trash'): ?>
-                    The trash is empty.
+        <div class="posts-empty-state">
+            <div class="posts-empty-icon">
+                <?php if ($status === 'trash'): ?>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                <?php elseif ($search): ?>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
                 <?php else: ?>
-                    Create your first <?= strtolower(esc($typeConfig['singular'])) ?> to get started.
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="12" x2="12" y2="18"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
                 <?php endif; ?>
-            </p>
+            </div>
+            <div class="posts-empty-content">
+                <h3>
+                    <?php if ($search): ?>
+                        No results found
+                    <?php elseif ($status === 'trash'): ?>
+                        Trash is empty
+                    <?php else: ?>
+                        No <?= strtolower(esc($typeConfig['label'])) ?> yet
+                    <?php endif; ?>
+                </h3>
+                <p>
+                    <?php if ($search): ?>
+                        We couldn't find any <?= strtolower(esc($typeConfig['label'])) ?> matching "<strong><?= esc($search) ?></strong>". Try adjusting your search terms.
+                    <?php elseif ($status === 'trash'): ?>
+                        Items you delete will appear here for <?= Post::TRASH_RETENTION_DAYS ?> days before being permanently removed.
+                    <?php else: ?>
+                        Get started by creating your first <?= strtolower(esc($typeConfig['singular'])) ?>. It only takes a moment.
+                    <?php endif; ?>
+                </p>
+                <?php if (!$search && $status !== 'trash'): ?>
+                    <a href="<?= ADMIN_URL ?>/post-edit.php?type=<?= $postType ?>" class="posts-empty-action">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create <?= esc($typeConfig['singular']) ?>
+                    </a>
+                <?php elseif ($search): ?>
+                    <a href="?type=<?= esc($postType) ?><?= $status ? '&status=' . esc($status) : '' ?>" class="posts-empty-action posts-empty-action-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        Clear Search
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     <?php else: ?>
         <?php

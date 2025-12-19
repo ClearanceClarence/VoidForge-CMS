@@ -108,7 +108,7 @@ include ADMIN_PATH . '/includes/header.php';
 
 /* Hero Section */
 .dash-hero {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1) 0%, var(--forge-secondary, #8b5cf6) 50%, color-mix(in srgb, var(--forge-secondary, #8b5cf6) 80%, #a855f7) 100%);
     border-radius: 16px;
     padding: 2rem;
     margin-bottom: 1.5rem;
@@ -172,12 +172,12 @@ include ADMIN_PATH . '/includes/header.php';
 .btn-hero svg { width: 18px; height: 18px; }
 .btn-hero-primary {
     background: white;
-    color: #6366f1;
+    color: var(--forge-primary, #6366f1);
     border-color: white;
 }
 .btn-hero-primary:hover {
     background: #f8fafc;
-    color: #4f46e5;
+    color: var(--forge-primary-dark, #4f46e5);
 }
 
 /* Stats Row */
@@ -209,7 +209,7 @@ include ADMIN_PATH . '/includes/header.php';
     line-height: 1;
     margin-bottom: 0.25rem;
 }
-.stat-num.blue { color: #6366f1; }
+.stat-num.blue { color: var(--forge-primary, #6366f1); }
 .stat-num.green { color: #10b981; }
 .stat-num.amber { color: #f59e0b; }
 .stat-num.pink { color: #ec4899; }
@@ -258,7 +258,7 @@ include ADMIN_PATH . '/includes/header.php';
     flex-shrink: 0;
 }
 .quick-icon svg { width: 24px; height: 24px; }
-.quick-icon.blue { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+.quick-icon.blue { background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6)); color: white; }
 .quick-icon.green { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
 .quick-icon.amber { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
 .quick-icon.pink { background: linear-gradient(135deg, #ec4899, #f472b6); color: white; }
@@ -375,11 +375,25 @@ include ADMIN_PATH . '/includes/header.php';
     padding: 3rem 1.5rem;
     text-align: center;
 }
-.empty-box svg {
+.empty-box .empty-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.empty-box .empty-icon svg {
+    width: 32px;
+    height: 32px;
+    color: #FFFFFF;
+}
+.empty-box > svg {
     width: 48px;
     height: 48px;
-    color: var(--text-muted);
-    opacity: 0.4;
+    color: #FFFFFF;
     margin-bottom: 1rem;
 }
 .empty-box p {
@@ -420,7 +434,7 @@ include ADMIN_PATH . '/includes/header.php';
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -506,7 +520,7 @@ include ADMIN_PATH . '/includes/header.php';
 .info-row .badge {
     display: inline-flex;
     padding: 0.25rem 0.625rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, var(--forge-primary, #6366f1), var(--forge-secondary, #8b5cf6));
     color: white;
     border-radius: 9999px;
     font-size: 0.75rem;
@@ -532,7 +546,7 @@ include ADMIN_PATH . '/includes/header.php';
     flex-shrink: 0;
 }
 .activity-icon svg { width: 16px; height: 16px; }
-.activity-icon.blue { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.activity-icon.blue { background: color-mix(in srgb, var(--forge-primary, #6366f1) 10%, transparent); color: var(--forge-primary, #6366f1); }
 .activity-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 .activity-icon.amber { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 .activity-icon.pink { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
@@ -657,7 +671,9 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
                 <?php if (empty($recentPosts)): ?>
                     <div class="empty-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        <div class="empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
                         <p>No posts yet</p>
                         <a href="<?= ADMIN_URL ?>/post-edit.php?type=post" class="btn-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -693,7 +709,9 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
                 <?php if (empty($recentPages)): ?>
                     <div class="empty-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <div class="empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
                         <p>No pages yet</p>
                         <a href="<?= ADMIN_URL ?>/post-edit.php?type=page" class="btn-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>

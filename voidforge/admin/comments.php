@@ -95,6 +95,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_comment']) && ve
     redirect(ADMIN_URL . '/comments.php' . ($status ? '?status=' . $status : ''));
 }
 
+// Handle orphan cleanup
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cleanup_orphans']) && verifyCsrf()) {
+    try {
+        $commentsTable = Database::table('comments');
+        $postsTable = Database::table('posts');
+        
+        // Get orphaned post IDs
+        $orphaned = Database::query(
+            "SELECT DISTINCT c.post_id FROM {$commentsTable} c 
+             WHERE NOT EXISTS (SELECT 1 FROM {$postsTable} p WHERE p.id = c.post_id)"
+        );
+        
+        $deleted = 0;
+        foreach ($orphaned as $row) {
+            $deleted += Database::delete($commentsTable, 'post_id = ?', [(int)$row['post_id']]);
+        }
+        
+        if ($deleted > 0) {
+            setFlash('success', "{$deleted} orphaned comment(s) permanently deleted.");
+        } else {
+            setFlash('info', 'No orphaned comments found.');
+        }
+    } catch (Exception $e) {
+        setFlash('error', 'Error cleaning up orphans: ' . $e->getMessage());
+    }
+    redirect(ADMIN_URL . '/comments.php');
+}
+
 // Build query args
 $queryArgs = [
     'limit' => $perPage,
@@ -138,6 +166,24 @@ foreach ($comments as $comment) {
     }
 }
 
+// Count orphaned comments
+$orphanedCount = 0;
+
+// Count orphaned comments directly with SQL
+try {
+    $commentsTable = Database::table('comments');
+    $postsTable = Database::table('posts');
+    
+    $orphanResult = Database::query(
+        "SELECT COUNT(*) as cnt FROM {$commentsTable} c 
+         WHERE NOT EXISTS (SELECT 1 FROM {$postsTable} p WHERE p.id = c.post_id)"
+    );
+    
+    $orphanedCount = (int) ($orphanResult[0]['cnt'] ?? 0);
+} catch (Exception $e) {
+    $orphanedCount = 0;
+}
+
 include ADMIN_PATH . '/includes/header.php';
 ?>
 
@@ -155,6 +201,182 @@ include ADMIN_PATH . '/includes/header.php';
     gap: 1rem;
 }
 .comments-header h1 { font-size: 1.75rem; font-weight: 700; margin: 0; }
+
+/* Cleanup Orphans Button */
+.btn-cleanup-orphans {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+
+.btn-cleanup-orphans:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.btn-cleanup-orphans.no-orphans {
+    background: var(--bg-card-header);
+    color: var(--text-muted);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+}
+
+.btn-cleanup-orphans.no-orphans:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--text-muted);
+}
+
+.btn-cleanup-orphans svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-cleanup-orphans .orphan-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* Cleanup Modal */
+.cleanup-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    padding: 1rem;
+}
+
+.cleanup-modal-overlay.active {
+    display: flex;
+    animation: cleanupFadeIn 0.2s ease;
+}
+
+@keyframes cleanupFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.cleanup-modal {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: cleanupSlideUp 0.25s ease;
+}
+
+@keyframes cleanupSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cleanup-modal-icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 50%;
+    margin: 0 auto 1.25rem;
+}
+
+.cleanup-modal-icon svg {
+    width: 36px;
+    height: 36px;
+    color: #f59e0b;
+}
+
+.cleanup-modal h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.cleanup-modal p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+}
+
+.cleanup-modal p strong {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.cleanup-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.cleanup-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.cleanup-modal-btn.cancel {
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.cleanup-modal-btn.cancel:hover {
+    background: var(--bg-card);
+    border-color: var(--text-muted);
+}
+
+.cleanup-modal-btn.confirm {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+
+.cleanup-modal-btn.confirm:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    transform: translateY(-1px);
+}
+
+.cleanup-modal-btn svg {
+    width: 16px;
+    height: 16px;
+}
 
 /* Tabs - same as folder buttons in media */
 .comments-tabs {
@@ -249,34 +471,90 @@ include ADMIN_PATH . '/includes/header.php';
     transition: all 0.15s;
 }
 .btn-apply:hover { opacity: 0.9; }
-.search-box {
+
+/* Search Box - Enhanced Design */
+.comments-search-box {
     display: flex;
     gap: 0.5rem;
 }
-.search-box input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-input);
-    font-size: 0.875rem;
-    width: 180px;
-}
-.search-box input:focus { border-color: var(--forge-primary); outline: none; }
-.btn-search {
-    display: inline-flex;
+
+.comments-search-input-wrapper {
+    display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: 0.5rem;
     padding: 0.5rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 200px;
+}
+
+.comments-search-input-wrapper:focus-within {
+    border-color: var(--forge-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.comments-search-input-wrapper svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.comments-search-input-wrapper input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    outline: none;
+    min-width: 0;
+    padding: 0;
+}
+
+.comments-search-input-wrapper input::placeholder {
+    color: var(--text-muted);
+}
+
+.comments-search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+}
+
+.comments-search-clear:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.comments-search-clear svg {
+    width: 12px;
+    height: 12px;
+}
+
+.comments-search-btn {
+    padding: 0.5rem 1rem;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-secondary);
     font-size: 0.875rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
+    white-space: nowrap;
 }
-.btn-search:hover { border-color: var(--forge-primary); color: var(--forge-primary); }
-.btn-search svg { width: 16px; height: 16px; }
+
+.comments-search-btn:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+}
 
 /* Card */
 .comments-card {
@@ -383,30 +661,272 @@ include ADMIN_PATH . '/includes/header.php';
 .status-badge.spam { background: #fed7aa; color: #c2410c; }
 .status-badge.trash { background: #fee2e2; color: #dc2626; }
 
-/* Empty */
-.empty-state { text-align: center; padding: 3rem 2rem; }
-.empty-state svg { width: 48px; height: 48px; color: var(--border-color); margin-bottom: 1rem; }
-.empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.25rem 0; }
-.empty-state p { color: var(--text-muted); margin: 0; font-size: 0.875rem; }
+/* Empty State - Enhanced Design */
+.comments-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-header) 100%);
+    min-height: 320px;
+}
 
-/* Pagination */
-.pagination { display: flex; align-items: center; justify-content: center; gap: 0.25rem; margin-top: 1.5rem; }
-.pagination a, .pagination span {
+.comments-empty-icon {
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.comments-empty-icon::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px dashed rgba(99, 102, 241, 0.2);
+}
+
+.comments-empty-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--forge-primary);
+    opacity: 0.8;
+}
+
+.comments-empty-content {
+    max-width: 400px;
+}
+
+.comments-empty-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.comments-empty-content p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+}
+
+.comments-empty-content p strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.comments-empty-content p a {
+    color: var(--forge-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.comments-empty-content p a:hover {
+    text-decoration: underline;
+}
+
+.comments-empty-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.comments-empty-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+    text-decoration: none;
+}
+
+.comments-empty-action-secondary {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.comments-empty-action-secondary:hover {
+    background: var(--bg-card-header);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .comments-empty-state {
+        padding: 3rem 1.5rem;
+        min-height: 280px;
+    }
+    
+    .comments-empty-icon {
+        width: 72px;
+        height: 72px;
+    }
+    
+    .comments-empty-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Pagination - Enhanced Design */
+.comments-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    flex-wrap: wrap;
+}
+
+.comments-pagination-info {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.comments-pagination-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.comments-pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.comments-pagination-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
-    height: 32px;
-    padding: 0 0.5rem;
+    gap: 0.375rem;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.75rem;
     font-size: 0.875rem;
+    font-weight: 500;
     color: var(--text-secondary);
-    background: var(--bg-card);
+    background: var(--bg-card-header);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.comments-pagination-btn:hover {
+    border-color: var(--forge-primary);
+    color: var(--forge-primary);
+    background: rgba(99, 102, 241, 0.05);
     text-decoration: none;
 }
-.pagination a:hover { border-color: var(--forge-primary); color: var(--text-primary); }
-.pagination .current { background: var(--forge-primary); border-color: var(--forge-primary); color: white; }
+
+.comments-pagination-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.comments-pagination-btn.prev svg {
+    margin-right: 0.125rem;
+}
+
+.comments-pagination-btn.next svg {
+    margin-left: 0.125rem;
+}
+
+.comments-pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.comments-pagination-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.comments-pagination-page:hover {
+    color: var(--forge-primary);
+    background: rgba(99, 102, 241, 0.05);
+    text-decoration: none;
+}
+
+.comments-pagination-page.current {
+    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.comments-pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .comments-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .comments-pagination-info {
+        text-align: center;
+        order: 2;
+    }
+    
+    .comments-pagination-nav {
+        justify-content: center;
+        order: 1;
+    }
+    
+    .comments-pagination-btn span {
+        display: none;
+    }
+    
+    .comments-pagination-btn {
+        padding: 0;
+        min-width: 36px;
+    }
+}
 
 /* Reply indicator */
 .reply-indicator { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
@@ -432,6 +952,19 @@ include ADMIN_PATH . '/includes/header.php';
 <div class="comments-page">
     <div class="comments-header">
         <h1>Comments</h1>
+        <?php if ($orphanedCount > 0): ?>
+        <button type="button" class="btn-cleanup-orphans" onclick="confirmCleanupOrphans()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            Clean Up Orphans
+            <span class="orphan-count"><?= $orphanedCount ?></span>
+        </button>
+        <?php endif; ?>
     </div>
 
     <!-- Status Tabs -->
@@ -478,13 +1011,23 @@ include ADMIN_PATH . '/includes/header.php';
                 <button type="submit" class="btn-apply">Apply</button>
             </div>
 
-            <div class="search-box">
-                <input type="text" name="s" value="<?= esc($search) ?>" placeholder="Search comments...">
-                <button type="button" class="btn-search" onclick="window.location.href='<?= ADMIN_URL ?>/comments.php?<?= $status ? 'status=' . esc($status) . '&' : '' ?>s=' + encodeURIComponent(this.previousElementSibling.value)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="comments-search-box">
+                <div class="comments-search-input-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
+                    <input type="text" name="s" value="<?= esc($search) ?>" placeholder="Search comments...">
+                    <?php if ($search): ?>
+                        <a href="<?= ADMIN_URL ?>/comments.php<?= $status ? '?status=' . esc($status) : '' ?>" class="comments-search-clear" title="Clear search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="comments-search-btn" onclick="window.location.href='<?= ADMIN_URL ?>/comments.php?<?= $status ? 'status=' . esc($status) . '&' : '' ?>s=' + encodeURIComponent(document.querySelector('.comments-search-input-wrapper input').value)">
                     Search
                 </button>
             </div>
@@ -493,20 +1036,80 @@ include ADMIN_PATH . '/includes/header.php';
         <!-- Comments Table -->
         <div class="comments-card">
             <?php if (empty($comments)): ?>
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <h3>No comments found</h3>
-                <p>
-                    <?php if ($search): ?>
-                        No comments match your search.
-                    <?php elseif ($status): ?>
-                        No <?= esc($status) ?> comments.
+            <div class="comments-empty-state">
+                <div class="comments-empty-icon">
+                    <?php if ($status === 'trash'): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    <?php elseif ($status === 'spam'): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                        </svg>
+                    <?php elseif ($search): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    <?php elseif ($status === 'pending'): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
                     <?php else: ?>
-                        Comments will appear here once visitors start engaging with your content.
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <line x1="9" y1="9" x2="15" y2="9"></line>
+                            <line x1="9" y1="13" x2="13" y2="13"></line>
+                        </svg>
                     <?php endif; ?>
-                </p>
+                </div>
+                <div class="comments-empty-content">
+                    <h3>
+                        <?php if ($search): ?>
+                            No matching comments
+                        <?php elseif ($status === 'trash'): ?>
+                            Trash is empty
+                        <?php elseif ($status === 'spam'): ?>
+                            No spam comments
+                        <?php elseif ($status === 'pending'): ?>
+                            No pending comments
+                        <?php elseif ($status === 'approved'): ?>
+                            No approved comments yet
+                        <?php else: ?>
+                            No comments yet
+                        <?php endif; ?>
+                    </h3>
+                    <p>
+                        <?php if ($search): ?>
+                            No comments match "<strong><?= esc($search) ?></strong>". Try different search terms or <a href="<?= ADMIN_URL ?>/comments.php<?= $status ? '?status=' . esc($status) : '' ?>">clear the search</a>.
+                        <?php elseif ($status === 'trash'): ?>
+                            Comments you delete will appear here before being permanently removed.
+                        <?php elseif ($status === 'spam'): ?>
+                            Comments marked as spam will appear here. Good news — your content is spam-free!
+                        <?php elseif ($status === 'pending'): ?>
+                            Comments awaiting moderation will appear here. All caught up!
+                        <?php elseif ($status === 'approved'): ?>
+                            Approved comments will appear here once you start moderating.
+                        <?php else: ?>
+                            When visitors engage with your content, their comments will appear here for moderation.
+                        <?php endif; ?>
+                    </p>
+                    <?php if ($search): ?>
+                        <a href="<?= ADMIN_URL ?>/comments.php<?= $status ? '?status=' . esc($status) : '' ?>" class="comments-empty-action comments-empty-action-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Clear Search
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
             <?php else: ?>
             <table class="comments-table">
@@ -650,25 +1253,104 @@ include ADMIN_PATH . '/includes/header.php';
 
     <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
-    <div class="pagination">
-        <?php if ($page > 1): ?>
-        <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $page - 1])) ?>">← Previous</a>
-        <?php endif; ?>
+    <div class="comments-pagination">
+        <div class="comments-pagination-info">
+            Showing <strong><?= number_format(($page - 1) * $perPage + 1) ?></strong> to <strong><?= number_format(min($page * $perPage, $totalComments)) ?></strong> of <strong><?= number_format($totalComments) ?></strong> comments
+        </div>
         
-        <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-            <?php if ($i === $page): ?>
-            <span class="current"><?= $i ?></span>
-            <?php else: ?>
-            <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $i])) ?>"><?= $i ?></a>
+        <div class="comments-pagination-nav">
+            <?php if ($page > 1): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $page - 1])) ?>" class="comments-pagination-btn prev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Previous</span>
+            </a>
             <?php endif; ?>
-        <?php endfor; ?>
-        
-        <?php if ($page < $totalPages): ?>
-        <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $page + 1])) ?>">Next →</a>
-        <?php endif; ?>
+            
+            <div class="comments-pagination-pages">
+                <?php
+                // Smart pagination with ellipsis
+                $showPages = [];
+                $showPages[] = 1; // Always show first page
+                
+                // Pages around current
+                for ($i = max(2, $page - 1); $i <= min($totalPages - 1, $page + 1); $i++) {
+                    $showPages[] = $i;
+                }
+                
+                if ($totalPages > 1) {
+                    $showPages[] = $totalPages; // Always show last page
+                }
+                
+                $showPages = array_unique($showPages);
+                sort($showPages);
+                
+                $prevShown = 0;
+                foreach ($showPages as $p):
+                    if ($prevShown && $p > $prevShown + 1):
+                ?>
+                    <span class="comments-pagination-ellipsis">…</span>
+                <?php endif; ?>
+                
+                <?php if ($p === $page): ?>
+                    <span class="comments-pagination-page current"><?= $p ?></span>
+                <?php else: ?>
+                    <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $p])) ?>" class="comments-pagination-page"><?= $p ?></a>
+                <?php endif; ?>
+                
+                <?php
+                    $prevShown = $p;
+                endforeach;
+                ?>
+            </div>
+            
+            <?php if ($page < $totalPages): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['paged' => $page + 1])) ?>" class="comments-pagination-btn next">
+                <span>Next</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+            <?php endif; ?>
+        </div>
     </div>
     <?php endif; ?>
 </div>
+
+<!-- Cleanup Orphans Modal -->
+<?php if ($orphanedCount > 0): ?>
+<div class="cleanup-modal-overlay" id="cleanupModal">
+    <div class="cleanup-modal">
+        <div class="cleanup-modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+            </svg>
+        </div>
+        <h3>Clean Up Orphaned Comments?</h3>
+        <p>Found <strong><?= $orphanedCount ?> orphaned comment<?= $orphanedCount !== 1 ? 's' : '' ?></strong> — comments attached to posts that no longer exist. This action will permanently delete them and cannot be undone.</p>
+        <div class="cleanup-modal-actions">
+            <button type="button" class="cleanup-modal-btn cancel" onclick="closeCleanupModal()">
+                Cancel
+            </button>
+            <form method="post" style="display: inline;">
+                <?= csrfField() ?>
+                <input type="hidden" name="cleanup_orphans" value="1">
+                <button type="submit" class="cleanup-modal-btn confirm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"/>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                    Delete <?= $orphanedCount ?> Comment<?= $orphanedCount !== 1 ? 's' : '' ?>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <script>
 function toggleAllComments(checkbox) {
@@ -684,6 +1366,33 @@ function toggleEdit(commentId) {
         form.classList.toggle('active');
     }
 }
+
+function confirmCleanupOrphans() {
+    document.getElementById('cleanupModal').classList.add('active');
+}
+
+function closeCleanupModal() {
+    document.getElementById('cleanupModal').classList.remove('active');
+}
+
+// Close modal on outside click
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('cleanupModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCleanupModal();
+            }
+        });
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCleanupModal();
+    }
+});
 </script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

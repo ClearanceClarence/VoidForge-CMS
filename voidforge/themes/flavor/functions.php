@@ -167,28 +167,35 @@ function flavor_render_comment(array $comment, int $depth = 0): void
 {
     $maxDepth = (int) getOption('comment_max_depth', 3);
     $authorName = Comment::getAuthorName($comment);
-    $gravatar = Comment::getGravatar($comment, 48);
-    $marginLeft = $depth * 40;
+    $gravatar = Comment::getGravatar($comment, 52);
+    $depthClass = $depth > 0 ? ' reply depth-' . min($depth, 3) : '';
     ?>
-    <div class="comment" id="comment-<?php echo $comment['id']; ?>" 
-         style="margin-left: <?php echo $marginLeft; ?>px; margin-bottom: 24px; padding: 20px; background: var(--color-bg-alt); border-radius: var(--radius-lg);">
-        <div style="display: flex; gap: 16px;">
-            <img src="<?php echo esc($gravatar); ?>" alt="<?php echo esc($authorName); ?>" 
-                 style="width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;">
-            <div style="flex: 1; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                    <strong style="font-weight: 600;"><?php echo esc($authorName); ?></strong>
-                    <span style="font-size: 0.8125rem; color: var(--color-text-light);">
-                        <?php echo flavor_date($comment['created_at']); ?>
+    <div class="comment<?= $depthClass ?>" id="comment-<?= $comment['id'] ?>">
+        <div class="comment-inner">
+            <div class="comment-avatar">
+                <img src="<?= esc($gravatar) ?>" alt="<?= esc($authorName) ?>">
+            </div>
+            <div class="comment-body">
+                <div class="comment-meta">
+                    <span class="comment-author"><?= esc($authorName) ?></span>
+                    <span class="comment-date">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <?= flavor_date($comment['created_at']) ?>
                     </span>
                 </div>
-                <div style="line-height: 1.6; color: var(--color-text);">
-                    <?php echo $comment['content']; ?>
+                <div class="comment-content">
+                    <?= nl2br(esc($comment['content'])) ?>
                 </div>
                 <?php if ($depth < $maxDepth): ?>
-                <div style="margin-top: 12px;">
-                    <a href="#respond" onclick="replyTo(<?php echo $comment['id']; ?>, '<?php echo esc(addslashes($authorName)); ?>')" 
-                       style="font-size: 0.8125rem; font-weight: 500; color: var(--color-accent); text-decoration: none;">
+                <div class="comment-actions">
+                    <a href="#respond" onclick="replyTo(<?= $comment['id'] ?>, '<?= esc(addslashes($authorName)) ?>')" class="comment-reply-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 17 4 12 9 7"/>
+                            <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
+                        </svg>
                         Reply
                     </a>
                 </div>

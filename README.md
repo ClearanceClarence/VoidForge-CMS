@@ -7,7 +7,7 @@
 <br>
 
 ![VoidForge CMS](https://img.shields.io/badge/VoidForge-CMS-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41Ij48cGF0aCBkPSJNNiA0TDEyIDIwTDE4IDQiLz48L3N2Zz4=)
-![Version](https://img.shields.io/badge/version-0.2.3-8b5cf6?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.2.3.1-8b5cf6?style=for-the-badge)
 ![Anvil Live](https://img.shields.io/badge/Anvil_Live-Visual_Editor-a78bfa?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)
@@ -113,6 +113,8 @@
 | **Guest Commenting** | Allow visitors to comment with name/email |
 | **Moderation** | Approve, spam, trash, and bulk moderate comments |
 | **Gravatar Support** | Automatic avatars based on email address |
+| **Orphan Cleanup** | Detect and remove comments from deleted posts |
+| **Modern Frontend** | Card-based design with gradient accents |
 | **Admin Dashboard** | Full comments management at Content → Comments |
 
 <br>
@@ -127,6 +129,7 @@
 | **Live CSS Editor** | Real-time styling with instant preview for admin and frontend |
 | **Granular Font Sizes** | Separate font size controls for sidebar, header, and content areas |
 | **80+ Admin Icons** | Extensive icon library for post types and navigation |
+| **Styled Error Pages** | Beautiful branded pages for database setup and errors |
 
 <br>
 
@@ -673,7 +676,7 @@ Create plugins using WordPress-style hooks:
  * Version: 1.0.0
  * Author: Your Name
  * Requires PHP: 8.0
- * Requires CMS: 0.2.3
+ * Requires CMS: 0.2.3.1
  */
 
 // Hook into initialization
@@ -749,7 +752,7 @@ define('DB_PREFIX', 'vf_');
 
 ```php
 define('SITE_URL', 'https://yoursite.com');
-define('CMS_VERSION', '0.2.3');
+define('CMS_VERSION', '0.2.3.1');
 define('CMS_NAME', 'VoidForge');
 ```
 
