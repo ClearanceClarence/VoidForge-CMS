@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.4] - 2025-12-20
+
+### ✨ New Features
+
+- **Anvil Live Page Settings** — New Page tab with content width, padding, and margin controls
+- **Preview Button** — View content without editor UI, auto-saves before previewing
+- **Per-Post Comments Toggle** — Enable/disable comments on individual posts
+- **Theme Entry Header Controls** — Show/hide entry title and meta in theme settings
+
+### 🐛 Bug Fixes
+
+- **Nested Block Settings** — Fixed settings panel not showing for blocks inside columns (z-index/overflow issues)
+
+### 🔧 Improvements
+
+- **Modular JS Architecture** — Started splitting anvil-live.js into logical modules for maintainability
+- **Theme Settings** — Added "Show Entry Title" and "Show Entry Meta" toggles to Flavor theme
+
+---
+
 ## [0.2.3.1] - 2025-12-19
 
 ### 💬 Comments System Improvements
@@ -2220,6 +2240,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.4 | 2025-12-20 | Page settings, preview button, per-post comments, entry header controls |
 | 0.2.3.1 | 2025-12-19 | Orphaned comments cleanup, frontend comments redesign, styled error pages, installer step redesign, dashboard theme colors |
 | 0.2.3 | 2025-12-19 | Elementor-style visual editor with typography, colors, borders, shadows, backgrounds, animations, transforms |
 | 0.2.2 | 2025-12-16 | Anvil Live visual frontend editor, drag-drop blocks, inline editing, columns support |

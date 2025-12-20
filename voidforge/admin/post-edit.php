@@ -206,6 +206,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
             Taxonomy::setPostTerms($savedPostId, $taxSlug, $termIds);
         }
         
+        // Save comments enabled setting
+        $commentsEnabled = isset($_POST['comments_enabled']) ? '1' : '0';
+        Post::setMeta($savedPostId, '_comments_enabled', $commentsEnabled);
+        
         redirect(ADMIN_URL . '/post-edit.php?id=' . $savedPostId);
     }
 }
@@ -218,6 +222,15 @@ if ($typeConfig['hierarchical']) {
 $featuredImage = null;
 if ($post && $post['featured_image_id']) {
     $featuredImage = Media::find($post['featured_image_id']);
+}
+
+// Get comments enabled setting for this post
+$postCommentsEnabled = true; // Default to enabled
+if ($post) {
+    $commentsEnabledMeta = Post::getMeta($post['id'], '_comments_enabled');
+    // If meta exists and is '0' or 0, comments are disabled
+    // If meta doesn't exist (null), default to enabled
+    $postCommentsEnabled = ($commentsEnabledMeta !== '0' && $commentsEnabledMeta !== 0);
 }
 
 // Get custom fields for this post type
@@ -999,6 +1012,20 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </div>
             <?php endif; ?>
+            
+            <!-- Discussion -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">Discussion</div>
+                <div class="sidebar-card-body">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" name="comments_enabled" value="1" <?= $postCommentsEnabled ? 'checked' : '' ?> style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <span style="font-size: 0.875rem;">Allow comments</span>
+                    </label>
+                    <p style="margin: 8px 0 0; font-size: 0.75rem; color: var(--text-muted);">
+                        Uncheck to disable comments on this <?= strtolower($typeConfig['singular']) ?>.
+                    </p>
+                </div>
+            </div>
             
             <?php foreach ($postTaxonomies as $taxSlug => $tax): 
                 $allTerms = Taxonomy::getTerms($taxSlug);

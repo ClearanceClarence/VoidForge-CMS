@@ -680,7 +680,7 @@ class Comment
 
         // Check post meta for individual override
         $postComments = Post::getMeta($post['id'], '_comments_enabled');
-        if ($postComments === '0') {
+        if ($postComments === '0' || $postComments === 0) {
             return false;
         }
 

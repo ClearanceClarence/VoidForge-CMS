@@ -18,8 +18,11 @@ $readTime = flavor_reading_time($post);
     <article class="single-post">
         
         <header class="entry-header">
+            <?php if (flavor_show_entry_title()): ?>
             <h1 class="entry-title"><?php echo esc($post['title']); ?></h1>
+            <?php endif; ?>
             
+            <?php if (flavor_show_entry_meta()): ?>
             <div class="entry-meta">
                 <?php if (flavor_show_date()): ?>
                 <span>
@@ -51,6 +54,7 @@ $readTime = flavor_reading_time($post);
                     <?php echo $readTime; ?> min read
                 </span>
             </div>
+            <?php endif; ?>
         </header>
         
         <?php 

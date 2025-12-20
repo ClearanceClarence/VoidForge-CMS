@@ -107,6 +107,14 @@ function anvil_live_get_icon(string $icon): string
         
         <div class="anvil-live-topbar-divider"></div>
         
+        <button type="button" id="anvil-live-preview" class="anvil-live-topbar-btn" title="Preview (opens in new tab)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>Preview</span>
+        </button>
+        
         <button type="button" id="anvil-live-save" class="anvil-live-btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
@@ -139,6 +147,14 @@ function anvil_live_get_icon(string $icon): string
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
             Settings
+        </button>
+        <button type="button" class="anvil-live-sidebar-tab" data-tab="page">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18"/>
+                <path d="M9 21V9"/>
+            </svg>
+            Page
         </button>
     </div>
     
@@ -183,6 +199,148 @@ function anvil_live_get_icon(string $icon): string
                     <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2m11-11h-2M3 12H1m17.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.73 0l-1.41-1.41M6.34 6.34L4.93 4.93"/>
                 </svg>
                 <p>Select a block to edit its settings</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Settings Panel -->
+    <div class="anvil-live-sidebar-panel" data-panel="page">
+        <div class="anvil-live-page-settings">
+            <div class="anvil-live-settings-content">
+                <!-- Content Width Section -->
+                <div class="anvil-live-section-header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 3v18M15 3v18"/>
+                    </svg>
+                    Content Width
+                </div>
+                
+                <div class="anvil-live-settings-group">
+                    <label class="anvil-live-toggle-row">
+                        <span class="anvil-live-settings-label" style="margin-bottom: 0;">Full Width</span>
+                        <label class="anvil-live-switch">
+                            <input type="checkbox" id="page-content-width-full">
+                            <span class="anvil-live-switch-slider"></span>
+                        </label>
+                    </label>
+                    <p class="anvil-live-settings-help">Enable to make content span the entire page width</p>
+                </div>
+                
+                <div class="anvil-live-settings-group" id="page-width-custom-group">
+                    <label class="anvil-live-settings-label">Max Width</label>
+                    <div class="anvil-live-input-with-unit">
+                        <input type="number" id="page-content-width" class="anvil-live-settings-input" min="0" step="1">
+                        <select id="page-content-width-unit" class="anvil-live-settings-select anvil-live-unit-select">
+                            <option value="px">px</option>
+                            <option value="%">%</option>
+                            <option value="vw">vw</option>
+                            <option value="em">em</option>
+                            <option value="rem">rem</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Padding Section -->
+                <div class="anvil-live-section-header" style="margin-top: 24px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <rect x="7" y="7" width="10" height="10" rx="1"/>
+                    </svg>
+                    Padding
+                </div>
+                
+                <div class="anvil-live-settings-group">
+                    <div class="anvil-live-spacing-grid">
+                        <div class="anvil-live-spacing-row">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Top</label>
+                                <input type="number" id="page-padding-top" class="anvil-live-settings-input" min="0" step="1">
+                            </div>
+                        </div>
+                        <div class="anvil-live-spacing-row anvil-live-spacing-row-middle">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Left</label>
+                                <input type="number" id="page-padding-left" class="anvil-live-settings-input" min="0" step="1">
+                            </div>
+                            <div class="anvil-live-spacing-visual">
+                                <div class="anvil-live-spacing-visual-inner"></div>
+                            </div>
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Right</label>
+                                <input type="number" id="page-padding-right" class="anvil-live-settings-input" min="0" step="1">
+                            </div>
+                        </div>
+                        <div class="anvil-live-spacing-row">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Bottom</label>
+                                <input type="number" id="page-padding-bottom" class="anvil-live-settings-input" min="0" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="anvil-live-unit-row">
+                        <label class="anvil-live-settings-label">Unit</label>
+                        <select id="page-padding-unit" class="anvil-live-settings-select">
+                            <option value="px">px</option>
+                            <option value="%">%</option>
+                            <option value="em">em</option>
+                            <option value="rem">rem</option>
+                            <option value="vw">vw</option>
+                            <option value="vh">vh</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Margin Section -->
+                <div class="anvil-live-section-header" style="margin-top: 24px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="6" width="12" height="12" rx="1"/>
+                        <path d="M6 3v3M18 3v3M6 18v3M18 18v3M3 6h3M3 18h3M18 6h3M18 18h3"/>
+                    </svg>
+                    Margin
+                </div>
+                
+                <div class="anvil-live-settings-group">
+                    <div class="anvil-live-spacing-grid">
+                        <div class="anvil-live-spacing-row">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Top</label>
+                                <input type="text" id="page-margin-top" class="anvil-live-settings-input" placeholder="0 or auto">
+                            </div>
+                        </div>
+                        <div class="anvil-live-spacing-row anvil-live-spacing-row-middle">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Left</label>
+                                <input type="text" id="page-margin-left" class="anvil-live-settings-input" placeholder="auto">
+                            </div>
+                            <div class="anvil-live-spacing-visual anvil-live-spacing-visual-margin">
+                                <div class="anvil-live-spacing-visual-inner"></div>
+                            </div>
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Right</label>
+                                <input type="text" id="page-margin-right" class="anvil-live-settings-input" placeholder="auto">
+                            </div>
+                        </div>
+                        <div class="anvil-live-spacing-row">
+                            <div class="anvil-live-spacing-item">
+                                <label class="anvil-live-settings-label">Bottom</label>
+                                <input type="text" id="page-margin-bottom" class="anvil-live-settings-input" placeholder="0 or auto">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="anvil-live-unit-row">
+                        <label class="anvil-live-settings-label">Unit (for numeric values)</label>
+                        <select id="page-margin-unit" class="anvil-live-settings-select">
+                            <option value="px">px</option>
+                            <option value="%">%</option>
+                            <option value="em">em</option>
+                            <option value="rem">rem</option>
+                            <option value="vw">vw</option>
+                            <option value="vh">vh</option>
+                        </select>
+                    </div>
+                    <p class="anvil-live-settings-help">Use "auto" for horizontal centering</p>
+                </div>
             </div>
         </div>
     </div>

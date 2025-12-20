@@ -15,7 +15,9 @@ global $post;
     <article class="single-page">
         
         <header class="entry-header">
+            <?php if (flavor_show_entry_title()): ?>
             <h1 class="entry-title"><?php echo esc($post['title']); ?></h1>
+            <?php endif; ?>
         </header>
         
         <div class="entry-content clearfix">

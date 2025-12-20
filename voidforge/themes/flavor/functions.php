@@ -143,6 +143,24 @@ function flavor_date(string $date): string
 }
 
 /**
+ * Check if we should show entry title
+ */
+function flavor_show_entry_title(): bool
+{
+    $settings = flavor_get_settings();
+    return ($settings['show_entry_title'] ?? true) !== false;
+}
+
+/**
+ * Check if we should show entry meta
+ */
+function flavor_show_entry_meta(): bool
+{
+    $settings = flavor_get_settings();
+    return ($settings['show_entry_meta'] ?? true) !== false;
+}
+
+/**
  * Check if we should show author
  */
 function flavor_show_author(): bool

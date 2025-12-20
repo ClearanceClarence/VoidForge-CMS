@@ -54,6 +54,8 @@ $defaultSettings = [
     'flavor' => [
         'accent_color' => '#6366f1',
         'content_width' => 'default',
+        'show_entry_title' => true,
+        'show_entry_meta' => true,
         'show_author' => true,
         'show_date' => true,
         'custom_css' => '',
@@ -481,6 +483,26 @@ include ADMIN_PATH . '/includes/header.php';
                     <p>Control what information is shown on posts</p>
                 </div>
                 <div class="section-body">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Show Entry Title</div>
+                            <div class="toggle-desc">Display the page/post title in the entry header</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="show_entry_title" <?= ($themeSettings['show_entry_title'] ?? true) ? 'checked' : '' ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Show Entry Meta</div>
+                            <div class="toggle-desc">Display the meta info bar (date, author, read time) on posts and pages</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="show_entry_meta" <?= ($themeSettings['show_entry_meta'] ?? true) ? 'checked' : '' ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                     <div class="toggle-row">
                         <div>
                             <div class="toggle-label">Show Author</div>

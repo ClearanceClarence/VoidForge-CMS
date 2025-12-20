@@ -15,6 +15,7 @@
     let redoStack = [];
     let autosaveTimer = null;
     let activeEditor = null;
+    let pageSettings = config.pageSettings || {};
 
     // Drag state
     let dragState = {
@@ -48,6 +49,7 @@
         initModals();
         initKeyboardShortcuts();
         initAutosave();
+        initPageSettings();
         
         // Make initial PHP-rendered blocks editable
         makeBlocksEditable();
@@ -951,6 +953,7 @@
 
         document.getElementById('anvil-live-title')?.addEventListener('input', () => markDirty());
         document.getElementById('anvil-live-save')?.addEventListener('click', () => saveContent());
+        document.getElementById('anvil-live-preview')?.addEventListener('click', () => previewContent());
         document.getElementById('anvil-live-undo')?.addEventListener('click', () => undo());
         document.getElementById('anvil-live-redo')?.addEventListener('click', () => redo());
 
@@ -1099,11 +1102,23 @@
                 const columnsBlock = column.closest('.anvil-live-block[data-block-type="columns"]');
                 
                 // Check if click is on a nested block INSIDE the column
-                const clickedBlock = e.target.closest('.anvil-live-block');
-                const isNestedBlockClick = clickedBlock && clickedBlock !== columnsBlock && column.contains(clickedBlock);
+                const nestedBlock = e.target.closest('.anvil-live-block');
+                const isNestedBlockClick = nestedBlock && nestedBlock !== columnsBlock && column.contains(nestedBlock);
                 
-                // Only trigger if not clicking on a nested block inside the column
-                if (columnsBlock && !isNestedBlockClick) {
+                // If clicking on a nested block, select it and show settings
+                if (isNestedBlockClick) {
+                    const blockId = nestedBlock.dataset.blockId;
+                    if (blockId && !e.target.closest('.anvil-live-block-action') && !e.target.closest('.anvil-live-block-handle')) {
+                        console.log('AnvilLive: Clicking on nested block in column', blockId);
+                        selectBlock(blockId);
+                        switchTab('settings');
+                        document.body.classList.add('anvil-live-sidebar-open');
+                    }
+                    return;
+                }
+                
+                // Only trigger column context if not clicking on a nested block
+                if (columnsBlock) {
                     const blockId = columnsBlock.dataset.blockId;
                     
                     // Get column index - from attribute or by position
@@ -2897,7 +2912,7 @@
             const response = await fetch(config.apiUrl + '/anvil-live/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': config.nonce },
-                body: JSON.stringify({ post_id: config.postId, blocks, title })
+                body: JSON.stringify({ post_id: config.postId, blocks, title, pageSettings })
             });
 
             const data = await response.json();
@@ -2912,6 +2927,16 @@
             console.error('Save failed:', err);
             updateSaveStatus('Save failed', 'error');
         }
+    }
+
+    async function previewContent() {
+        // Save first if there are unsaved changes
+        if (isDirty) {
+            await saveContent();
+        }
+        
+        // Open preview in new tab (exitUrl is the permalink without editor params)
+        window.open(config.exitUrl, '_blank');
     }
 
     async function autosave() {
@@ -3293,16 +3318,32 @@
             const popup = document.createElement('div');
             popup.className = 'anvil-color-popup';
             popup.innerHTML = this.buildHTML();
-            wrap.appendChild(popup);
             
-            // Position popup
+            // Append to body for fixed positioning
+            document.body.appendChild(popup);
+            
+            // Position popup using fixed coordinates
             const rect = wrap.getBoundingClientRect();
-            if (rect.bottom + 400 > window.innerHeight) {
-                popup.classList.add('position-top');
+            let top = rect.bottom + 8;
+            let left = rect.left;
+            
+            // Adjust if popup would go off bottom of screen
+            if (top + 400 > window.innerHeight) {
+                top = rect.top - 400 - 8;
             }
-            if (rect.left + 280 > window.innerWidth) {
-                popup.classList.add('position-right');
+            
+            // Adjust if popup would go off right of screen
+            if (left + 280 > window.innerWidth) {
+                left = rect.right - 280;
             }
+            
+            // Ensure popup doesn't go off left edge
+            if (left < 8) {
+                left = 8;
+            }
+            
+            popup.style.top = top + 'px';
+            popup.style.left = left + 'px';
             
             // Show popup and overlay
             requestAnimationFrame(() => {
@@ -4145,6 +4186,202 @@
             input.addEventListener('input', updateHandler);
             input.addEventListener('change', updateHandler);
         });
+    }
+
+    // =========================================================================
+    // PAGE SETTINGS
+    // =========================================================================
+
+    function initPageSettings() {
+        // Initialize form values from pageSettings
+        const fullWidthCheckbox = document.getElementById('page-content-width-full');
+        const widthInput = document.getElementById('page-content-width');
+        const widthUnitSelect = document.getElementById('page-content-width-unit');
+        const customWidthGroup = document.getElementById('page-width-custom-group');
+        
+        const paddingTop = document.getElementById('page-padding-top');
+        const paddingRight = document.getElementById('page-padding-right');
+        const paddingBottom = document.getElementById('page-padding-bottom');
+        const paddingLeft = document.getElementById('page-padding-left');
+        const paddingUnit = document.getElementById('page-padding-unit');
+        
+        const marginTop = document.getElementById('page-margin-top');
+        const marginRight = document.getElementById('page-margin-right');
+        const marginBottom = document.getElementById('page-margin-bottom');
+        const marginLeft = document.getElementById('page-margin-left');
+        const marginUnit = document.getElementById('page-margin-unit');
+        
+        // Set initial values
+        if (fullWidthCheckbox) {
+            fullWidthCheckbox.checked = pageSettings.contentWidthFull === true || pageSettings.contentWidthFull === 'true';
+            toggleFullWidth(fullWidthCheckbox.checked);
+            
+            fullWidthCheckbox.addEventListener('change', function() {
+                pageSettings.contentWidthFull = this.checked;
+                toggleFullWidth(this.checked);
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        
+        if (widthInput) {
+            widthInput.value = pageSettings.contentWidth || '1200';
+            widthInput.addEventListener('input', function() {
+                pageSettings.contentWidth = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        
+        if (widthUnitSelect) {
+            widthUnitSelect.value = pageSettings.contentWidthUnit || 'px';
+            widthUnitSelect.addEventListener('change', function() {
+                pageSettings.contentWidthUnit = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        
+        // Padding
+        if (paddingTop) {
+            paddingTop.value = pageSettings.paddingTop || '0';
+            paddingTop.addEventListener('input', function() {
+                pageSettings.paddingTop = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (paddingRight) {
+            paddingRight.value = pageSettings.paddingRight || '0';
+            paddingRight.addEventListener('input', function() {
+                pageSettings.paddingRight = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (paddingBottom) {
+            paddingBottom.value = pageSettings.paddingBottom || '0';
+            paddingBottom.addEventListener('input', function() {
+                pageSettings.paddingBottom = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (paddingLeft) {
+            paddingLeft.value = pageSettings.paddingLeft || '0';
+            paddingLeft.addEventListener('input', function() {
+                pageSettings.paddingLeft = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (paddingUnit) {
+            paddingUnit.value = pageSettings.paddingUnit || 'px';
+            paddingUnit.addEventListener('change', function() {
+                pageSettings.paddingUnit = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        
+        // Margin
+        if (marginTop) {
+            marginTop.value = pageSettings.marginTop || '0';
+            marginTop.addEventListener('input', function() {
+                pageSettings.marginTop = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (marginRight) {
+            marginRight.value = pageSettings.marginRight || 'auto';
+            marginRight.addEventListener('input', function() {
+                pageSettings.marginRight = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (marginBottom) {
+            marginBottom.value = pageSettings.marginBottom || '0';
+            marginBottom.addEventListener('input', function() {
+                pageSettings.marginBottom = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (marginLeft) {
+            marginLeft.value = pageSettings.marginLeft || 'auto';
+            marginLeft.addEventListener('input', function() {
+                pageSettings.marginLeft = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        if (marginUnit) {
+            marginUnit.value = pageSettings.marginUnit || 'px';
+            marginUnit.addEventListener('change', function() {
+                pageSettings.marginUnit = this.value;
+                applyPageSettings();
+                markDirty();
+            });
+        }
+        
+        function toggleFullWidth(isFull) {
+            if (customWidthGroup) {
+                customWidthGroup.classList.toggle('hidden', isFull);
+            }
+        }
+        
+        // Apply settings on initial load
+        applyPageSettings();
+    }
+    
+    function applyPageSettings() {
+        const blocksContainer = document.getElementById('anvil-live-blocks');
+        if (!blocksContainer) return;
+        
+        const styles = [];
+        const isFull = pageSettings.contentWidthFull === true || pageSettings.contentWidthFull === 'true';
+        
+        // Toggle full width class for seamless blending
+        blocksContainer.classList.toggle('anvil-live-full-width', isFull);
+        
+        // Content width
+        if (isFull) {
+            styles.push('max-width: 100%');
+            styles.push('width: 100%');
+        } else {
+            const width = pageSettings.contentWidth || '1200';
+            const unit = pageSettings.contentWidthUnit || 'px';
+            styles.push('max-width: ' + width + unit);
+            styles.push('width: 100%');
+        }
+        
+        // Padding
+        const pUnit = pageSettings.paddingUnit || 'px';
+        const pTop = pageSettings.paddingTop || '0';
+        const pRight = pageSettings.paddingRight || '0';
+        const pBottom = pageSettings.paddingBottom || '0';
+        const pLeft = pageSettings.paddingLeft || '0';
+        
+        // Always set padding (even if 0) so it overrides default CSS
+        styles.push('padding: ' + (pTop || '0') + pUnit + ' ' + (pRight || '0') + pUnit + ' ' + (pBottom || '0') + pUnit + ' ' + (pLeft || '0') + pUnit);
+        
+        // Margin
+        const mUnit = pageSettings.marginUnit || 'px';
+        const mTop = pageSettings.marginTop || '0';
+        const mRight = pageSettings.marginRight || 'auto';
+        const mBottom = pageSettings.marginBottom || '0';
+        const mLeft = pageSettings.marginLeft || 'auto';
+        
+        const mTopVal = mTop === 'auto' ? 'auto' : (mTop || '0') + mUnit;
+        const mRightVal = mRight === 'auto' ? 'auto' : (mRight || '0') + mUnit;
+        const mBottomVal = mBottom === 'auto' ? 'auto' : (mBottom || '0') + mUnit;
+        const mLeftVal = mLeft === 'auto' ? 'auto' : (mLeft || '0') + mUnit;
+        
+        styles.push('margin: ' + mTopVal + ' ' + mRightVal + ' ' + mBottomVal + ' ' + mLeftVal);
+        
+        blocksContainer.style.cssText = styles.join('; ');
     }
 
     // =========================================================================

@@ -1381,3 +1381,12 @@ ol.anvil-block-list li::marker {
         color: #1f2937;
     }
 }
+
+/* ==========================================================================
+   Anvil Live Page Settings
+   ========================================================================== */
+
+/* Full Width Content Breakout - only affects Anvil content wrapper */
+.anvil-content-wrapper.anvil-full-width {
+    position: relative;
+}

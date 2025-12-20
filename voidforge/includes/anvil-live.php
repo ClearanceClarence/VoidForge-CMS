@@ -26,7 +26,7 @@ class AnvilLive
     private static ?array $currentPost = null;
     
     /** @var string Editor version for cache busting */
-    public const VERSION = '1.0.6';
+    public const VERSION = '1.1.0';
     
     /**
      * Initialize Anvil Live
@@ -161,6 +161,9 @@ class AnvilLive
         // Load SortableJS for drag and drop
         echo '<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>' . "\n";
         
+        // Get page settings from post meta
+        $pageSettings = self::getPageSettings(self::$currentPost['id']);
+        
         // Editor configuration
         echo '<script>
         window.AnvilLiveConfig = ' . json_encode([
@@ -174,8 +177,64 @@ class AnvilLive
             'blocks' => Anvil::getEditorData(),
             'exitUrl' => Post::permalink(self::$currentPost),
             'editUrl' => SITE_URL . '/admin/post-edit.php?id=' . self::$currentPost['id'],
+            'pageSettings' => $pageSettings,
         ]) . ';
         </script>' . "\n";
+    }
+    
+    /**
+     * Get page settings for a post
+     */
+    public static function getPageSettings(int $postId): array
+    {
+        $defaults = [
+            'contentWidth' => '1200',
+            'contentWidthUnit' => 'px',
+            'contentWidthFull' => false,
+            'paddingTop' => '0',
+            'paddingRight' => '0',
+            'paddingBottom' => '0',
+            'paddingLeft' => '0',
+            'paddingUnit' => 'px',
+            'marginTop' => '0',
+            'marginRight' => 'auto',
+            'marginBottom' => '0',
+            'marginLeft' => 'auto',
+            'marginUnit' => 'px',
+        ];
+        
+        $saved = Post::getMeta($postId, 'anvil_page_settings');
+        if ($saved && is_array($saved)) {
+            return array_merge($defaults, $saved);
+        }
+        
+        return $defaults;
+    }
+    
+    /**
+     * Save page settings for a post
+     */
+    public static function savePageSettings(int $postId, array $settings): bool
+    {
+        $allowedKeys = [
+            'contentWidth', 'contentWidthUnit', 'contentWidthFull',
+            'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'paddingUnit',
+            'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'marginUnit',
+        ];
+        
+        $filtered = [];
+        foreach ($allowedKeys as $key) {
+            if (isset($settings[$key])) {
+                $filtered[$key] = $settings[$key];
+            }
+        }
+        
+        try {
+            Post::setMeta($postId, 'anvil_page_settings', $filtered);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
     
     /**
@@ -217,9 +276,14 @@ class AnvilLive
             }
         }
         
+        // Get page settings and generate inline styles
+        $pageSettings = self::getPageSettings(self::$currentPost['id']);
+        $blocksStyle = self::generateCanvasStyle($pageSettings);
+        $fullWidthClass = !empty($pageSettings['contentWidthFull']) ? ' anvil-live-full-width' : '';
+        
         // Build editable content area
         $output = '<div id="anvil-live-canvas" class="anvil-live-canvas" data-post-id="' . esc((string)self::$currentPost['id']) . '">';
-        $output .= '<div class="anvil-live-blocks" id="anvil-live-blocks">';
+        $output .= '<div class="anvil-live-blocks' . $fullWidthClass . '" id="anvil-live-blocks" style="' . esc($blocksStyle) . '">';
         
         if (empty($blocks)) {
             // Empty state - show prompt to add blocks
@@ -247,6 +311,53 @@ class AnvilLive
         $output .= '<script>window.AnvilLiveBlocks = ' . json_encode($blocks, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ';</script>';
         
         return $output;
+    }
+    
+    /**
+     * Generate inline CSS for canvas based on page settings
+     */
+    private static function generateCanvasStyle(array $settings): string
+    {
+        $styles = [];
+        
+        // Content width
+        if (!empty($settings['contentWidthFull'])) {
+            $styles[] = 'max-width: 100%';
+            $styles[] = 'width: 100%';
+        } else {
+            $width = $settings['contentWidth'] ?? '1200';
+            $unit = $settings['contentWidthUnit'] ?? 'px';
+            $styles[] = 'max-width: ' . $width . $unit;
+            $styles[] = 'width: 100%';
+        }
+        
+        // Padding
+        $pUnit = $settings['paddingUnit'] ?? 'px';
+        $pTop = $settings['paddingTop'] ?? '0';
+        $pRight = $settings['paddingRight'] ?? '0';
+        $pBottom = $settings['paddingBottom'] ?? '0';
+        $pLeft = $settings['paddingLeft'] ?? '0';
+        
+        if ($pTop !== '0' || $pRight !== '0' || $pBottom !== '0' || $pLeft !== '0') {
+            $styles[] = 'padding: ' . $pTop . $pUnit . ' ' . $pRight . $pUnit . ' ' . $pBottom . $pUnit . ' ' . $pLeft . $pUnit;
+        }
+        
+        // Margin
+        $mUnit = $settings['marginUnit'] ?? 'px';
+        $mTop = $settings['marginTop'] ?? '0';
+        $mRight = $settings['marginRight'] ?? 'auto';
+        $mBottom = $settings['marginBottom'] ?? '0';
+        $mLeft = $settings['marginLeft'] ?? 'auto';
+        
+        // Build margin value
+        $mTopVal = $mTop === 'auto' ? 'auto' : $mTop . $mUnit;
+        $mRightVal = $mRight === 'auto' ? 'auto' : $mRight . $mUnit;
+        $mBottomVal = $mBottom === 'auto' ? 'auto' : $mBottom . $mUnit;
+        $mLeftVal = $mLeft === 'auto' ? 'auto' : $mLeft . $mUnit;
+        
+        $styles[] = 'margin: ' . $mTopVal . ' ' . $mRightVal . ' ' . $mBottomVal . ' ' . $mLeftVal;
+        
+        return implode('; ', $styles);
     }
     
     /**
@@ -372,6 +483,7 @@ class AnvilLive
         $postId = (int)($request['post_id'] ?? 0);
         $blocks = $request['blocks'] ?? [];
         $title = $request['title'] ?? null;
+        $pageSettings = $request['pageSettings'] ?? null;
         
         if (!$postId) {
             return ['success' => false, 'error' => 'Invalid post ID'];
@@ -399,6 +511,11 @@ class AnvilLive
         
         // Update post
         $result = Post::update($postId, $updateData);
+        
+        // Save page settings if provided
+        if ($pageSettings !== null && is_array($pageSettings)) {
+            self::savePageSettings($postId, $pageSettings);
+        }
         
         if ($result) {
             return [
