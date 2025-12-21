@@ -681,6 +681,11 @@ class AnvilLive
             return '';
         }
         
+        // Don't show if admin bar is active (it already has edit links)
+        if (function_exists('should_show_admin_bar') && should_show_admin_bar()) {
+            return '';
+        }
+        
         // Get current post from global context
         global $post;
         if (!$post || empty($post['id'])) {

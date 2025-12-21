@@ -1,18 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <defs>
-    <linearGradient id="voidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#06b6d4"/>
+    <linearGradient id="fg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
     </linearGradient>
-    <linearGradient id="innerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" style="stop-color:#c4b5fd"/>
-      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    <linearGradient id="fg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
     </linearGradient>
   </defs>
-  <!-- Main V shape with thick strokes -->
-  <path d="M5 5 L16 27 L27 5" fill="none" stroke="url(#voidGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Inner void spark/core -->
-  <circle cx="16" cy="14" r="3.5" fill="url(#innerGlow)"/>
-  <!-- Small accent dot -->
-  <circle cx="16" cy="14" r="1.5" fill="#fff" opacity="0.9"/>
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="url(#fg2)"/>
+  <!-- Stacked layers -->
+  <g transform="translate(4, 5)">
+    <path d="M12 20L2 14L12 10L22 14Z" fill="#4f46e5"/>
+    <path d="M12 16L2 10L12 6L22 10Z" fill="#6366f1"/>
+    <path d="M12 12L2 6L12 2L22 6Z" fill="#c4b5fd"/>
+  </g>
+  <!-- Spark -->
+  <circle cx="16" cy="4" r="1.5" fill="#fff"/>
 </svg>

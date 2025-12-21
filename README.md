@@ -2,7 +2,7 @@
 
 A modern, lightweight content management system built with pure PHP. No frameworks, no bloat — just powerful features and clean code.
 
-![Version](https://img.shields.io/badge/version-0.2.4-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.2.4.1-6366f1?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)
 

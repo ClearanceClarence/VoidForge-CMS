@@ -3,7 +3,7 @@
  * Flavor Theme Functions
  * 
  * @package Flavor
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 defined('CMS_ROOT') or die('Direct access not allowed');
@@ -22,7 +22,7 @@ function flavor_get_settings(): array
 Plugin::addAction('vf_head', function() {
     echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
     echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
-    echo '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">';
+    echo '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">';
 }, 5);
 
 /**
@@ -34,19 +34,21 @@ Plugin::addAction('vf_head', function() {
     $contentWidth = $settings['content_width'] ?? 'default';
     
     $widths = [
-        'narrow' => '680px',
-        'default' => '780px',
-        'wide' => '920px'
+        'narrow' => '720px',
+        'default' => '860px',
+        'wide' => '1080px'
     ];
     
-    $width = $widths[$contentWidth] ?? '780px';
+    $width = $widths[$contentWidth] ?? '860px';
     
     echo '<style>
         :root {
-            --color-accent: ' . esc($accentColor) . ';
-            --color-accent-hover: ' . flavor_adjust_brightness($accentColor, -15) . ';
-            --color-accent-light: ' . flavor_hex_to_rgba($accentColor, 0.1) . ';
+            --color-primary: ' . esc($accentColor) . ';
+            --color-primary-dark: ' . flavor_adjust_brightness($accentColor, -15) . ';
+            --color-primary-light: ' . flavor_adjust_brightness($accentColor, 15) . ';
+            --color-primary-subtle: ' . flavor_hex_to_rgba($accentColor, 0.08) . ';
             --content-width: ' . $width . ';
+            --gradient-primary: linear-gradient(135deg, ' . esc($accentColor) . ' 0%, ' . flavor_adjust_brightness($accentColor, 20) . ' 100%);
         }
     </style>';
 }, 20);
@@ -185,7 +187,7 @@ function flavor_render_comment(array $comment, int $depth = 0): void
 {
     $maxDepth = (int) getOption('comment_max_depth', 3);
     $authorName = Comment::getAuthorName($comment);
-    $gravatar = Comment::getGravatar($comment, 52);
+    $gravatar = Comment::getGravatar($comment, 48);
     $depthClass = $depth > 0 ? ' reply depth-' . min($depth, 3) : '';
     ?>
     <div class="comment<?= $depthClass ?>" id="comment-<?= $comment['id'] ?>">
@@ -197,7 +199,7 @@ function flavor_render_comment(array $comment, int $depth = 0): void
                 <div class="comment-meta">
                     <span class="comment-author"><?= esc($authorName) ?></span>
                     <span class="comment-date">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
@@ -208,15 +210,13 @@ function flavor_render_comment(array $comment, int $depth = 0): void
                     <?= nl2br(esc($comment['content'])) ?>
                 </div>
                 <?php if ($depth < $maxDepth): ?>
-                <div class="comment-actions">
-                    <a href="#respond" onclick="replyTo(<?= $comment['id'] ?>, '<?= esc(addslashes($authorName)) ?>')" class="comment-reply-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 17 4 12 9 7"/>
-                            <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
-                        </svg>
-                        Reply
-                    </a>
-                </div>
+                <a href="#respond" onclick="replyTo(<?= $comment['id'] ?>, '<?= esc(addslashes($authorName)) ?>')" class="comment-reply-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 17 4 12 9 7"/>
+                        <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
+                    </svg>
+                    Reply
+                </a>
                 <?php endif; ?>
             </div>
         </div>

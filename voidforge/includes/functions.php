@@ -1031,6 +1031,233 @@ function get_site_description(): string
 }
 
 /**
+ * Get the site logo URL
+ * Returns the custom logo URL if set, or empty string if not
+ */
+function get_site_logo_url(): string
+{
+    // First check for direct URL (from new customizer)
+    $logoUrl = getOption('site_logo', '');
+    if (!empty($logoUrl)) {
+        return $logoUrl;
+    }
+    
+    // Fall back to ID-based (legacy)
+    $logoId = getOption('site_logo_id', 0);
+    if (!$logoId) {
+        return '';
+    }
+    
+    if (!class_exists('Media')) {
+        return '';
+    }
+    
+    $logo = Media::find($logoId);
+    if (!$logo || empty($logo['file_path'])) {
+        return '';
+    }
+    
+    return UPLOADS_URL . '/' . $logo['file_path'];
+}
+
+/**
+ * Get site logo data (url, width, height)
+ * Returns array with logo details or null if not set
+ */
+function get_site_logo(): ?array
+{
+    $logoUrl = get_site_logo_url();
+    if (empty($logoUrl)) {
+        return null;
+    }
+    
+    $width = getOption('site_logo_width', 0);
+    $height = getOption('site_logo_height', 0);
+    
+    return [
+        'url' => $logoUrl,
+        'width' => $width ?: null,
+        'height' => $height ?: null,
+        'alt' => get_site_name(),
+    ];
+}
+
+/**
+ * Get the site favicon URL
+ * Returns the custom favicon URL if set, or default VoidForge favicon
+ */
+function get_site_favicon_url(): string
+{
+    // First check for direct URL (from new customizer)
+    $faviconUrl = getOption('site_favicon', '');
+    if (!empty($faviconUrl)) {
+        return $faviconUrl;
+    }
+    
+    // Fall back to ID-based (legacy)
+    $faviconId = getOption('site_favicon_id', 0);
+    if (!$faviconId) {
+        // Return default VoidForge favicon
+        return SITE_URL . '/favicon.svg';
+    }
+    
+    if (!class_exists('Media')) {
+        return SITE_URL . '/favicon.svg';
+    }
+    
+    $favicon = Media::find($faviconId);
+    if (!$favicon || empty($favicon['file_path'])) {
+        return SITE_URL . '/favicon.svg';
+    }
+    
+    return UPLOADS_URL . '/' . $favicon['file_path'];
+}
+
+/**
+ * Get site favicon data (url, mime_type)
+ * Returns array with favicon details or default favicon info
+ */
+function get_site_favicon(): array
+{
+    $faviconUrl = getOption('site_favicon', '');
+    
+    if (!empty($faviconUrl)) {
+        // Determine mime type from URL extension
+        $ext = strtolower(pathinfo(parse_url($faviconUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+            'ico' => 'image/x-icon',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        return [
+            'url' => $faviconUrl,
+            'mime_type' => $mimeTypes[$ext] ?? 'image/png',
+        ];
+    }
+    
+    // Fall back to ID-based (legacy)
+    $faviconId = getOption('site_favicon_id', 0);
+    
+    if ($faviconId && class_exists('Media')) {
+        $favicon = Media::find($faviconId);
+        if ($favicon && !empty($favicon['file_path'])) {
+            return [
+                'url' => UPLOADS_URL . '/' . $favicon['file_path'],
+                'mime_type' => $favicon['mime_type'] ?? 'image/png',
+            ];
+        }
+    }
+    
+    // Return default VoidForge favicon
+    return [
+        'url' => SITE_URL . '/favicon.svg',
+        'mime_type' => 'image/svg+xml',
+    ];
+}
+
+/**
+ * Output the favicon link tags
+ * Call this in the <head> section
+ */
+function the_favicon(): void
+{
+    $favicon = get_site_favicon();
+    $url = esc($favicon['url']);
+    $type = esc($favicon['mime_type']);
+    
+    // SVG favicon (modern browsers)
+    if ($type === 'image/svg+xml') {
+        echo '<link rel="icon" type="image/svg+xml" href="' . $url . '">' . "\n";
+    } else {
+        // PNG/ICO favicon
+        echo '<link rel="icon" type="' . $type . '" href="' . $url . '">' . "\n";
+    }
+    
+    // Apple touch icon (if PNG or JPG)
+    if (in_array($type, ['image/png', 'image/jpeg', 'image/jpg'])) {
+        echo '<link rel="apple-touch-icon" href="' . $url . '">' . "\n";
+    }
+}
+
+/**
+ * Output the site logo HTML
+ * @param array $attrs Optional attributes (class, width, height)
+ */
+function the_site_logo(array $attrs = []): void
+{
+    $logo = get_site_logo();
+    
+    $class = $attrs['class'] ?? 'site-logo';
+    $linkHome = $attrs['link'] ?? true;
+    
+    // Use provided dimensions or fall back to saved settings
+    $width = '';
+    $height = '';
+    
+    if (isset($attrs['width'])) {
+        $width = ' width="' . (int)$attrs['width'] . '"';
+    } elseif ($logo && !empty($logo['width'])) {
+        $width = ' width="' . (int)$logo['width'] . '"';
+    }
+    
+    if (isset($attrs['height'])) {
+        $height = ' height="' . (int)$attrs['height'] . '"';
+    } elseif ($logo && !empty($logo['height'])) {
+        $height = ' height="' . (int)$logo['height'] . '"';
+    }
+    
+    if ($logo) {
+        $alt = esc($logo['alt']);
+        $url = esc($logo['url']);
+        
+        $img = '<img src="' . $url . '" alt="' . $alt . '" class="' . esc($class) . '"' . $width . $height . '>';
+        
+        if ($linkHome) {
+            echo '<a href="' . esc(SITE_URL) . '" class="site-logo-link">' . $img . '</a>';
+        } else {
+            echo $img;
+        }
+    } else {
+        // No custom logo, output site name as text
+        $siteName = esc(get_site_name());
+        if ($linkHome) {
+            echo '<a href="' . esc(SITE_URL) . '" class="site-logo-link site-logo-text">' . $siteName . '</a>';
+        } else {
+            echo '<span class="site-logo-text">' . $siteName . '</span>';
+        }
+    }
+}
+
+/**
+ * Check if a custom logo is set
+ */
+function has_site_logo(): bool
+{
+    // Check URL-based first (new customizer)
+    $logoUrl = getOption('site_logo', '');
+    if (!empty($logoUrl)) {
+        return true;
+    }
+    
+    // Fall back to ID-based (legacy)
+    $logoId = getOption('site_logo_id', 0);
+    return !empty($logoId);
+}
+
+/**
+ * Check if a custom favicon is set
+ */
+function has_custom_favicon(): bool
+{
+    $faviconId = getOption('site_favicon_id', 0);
+    return !empty($faviconId);
+}
+
+/**
  * Get the page title
  */
 function get_page_title(): string
@@ -1244,6 +1471,580 @@ function body_class(): string
     }
     
     return implode(' ', array_filter($classes));
+}
+
+// ============================================================================
+// Frontend Admin Bar
+// ============================================================================
+
+/**
+ * Check if admin bar should be shown
+ */
+function should_show_admin_bar(): bool
+{
+    // Must be logged in
+    if (!class_exists('User') || !User::isLoggedIn()) {
+        return false;
+    }
+    
+    // Must have appropriate role
+    $user = User::current();
+    if (!$user || !in_array($user['role'], ['admin', 'editor', 'author'])) {
+        return false;
+    }
+    
+    // Don't show in Anvil Live editor mode (it has its own UI)
+    if (class_exists('AnvilLive') && AnvilLive::isEditorMode()) {
+        return false;
+    }
+    
+    // Check if user has disabled admin bar (future setting)
+    // if (getOption('disable_admin_bar_' . $user['id'])) return false;
+    
+    return true;
+}
+
+/**
+ * Get pending comments count for admin bar badge
+ */
+function get_pending_comments_count(): int
+{
+    if (!class_exists('Comment')) {
+        return 0;
+    }
+    
+    try {
+        return Comment::count(['status' => 'pending']);
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
+/**
+ * Render the frontend admin bar HTML
+ */
+function render_admin_bar(): string
+{
+    if (!should_show_admin_bar()) {
+        return '';
+    }
+    
+    $user = User::current();
+    $siteName = get_site_name();
+    $adminUrl = defined('ADMIN_URL') ? ADMIN_URL : SITE_URL . '/admin';
+    
+    // Get current post context
+    global $post;
+    $currentPost = $post ?? null;
+    
+    // Get pending comments count
+    $pendingComments = get_pending_comments_count();
+    
+    // Get post types for "New" menu
+    $postTypes = class_exists('Post') ? Post::getTypes() : [];
+    
+    // Get custom logo if set
+    $customLogo = has_site_logo() ? get_site_logo() : null;
+    
+    // Build the admin bar HTML
+    $html = '<div id="vf-admin-bar" class="vf-admin-bar">';
+    $html .= '<div class="vf-admin-bar-inner">';
+    
+    // Left side
+    $html .= '<div class="vf-admin-bar-left">';
+    
+    // Site logo/home (custom or default VoidForge)
+    $html .= '<a href="' . esc(SITE_URL) . '" class="vf-admin-bar-logo" title="Visit Site">';
+    if ($customLogo) {
+        $html .= '<img src="' . esc($customLogo['url']) . '" alt="' . esc($customLogo['alt']) . '" class="vf-admin-bar-logo-img">';
+    } else {
+        $html .= '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>';
+    }
+    $html .= '</a>';
+    
+    // Site name
+    $html .= '<a href="' . esc(SITE_URL) . '" class="vf-admin-bar-site-name">' . esc($siteName) . '</a>';
+    
+    // Dashboard link
+    $html .= '<a href="' . esc($adminUrl) . '/" class="vf-admin-bar-item">';
+    $html .= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>';
+    $html .= '<span>Dashboard</span>';
+    $html .= '</a>';
+    
+    // New dropdown
+    $html .= '<div class="vf-admin-bar-dropdown">';
+    $html .= '<button class="vf-admin-bar-item vf-admin-bar-dropdown-trigger">';
+    $html .= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    $html .= '<span>New</span>';
+    $html .= '<svg class="vf-admin-bar-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    $html .= '</button>';
+    $html .= '<div class="vf-admin-bar-dropdown-menu">';
+    
+    foreach ($postTypes as $type => $config) {
+        if (($config['public'] ?? true) === false) continue;
+        $singular = $config['singular'] ?? ucfirst($type);
+        $html .= '<a href="' . esc($adminUrl) . '/post-edit.php?type=' . esc($type) . '" class="vf-admin-bar-dropdown-item">';
+        $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' . getAdminMenuIconPath($config['icon'] ?? 'file') . '</svg>';
+        $html .= '<span>' . esc($singular) . '</span>';
+        $html .= '</a>';
+    }
+    
+    // Media upload
+    $html .= '<div class="vf-admin-bar-dropdown-divider"></div>';
+    $html .= '<a href="' . esc($adminUrl) . '/media.php" class="vf-admin-bar-dropdown-item">';
+    $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    $html .= '<span>Media</span>';
+    $html .= '</a>';
+    
+    $html .= '</div>'; // dropdown menu
+    $html .= '</div>'; // dropdown
+    
+    // Edit current post/page (if viewing one)
+    if ($currentPost && !empty($currentPost['id'])) {
+        $postType = Post::getType($currentPost['post_type'] ?? 'post');
+        $editLabel = 'Edit ' . ($postType['singular'] ?? 'Post');
+        
+        $html .= '<a href="' . esc($adminUrl) . '/post-edit.php?id=' . (int)$currentPost['id'] . '" class="vf-admin-bar-item">';
+        $html .= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+        $html .= '<span>' . esc($editLabel) . '</span>';
+        $html .= '</a>';
+        
+        // Anvil Live button
+        if (class_exists('AnvilLive') && AnvilLive::isAvailable($currentPost['post_type'] ?? 'post')) {
+            $html .= '<a href="' . esc(AnvilLive::getEditUrl($currentPost)) . '" class="vf-admin-bar-item vf-admin-bar-anvil">';
+            $html .= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>';
+            $html .= '<span>Anvil Live</span>';
+            $html .= '</a>';
+        }
+    }
+    
+    $html .= '</div>'; // left
+    
+    // Right side
+    $html .= '<div class="vf-admin-bar-right">';
+    
+    // Comments (admin/editor only)
+    if (in_array($user['role'], ['admin', 'editor'])) {
+        $html .= '<a href="' . esc($adminUrl) . '/comments.php" class="vf-admin-bar-item">';
+        $html .= '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+        if ($pendingComments > 0) {
+            $html .= '<span class="vf-admin-bar-badge">' . ($pendingComments > 99 ? '99+' : $pendingComments) . '</span>';
+        }
+        $html .= '</a>';
+    }
+    
+    // User dropdown
+    $html .= '<div class="vf-admin-bar-dropdown vf-admin-bar-user">';
+    $html .= '<button class="vf-admin-bar-item vf-admin-bar-dropdown-trigger">';
+    $html .= '<img src="' . esc(getGravatarUrl($user['email'], 32)) . '" alt="" class="vf-admin-bar-avatar">';
+    $html .= '<span class="vf-admin-bar-username">' . esc($user['display_name'] ?? $user['username']) . '</span>';
+    $html .= '<svg class="vf-admin-bar-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    $html .= '</button>';
+    $html .= '<div class="vf-admin-bar-dropdown-menu vf-admin-bar-dropdown-right">';
+    
+    // User info header
+    $html .= '<div class="vf-admin-bar-user-header">';
+    $html .= '<img src="' . esc(getGravatarUrl($user['email'], 48)) . '" alt="" class="vf-admin-bar-user-avatar">';
+    $html .= '<div class="vf-admin-bar-user-info">';
+    $html .= '<div class="vf-admin-bar-user-name">' . esc($user['display_name'] ?? $user['username']) . '</div>';
+    $html .= '<div class="vf-admin-bar-user-role">' . esc(ucfirst($user['role'])) . '</div>';
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    $html .= '<div class="vf-admin-bar-dropdown-divider"></div>';
+    
+    // Profile
+    $html .= '<a href="' . esc($adminUrl) . '/profile.php" class="vf-admin-bar-dropdown-item">';
+    $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    $html .= '<span>Edit Profile</span>';
+    $html .= '</a>';
+    
+    // Admin settings (admin only)
+    if ($user['role'] === 'admin') {
+        $html .= '<a href="' . esc($adminUrl) . '/settings.php" class="vf-admin-bar-dropdown-item">';
+        $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+        $html .= '<span>Settings</span>';
+        $html .= '</a>';
+    }
+    
+    $html .= '<div class="vf-admin-bar-dropdown-divider"></div>';
+    
+    // Logout
+    $html .= '<a href="' . esc($adminUrl) . '/logout.php" class="vf-admin-bar-dropdown-item vf-admin-bar-logout">';
+    $html .= '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+    $html .= '<span>Log Out</span>';
+    $html .= '</a>';
+    
+    $html .= '</div>'; // dropdown menu
+    $html .= '</div>'; // user dropdown
+    
+    $html .= '</div>'; // right
+    
+    $html .= '</div>'; // inner
+    $html .= '</div>'; // admin bar
+    
+    return $html;
+}
+
+/**
+ * Get icon path for admin bar (helper)
+ */
+function getAdminMenuIconPath(string $icon): string
+{
+    $icons = [
+        'file-text' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+        'file' => '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+        'image' => '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+        'video' => '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+        'book' => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+        'shopping-bag' => '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+        'calendar' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+        'star' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+        'box' => '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+        'briefcase' => '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+        'users' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        'tag' => '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+        'layers' => '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+    ];
+    
+    return $icons[$icon] ?? $icons['file'];
+}
+
+/**
+ * Render admin bar CSS
+ */
+function render_admin_bar_styles(): string
+{
+    if (!should_show_admin_bar()) {
+        return '';
+    }
+    
+    return '
+<style id="vf-admin-bar-styles">
+/* VoidForge Admin Bar */
+.vf-admin-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: #1e1e2e;
+    z-index: 99999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    font-size: 13px;
+    line-height: 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.vf-admin-bar * {
+    box-sizing: border-box;
+}
+.vf-admin-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    max-width: 100%;
+    padding: 0 8px;
+}
+.vf-admin-bar-left,
+.vf-admin-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.vf-admin-bar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: #a78bfa;
+    transition: color 0.15s;
+}
+.vf-admin-bar-logo:hover {
+    color: #c4b5fd;
+}
+.vf-admin-bar-site-name {
+    color: #e2e8f0;
+    font-weight: 600;
+    padding: 0 12px 0 4px;
+    text-decoration: none;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vf-admin-bar-site-name:hover {
+    color: #fff;
+}
+.vf-admin-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    color: #94a3b8;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border-radius: 4px;
+}
+.vf-admin-bar-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: #e2e8f0;
+}
+.vf-admin-bar-item svg {
+    flex-shrink: 0;
+}
+.vf-admin-bar-item span {
+    display: none;
+}
+@media (min-width: 600px) {
+    .vf-admin-bar-item span {
+        display: inline;
+    }
+}
+.vf-admin-bar-anvil {
+    color: #a78bfa;
+}
+.vf-admin-bar-anvil:hover {
+    background: rgba(167, 139, 250, 0.15);
+    color: #c4b5fd;
+}
+
+/* Dropdown */
+.vf-admin-bar-dropdown {
+    position: relative;
+}
+.vf-admin-bar-dropdown-trigger {
+    font-size: 13px;
+}
+.vf-admin-bar-caret {
+    margin-left: 2px;
+    opacity: 0.6;
+    transition: transform 0.2s;
+}
+.vf-admin-bar-dropdown:hover .vf-admin-bar-caret,
+.vf-admin-bar-dropdown:focus-within .vf-admin-bar-caret {
+    transform: rotate(180deg);
+}
+.vf-admin-bar-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 180px;
+    background: #2d2d3d;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    padding: 6px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: all 0.15s;
+    z-index: 100000;
+}
+.vf-admin-bar-dropdown-right {
+    left: auto;
+    right: 0;
+}
+.vf-admin-bar-dropdown:hover .vf-admin-bar-dropdown-menu,
+.vf-admin-bar-dropdown:focus-within .vf-admin-bar-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.vf-admin-bar-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    color: #cbd5e1;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.vf-admin-bar-dropdown-item:hover {
+    background: rgba(167, 139, 250, 0.15);
+    color: #fff;
+}
+.vf-admin-bar-dropdown-item svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.vf-admin-bar-dropdown-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 6px 0;
+}
+.vf-admin-bar-logout {
+    color: #f87171;
+}
+.vf-admin-bar-logout:hover {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+/* Badge */
+.vf-admin-bar-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 9px;
+    margin-left: 4px;
+}
+
+/* User dropdown */
+.vf-admin-bar-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.vf-admin-bar-username {
+    display: none;
+}
+@media (min-width: 768px) {
+    .vf-admin-bar-username {
+        display: inline;
+    }
+}
+.vf-admin-bar-user-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+.vf-admin-bar-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.vf-admin-bar-user-info {
+    flex: 1;
+    min-width: 0;
+}
+.vf-admin-bar-user-name {
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vf-admin-bar-user-role {
+    color: #a78bfa;
+    font-size: 12px;
+}
+
+/* Body offset when admin bar is shown */
+html.vf-has-admin-bar {
+    margin-top: 32px !important;
+}
+html.vf-has-admin-bar body {
+    min-height: calc(100vh - 32px);
+}
+/* Fix for fixed headers */
+html.vf-has-admin-bar .fixed-header,
+html.vf-has-admin-bar header[style*="position: fixed"],
+html.vf-has-admin-bar header[style*="position:fixed"] {
+    top: 32px !important;
+}
+/* Fix for sticky headers */
+html.vf-has-admin-bar .site-header,
+html.vf-has-admin-bar header.sticky,
+html.vf-has-admin-bar [style*="position: sticky"],
+html.vf-has-admin-bar [style*="position:sticky"] {
+    top: 32px !important;
+}
+</style>
+';
+}
+
+/**
+ * Render admin bar JavaScript
+ */
+function render_admin_bar_scripts(): string
+{
+    if (!should_show_admin_bar()) {
+        return '';
+    }
+    
+    return '
+<script id="vf-admin-bar-scripts">
+(function() {
+    // Add class to html element for body offset
+    document.documentElement.classList.add("vf-has-admin-bar");
+    
+    // Handle keyboard accessibility for dropdowns
+    document.querySelectorAll(".vf-admin-bar-dropdown-trigger").forEach(function(trigger) {
+        trigger.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                var menu = this.nextElementSibling;
+                var isVisible = menu.style.visibility === "visible";
+                menu.style.visibility = isVisible ? "hidden" : "visible";
+                menu.style.opacity = isVisible ? "0" : "1";
+                menu.style.transform = isVisible ? "translateY(-4px)" : "translateY(0)";
+            }
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", function(e) {
+        if (!e.target.closest(".vf-admin-bar-dropdown")) {
+            document.querySelectorAll(".vf-admin-bar-dropdown-menu").forEach(function(menu) {
+                menu.style.visibility = "";
+                menu.style.opacity = "";
+                menu.style.transform = "";
+            });
+        }
+    });
+})();
+</script>
+';
+}
+
+/**
+ * Output admin bar (call in theme or via hook)
+ */
+function vf_admin_bar(): void
+{
+    echo render_admin_bar_styles();
+    echo render_admin_bar();
+    echo render_admin_bar_scripts();
+}
+
+/**
+ * Hook admin bar to vf_head (styles) and vf_footer (HTML + scripts)
+ * This is called during init
+ */
+function init_admin_bar(): void
+{
+    if (!should_show_admin_bar()) {
+        return;
+    }
+    
+    // Add styles to head
+    if (class_exists('Plugin')) {
+        Plugin::addAction('vf_head', function() {
+            echo render_admin_bar_styles();
+        }, 1);
+        
+        // Add HTML and scripts to footer (before closing body)
+        Plugin::addAction('vf_footer', function() {
+            echo render_admin_bar();
+            echo render_admin_bar_scripts();
+        }, 1);
+    }
 }
 
 // ============================================================================

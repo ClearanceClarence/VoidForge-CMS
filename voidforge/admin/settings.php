@@ -25,6 +25,21 @@ $pageTitle = 'Settings';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
     setOption('site_title', trim($_POST['site_title'] ?? ''));
     setOption('site_description', trim($_POST['site_description'] ?? ''));
+    
+    // Handle logo upload/selection
+    if (!empty($_POST['site_logo_id'])) {
+        setOption('site_logo_id', (int)$_POST['site_logo_id']);
+    } elseif (isset($_POST['remove_logo'])) {
+        deleteOption('site_logo_id');
+    }
+    
+    // Handle favicon upload/selection
+    if (!empty($_POST['site_favicon_id'])) {
+        setOption('site_favicon_id', (int)$_POST['site_favicon_id']);
+    } elseif (isset($_POST['remove_favicon'])) {
+        deleteOption('site_favicon_id');
+    }
+    
     setOption('homepage_display', $_POST['homepage_display'] ?? 'landing');
     setOption('homepage_id', (int)($_POST['homepage_id'] ?? 0));
     setOption('posts_per_page', (int)($_POST['posts_per_page'] ?? 10));
@@ -68,6 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
 
 $siteTitle = getOption('site_title', '');
 $siteDescription = getOption('site_description', '');
+$siteLogoId = getOption('site_logo_id', 0);
+$siteFaviconId = getOption('site_favicon_id', 0);
+$siteLogo = $siteLogoId ? Media::find($siteLogoId) : null;
+$siteFavicon = $siteFaviconId ? Media::find($siteFaviconId) : null;
 $homepageDisplay = getOption('homepage_display', 'landing');
 $homepageId = getOption('homepage_id', 0);
 $postsPerPage = getOption('posts_per_page', 10);
@@ -763,6 +782,121 @@ include ADMIN_PATH . '/includes/header.php';
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* Media Upload Boxes */
+.media-upload-box {
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+
+.media-upload-box:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.media-upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    color: #94a3b8;
+}
+
+.media-upload-placeholder svg {
+    opacity: 0.5;
+}
+
+.media-upload-placeholder span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.media-upload-placeholder small {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.media-upload-placeholder-small {
+    padding: 1rem 0.75rem;
+}
+
+.media-upload-placeholder-small svg {
+    width: 20px;
+    height: 20px;
+}
+
+.media-preview {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.media-preview img {
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.media-preview-small img {
+    max-height: 64px;
+}
+
+.media-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.media-remove-btn:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #ef4444;
+}
+
+.media-select-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #475569;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.media-select-btn:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: #eef2ff;
+}
 </style>
 
 <script>
@@ -802,7 +936,267 @@ function switchTab(tabId, evt) {
     
     return false;
 }
+
+// Logo and Favicon Media Selection
+function selectLogo() {
+    openMediaLibrary(function(media) {
+        if (media && media.id) {
+            document.getElementById('siteLogoId').value = media.id;
+            var preview = document.getElementById('logoPreview');
+            var placeholder = document.getElementById('logoPlaceholder');
+            
+            preview.innerHTML = '<img src="' + media.url + '" alt="Site Logo">' +
+                '<button type="button" class="media-remove-btn" onclick="removeLogo()">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>';
+            preview.style.display = 'flex';
+            placeholder.style.display = 'none';
+            
+            // Update button text
+            var btn = document.querySelector('#logoUploadBox .media-select-btn');
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Change Logo';
+        }
+    }, 'image');
+}
+
+function removeLogo() {
+    document.getElementById('siteLogoId').value = '';
+    document.getElementById('logoPreview').style.display = 'none';
+    document.getElementById('logoPlaceholder').style.display = 'flex';
+    
+    // Add hidden input to indicate removal
+    var existing = document.querySelector('input[name="remove_logo"]');
+    if (!existing) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'remove_logo';
+        input.value = '1';
+        document.getElementById('logoUploadBox').appendChild(input);
+    }
+    
+    // Update button text
+    var btn = document.querySelector('#logoUploadBox .media-select-btn');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Select Logo';
+}
+
+function selectFavicon() {
+    openMediaLibrary(function(media) {
+        if (media && media.id) {
+            document.getElementById('siteFaviconId').value = media.id;
+            var preview = document.getElementById('faviconPreview');
+            var placeholder = document.getElementById('faviconPlaceholder');
+            
+            preview.innerHTML = '<img src="' + media.url + '" alt="Favicon">' +
+                '<button type="button" class="media-remove-btn" onclick="removeFavicon()">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>';
+            preview.style.display = 'flex';
+            preview.classList.add('media-preview-small');
+            placeholder.style.display = 'none';
+            
+            // Update button text
+            var btn = document.querySelector('#faviconUploadBox .media-select-btn');
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Change';
+        }
+    }, 'image');
+}
+
+function removeFavicon() {
+    document.getElementById('siteFaviconId').value = '';
+    document.getElementById('faviconPreview').style.display = 'none';
+    document.getElementById('faviconPlaceholder').style.display = 'flex';
+    
+    // Add hidden input to indicate removal
+    var existing = document.querySelector('input[name="remove_favicon"]');
+    if (!existing) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'remove_favicon';
+        input.value = '1';
+        document.getElementById('faviconUploadBox').appendChild(input);
+    }
+    
+    // Update button text
+    var btn = document.querySelector('#faviconUploadBox .media-select-btn');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Select';
+}
+
+// Media Library Modal - simplified version for settings page
+function openMediaLibrary(callback, type) {
+    type = type || 'image';
+    
+    // Create modal
+    var modal = document.createElement('div');
+    modal.className = 'media-modal-overlay';
+    modal.innerHTML = '<div class="media-modal">' +
+        '<div class="media-modal-header">' +
+            '<h3>Select Media</h3>' +
+            '<button type="button" class="media-modal-close" onclick="closeMediaLibrary()">&times;</button>' +
+        '</div>' +
+        '<div class="media-modal-body">' +
+            '<div class="media-modal-loading">Loading media library...</div>' +
+        '</div>' +
+    '</div>';
+    
+    document.body.appendChild(modal);
+    
+    // Store callback
+    window._mediaCallback = callback;
+    
+    // Load media items
+    fetch('<?= ADMIN_URL ?>/media.php?ajax=list&type=' + type)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var body = modal.querySelector('.media-modal-body');
+            if (data.items && data.items.length > 0) {
+                var html = '<div class="media-modal-grid">';
+                data.items.forEach(function(item) {
+                    html += '<div class="media-modal-item" onclick="selectMediaItem(' + item.id + ', \'' + item.url.replace(/'/g, "\\'") + '\')">';
+                    if (item.mime_type && item.mime_type.indexOf('image/') === 0) {
+                        html += '<img src="' + (item.thumbnail_url || item.url) + '" alt="">';
+                    } else {
+                        html += '<div class="media-modal-file-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+                body.innerHTML = html;
+            } else {
+                body.innerHTML = '<div class="media-modal-empty">No media found. <a href="<?= ADMIN_URL ?>/media.php">Upload some files first.</a></div>';
+            }
+        })
+        .catch(function(err) {
+            modal.querySelector('.media-modal-body').innerHTML = '<div class="media-modal-empty">Error loading media: ' + err.message + '</div>';
+        });
+}
+
+function closeMediaLibrary() {
+    var modal = document.querySelector('.media-modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+    window._mediaCallback = null;
+}
+
+function selectMediaItem(id, url) {
+    if (window._mediaCallback) {
+        window._mediaCallback({ id: id, url: url });
+    }
+    closeMediaLibrary();
+}
 </script>
+
+<style>
+/* Media Modal */
+.media-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+}
+
+.media-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.media-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.media-modal-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.media-modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.media-modal-close:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.media-modal-body {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.media-modal-loading,
+.media-modal-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+}
+
+.media-modal-empty a {
+    color: #6366f1;
+}
+
+.media-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+}
+
+.media-modal-item {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s ease;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-modal-item:hover {
+    border-color: #6366f1;
+    transform: scale(1.02);
+}
+
+.media-modal-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.media-modal-file-icon {
+    color: #94a3b8;
+}
+</style>
 
 <div class="settings-page">
     <div class="settings-header">
@@ -875,6 +1269,109 @@ function switchTab(tabId, evt) {
                             <textarea name="site_description" class="form-textarea" 
                                       placeholder="A short description of your site..."><?= esc($siteDescription) ?></textarea>
                             <span class="form-hint">A brief explanation of what your site is about</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Brand Identity (Logo & Favicon) -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon green">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="settings-card-title">
+                        <h3>Brand Identity</h3>
+                        <p>Logo and favicon for your website</p>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-grid form-grid-2">
+                        <!-- Logo -->
+                        <div class="form-group">
+                            <label class="form-label">Site Logo</label>
+                            <div class="media-upload-box" id="logoUploadBox">
+                                <?php if ($siteLogo): ?>
+                                <div class="media-preview" id="logoPreview">
+                                    <?php if ($siteLogo['mime_type'] === 'image/svg+xml'): ?>
+                                    <img src="<?= esc(UPLOADS_URL . '/' . $siteLogo['file_path']) ?>" alt="Site Logo">
+                                    <?php else: ?>
+                                    <img src="<?= esc(UPLOADS_URL . '/' . $siteLogo['file_path']) ?>" alt="Site Logo">
+                                    <?php endif; ?>
+                                    <button type="button" class="media-remove-btn" onclick="removeLogo()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="site_logo_id" id="siteLogoId" value="<?= $siteLogoId ?>">
+                                <?php else: ?>
+                                <div class="media-preview" id="logoPreview" style="display: none;"></div>
+                                <input type="hidden" name="site_logo_id" id="siteLogoId" value="">
+                                <?php endif; ?>
+                                <div class="media-upload-placeholder" id="logoPlaceholder" <?= $siteLogo ? 'style="display:none;"' : '' ?>>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                        <polyline points="2 17 12 22 22 17"></polyline>
+                                        <polyline points="2 12 12 17 22 12"></polyline>
+                                    </svg>
+                                    <span>Click to select logo</span>
+                                    <small>SVG, PNG, JPG • Max 2MB</small>
+                                </div>
+                                <button type="button" class="media-select-btn" onclick="selectLogo()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    <?= $siteLogo ? 'Change Logo' : 'Select Logo' ?>
+                                </button>
+                            </div>
+                            <span class="form-hint">Recommended: SVG for best quality at any size. PNG/JPG also supported.</span>
+                        </div>
+                        
+                        <!-- Favicon -->
+                        <div class="form-group">
+                            <label class="form-label">Favicon</label>
+                            <div class="media-upload-box" id="faviconUploadBox">
+                                <?php if ($siteFavicon): ?>
+                                <div class="media-preview media-preview-small" id="faviconPreview">
+                                    <img src="<?= esc(UPLOADS_URL . '/' . $siteFavicon['file_path']) ?>" alt="Favicon">
+                                    <button type="button" class="media-remove-btn" onclick="removeFavicon()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="site_favicon_id" id="siteFaviconId" value="<?= $siteFaviconId ?>">
+                                <?php else: ?>
+                                <div class="media-preview media-preview-small" id="faviconPreview" style="display: none;"></div>
+                                <input type="hidden" name="site_favicon_id" id="siteFaviconId" value="">
+                                <?php endif; ?>
+                                <div class="media-upload-placeholder media-upload-placeholder-small" id="faviconPlaceholder" <?= $siteFavicon ? 'style="display:none;"' : '' ?>>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <path d="M12 8v8M8 12h8"></path>
+                                    </svg>
+                                    <span>Click to select</span>
+                                    <small>SVG, PNG, ICO • 32×32+</small>
+                                </div>
+                                <button type="button" class="media-select-btn" onclick="selectFavicon()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    <?= $siteFavicon ? 'Change' : 'Select' ?>
+                                </button>
+                            </div>
+                            <span class="form-hint">Browser tab icon. SVG preferred, or PNG/ICO at 32×32px or larger.</span>
                         </div>
                     </div>
                 </div>

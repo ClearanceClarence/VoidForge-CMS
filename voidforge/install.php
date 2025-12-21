@@ -27,7 +27,7 @@ if (file_exists(CMS_ROOT . '/includes/config.php')) {
 }
 
 // Define fallbacks only if config.php didn't define them
-if (!defined('CMS_VERSION')) define('CMS_VERSION', '0.2.3.1');
+if (!defined('CMS_VERSION')) define('CMS_VERSION', '0.2.4.1');
 if (!defined('CMS_NAME')) define('CMS_NAME', 'VoidForge CMS');
 
 if ($isInstalled) {
@@ -314,7 +314,7 @@ define('SITE_URL', " . var_export($siteUrl, true) . ");
 define('ADMIN_URL', SITE_URL . '/admin');
 
 // CMS
-define('CMS_VERSION', '0.2.3');
+define('CMS_VERSION', '0.2.4.1');
 define('CMS_NAME', 'VoidForge');
 
 // Paths  

@@ -45,6 +45,60 @@ if (isset($_GET['action']) && isset($_GET['theme']) && verifyCsrf($_GET['csrf'] 
     redirect(ADMIN_URL . '/themes.php');
 }
 
+// Handle theme overwrite confirmation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_overwrite']) && verifyCsrf()) {
+    $pendingTheme = $_SESSION['pending_theme_upload'] ?? null;
+    
+    if ($pendingTheme && is_dir($pendingTheme['temp_path'])) {
+        $destPath = CMS_ROOT . '/themes/' . $pendingTheme['slug'];
+        
+        // Remove existing theme
+        if (is_dir($destPath)) {
+            function removeDir($dir) {
+                $files = array_diff(scandir($dir), ['.', '..']);
+                foreach ($files as $file) {
+                    is_dir("$dir/$file") ? removeDir("$dir/$file") : unlink("$dir/$file");
+                }
+                return rmdir($dir);
+            }
+            removeDir($destPath);
+        }
+        
+        // Move new theme
+        rename($pendingTheme['temp_path'], $destPath);
+        setFlash('success', 'Theme updated from v' . $pendingTheme['old_version'] . ' to v' . $pendingTheme['new_version']);
+        
+        // Clean up temp directory
+        $tempDir = dirname($pendingTheme['temp_path']);
+        @rmdir($tempDir);
+    }
+    
+    unset($_SESSION['pending_theme_upload']);
+    redirect(ADMIN_URL . '/themes.php');
+}
+
+// Handle cancel overwrite
+if (isset($_GET['cancel_upload']) && verifyCsrf($_GET['csrf'] ?? '')) {
+    $pendingTheme = $_SESSION['pending_theme_upload'] ?? null;
+    
+    if ($pendingTheme && is_dir($pendingTheme['temp_path'])) {
+        function removeDirCancel($dir) {
+            $files = array_diff(scandir($dir), ['.', '..']);
+            foreach ($files as $file) {
+                is_dir("$dir/$file") ? removeDirCancel("$dir/$file") : unlink("$dir/$file");
+            }
+            return rmdir($dir);
+        }
+        removeDirCancel($pendingTheme['temp_path']);
+        $tempDir = dirname($pendingTheme['temp_path']);
+        @rmdir($tempDir);
+    }
+    
+    unset($_SESSION['pending_theme_upload']);
+    setFlash('info', 'Theme upload cancelled.');
+    redirect(ADMIN_URL . '/themes.php');
+}
+
 // Handle theme upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['theme_zip']) && verifyCsrf()) {
     $file = $_FILES['theme_zip'];
@@ -65,34 +119,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['theme_zip']) && veri
             if (is_dir($themePath) && (file_exists($themePath . '/index.php') || file_exists($themePath . '/theme.json'))) {
                 $destPath = CMS_ROOT . '/themes/' . $themeFolder;
                 
-                if (is_dir($destPath)) {
-                    function removeDir($dir) {
-                        $files = array_diff(scandir($dir), ['.', '..']);
-                        foreach ($files as $file) {
-                            is_dir("$dir/$file") ? removeDir("$dir/$file") : unlink("$dir/$file");
-                        }
-                        return rmdir($dir);
-                    }
-                    removeDir($destPath);
+                // Get new theme info
+                $newThemeInfo = [];
+                if (file_exists($themePath . '/theme.json')) {
+                    $newThemeInfo = json_decode(file_get_contents($themePath . '/theme.json'), true) ?: [];
                 }
+                $newVersion = $newThemeInfo['version'] ?? '1.0.0';
+                $newName = $newThemeInfo['name'] ?? ucfirst($themeFolder);
                 
-                rename($themePath, $destPath);
-                setFlash('success', 'Theme uploaded successfully.');
+                // Check if theme already exists
+                if (is_dir($destPath)) {
+                    // Get existing theme info
+                    $oldThemeInfo = [];
+                    if (file_exists($destPath . '/theme.json')) {
+                        $oldThemeInfo = json_decode(file_get_contents($destPath . '/theme.json'), true) ?: [];
+                    }
+                    $oldVersion = $oldThemeInfo['version'] ?? '1.0.0';
+                    $oldName = $oldThemeInfo['name'] ?? ucfirst($themeFolder);
+                    
+                    // Store pending upload info in session
+                    $_SESSION['pending_theme_upload'] = [
+                        'slug' => $themeFolder,
+                        'temp_path' => $themePath,
+                        'old_name' => $oldName,
+                        'new_name' => $newName,
+                        'old_version' => $oldVersion,
+                        'new_version' => $newVersion,
+                        'old_description' => $oldThemeInfo['description'] ?? '',
+                        'new_description' => $newThemeInfo['description'] ?? '',
+                        'old_author' => $oldThemeInfo['author'] ?? '',
+                        'new_author' => $newThemeInfo['author'] ?? ''
+                    ];
+                    
+                    // Show confirmation page (handled below in HTML)
+                } else {
+                    // New theme - just install it
+                    rename($themePath, $destPath);
+                    setFlash('success', 'Theme "' . $newName . '" installed successfully.');
+                    
+                    // Clean up temp
+                    @rmdir($tempDir);
+                    redirect(ADMIN_URL . '/themes.php');
+                }
             } else {
-                setFlash('error', 'Invalid theme structure.');
+                setFlash('error', 'Invalid theme structure. Theme must contain index.php or theme.json');
+                array_map('unlink', glob("$tempDir/*"));
+                @rmdir($tempDir);
+                redirect(ADMIN_URL . '/themes.php');
             }
-            
-            array_map('unlink', glob("$tempDir/*"));
-            @rmdir($tempDir);
         } else {
             setFlash('error', 'Failed to extract ZIP file.');
+            redirect(ADMIN_URL . '/themes.php');
         }
     } else {
         setFlash('error', 'Please upload a valid ZIP file.');
+        redirect(ADMIN_URL . '/themes.php');
     }
-    
-    redirect(ADMIN_URL . '/themes.php');
 }
+
+// Check for pending upload confirmation
+$pendingUpload = $_SESSION['pending_theme_upload'] ?? null;
 
 $themes = Theme::getThemes();
 $activeTheme = Theme::getActive();
@@ -404,6 +490,7 @@ include ADMIN_PATH . '/includes/header.php';
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -414,8 +501,8 @@ include ADMIN_PATH . '/includes/header.php';
     background: var(--bg-card);
     border-radius: var(--border-radius-lg);
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    max-width: 440px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 .modal-header {
@@ -430,6 +517,7 @@ include ADMIN_PATH . '/includes/header.php';
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
+    color: var(--forge-primary);
 }
 .modal-close {
     width: 32px;
@@ -442,36 +530,107 @@ include ADMIN_PATH . '/includes/header.php';
     border-radius: 6px;
     color: var(--text-muted);
     cursor: pointer;
+    transition: all 0.15s ease;
 }
-.modal-close:hover { background: var(--border-color); color: var(--text-primary); }
+.modal-close:hover { 
+    background: var(--border-color); 
+    color: var(--text-primary); 
+}
 .modal-body { padding: 1.25rem; }
 
+/* Upload Zone */
 .upload-zone {
-    border: 2px dashed var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 2rem 1.5rem;
+    display: block;
+    position: relative;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem 2rem;
     text-align: center;
     cursor: pointer;
     background: var(--bg-card-header);
+    transition: all 0.2s ease;
 }
 .upload-zone:hover, .upload-zone.dragover {
     border-color: var(--forge-primary);
-    background: rgba(99, 102, 241, 0.05);
+    background: var(--bg-card);
 }
 .upload-zone .upload-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 0.75rem;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: 12px;
+    background: var(--forge-primary);
+    border-radius: 16px;
+    color: white;
+    transition: all 0.2s ease;
+}
+.upload-zone:hover .upload-icon {
+    transform: scale(1.05);
+}
+.upload-zone .upload-icon svg {
+    width: 28px;
+    height: 28px;
+}
+.upload-zone h3 {
+    margin: 0 0 0.375rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.upload-zone p {
+    margin: 0 0 1rem 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+.upload-zone input { display: none; }
+.upload-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.upload-hint svg {
+    width: 14px;
+    height: 14px;
     color: var(--forge-primary);
 }
-.upload-zone h3 { margin: 0 0 0.25rem 0; font-size: 0.9375rem; font-weight: 600; }
-.upload-zone p { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
-.upload-zone input { display: none; }
+
+/* Upload Progress State */
+.upload-zone.uploading .upload-content { display: none; }
+.upload-zone .upload-progress { display: none; }
+.upload-zone.uploading .upload-progress { display: block; }
+.upload-progress .spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 0.75rem;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--forge-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.upload-progress p {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.upload-progress .filename {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
 
 .delete-modal-body { text-align: center; }
 .delete-icon {
@@ -501,14 +660,118 @@ include ADMIN_PATH . '/includes/header.php';
 }
 .btn-modal-cancel { background: var(--bg-card-header); color: var(--text-secondary); }
 .btn-modal-cancel:hover { background: var(--border-color); }
-.btn-modal-danger { background: var(--forge-danger); color: white; }
+.btn-modal-danger { background: var(--forge-danger); color: white; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; }
 .btn-modal-danger:hover { opacity: 0.9; }
+
+/* Overwrite Confirmation Modal */
+.modal-wide { max-width: 540px; }
+.overwrite-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+.overwrite-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.15);
+    border-radius: 10px;
+    color: #d97706;
+}
+.overwrite-warning p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-top: 0.25rem;
+}
+.version-compare {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.version-box {
+    flex: 1;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card-header);
+}
+.version-box.version-new {
+    border-color: var(--forge-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+.version-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+.version-new .version-label { color: var(--forge-primary); }
+.version-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+.version-number {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: monospace;
+    margin-bottom: 0.5rem;
+}
+.version-new .version-number {
+    background: var(--forge-primary);
+    border-color: var(--forge-primary);
+    color: white;
+}
+.version-author {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.375rem;
+}
+.version-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.version-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.overwrite-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+.overwrite-actions .btn-modal { flex: 1; }
 
 @media (max-width: 768px) {
     .themes-header { flex-direction: column; align-items: flex-start; }
     .active-theme-inner { flex-direction: column; }
     .active-theme-preview { width: 100%; height: 160px; }
     .themes-grid { grid-template-columns: 1fr; }
+    .version-compare { flex-direction: column; }
+    .version-arrow { transform: rotate(90deg); padding: 0.5rem 0; }
 }
 </style>
 
@@ -677,21 +940,159 @@ include ADMIN_PATH . '/includes/header.php';
             <form method="POST" enctype="multipart/form-data" id="uploadForm">
                 <?= csrfField() ?>
                 <label class="upload-zone" id="uploadZone">
-                    <div class="upload-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
+                    <div class="upload-content">
+                        <div class="upload-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <h3>Drop your theme here</h3>
+                        <p>or click to browse your files</p>
+                        <div class="upload-hint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 8v13H3V8"/>
+                                <path d="M1 3h22v5H1z"/>
+                                <path d="M10 12h4"/>
+                            </svg>
+                            ZIP files only • Max 50MB
+                        </div>
                     </div>
-                    <h3>Drop your theme here</h3>
-                    <p>or click to browse for a ZIP file</p>
-                    <input type="file" name="theme_zip" accept=".zip" onchange="this.form.submit()">
+                    <div class="upload-progress">
+                        <div class="spinner"></div>
+                        <p>Uploading theme...</p>
+                        <span class="filename"></span>
+                    </div>
+                    <input type="file" name="theme_zip" accept=".zip" id="themeFileInput">
                 </label>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('themeFileInput');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    if (!uploadZone || !fileInput) return;
+    
+    // Drag and drop
+    ['dragenter', 'dragover'].forEach(e => {
+        uploadZone.addEventListener(e, (ev) => {
+            ev.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+    });
+    
+    ['dragleave', 'drop'].forEach(e => {
+        uploadZone.addEventListener(e, (ev) => {
+            ev.preventDefault();
+            uploadZone.classList.remove('dragover');
+        });
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length && files[0].name.endsWith('.zip')) {
+            fileInput.files = files;
+            handleUpload(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            handleUpload(this.files[0]);
+        }
+    });
+    
+    function handleUpload(file) {
+        uploadZone.classList.add('uploading');
+        const filenameEl = uploadZone.querySelector('.filename');
+        if (filenameEl) filenameEl.textContent = file.name;
+        
+        setTimeout(() => {
+            uploadForm.submit();
+        }, 300);
+    }
+});
+</script>
+
+<!-- Overwrite Confirmation Modal -->
+<?php if ($pendingUpload): ?>
+<div class="modal-overlay open" id="overwriteModal">
+    <div class="modal modal-wide">
+        <div class="modal-header">
+            <h2>Theme Already Exists</h2>
+            <a href="?cancel_upload=1&csrf=<?= csrfToken() ?>" class="modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </a>
+        </div>
+        <div class="modal-body">
+            <div class="overwrite-warning">
+                <div class="overwrite-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <p>A theme with this name already exists. Would you like to replace it?</p>
+            </div>
+            
+            <div class="version-compare">
+                <div class="version-box version-current">
+                    <div class="version-label">Currently Installed</div>
+                    <div class="version-name"><?= esc($pendingUpload['old_name']) ?></div>
+                    <div class="version-number">v<?= esc($pendingUpload['old_version']) ?></div>
+                    <?php if ($pendingUpload['old_author']): ?>
+                    <div class="version-author">by <?= esc($pendingUpload['old_author']) ?></div>
+                    <?php endif; ?>
+                    <?php if ($pendingUpload['old_description']): ?>
+                    <div class="version-desc"><?= esc($pendingUpload['old_description']) ?></div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="version-arrow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+                
+                <div class="version-box version-new">
+                    <div class="version-label">New Version</div>
+                    <div class="version-name"><?= esc($pendingUpload['new_name']) ?></div>
+                    <div class="version-number">v<?= esc($pendingUpload['new_version']) ?></div>
+                    <?php if ($pendingUpload['new_author']): ?>
+                    <div class="version-author">by <?= esc($pendingUpload['new_author']) ?></div>
+                    <?php endif; ?>
+                    <?php if ($pendingUpload['new_description']): ?>
+                    <div class="version-desc"><?= esc($pendingUpload['new_description']) ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="overwrite-actions">
+                <a href="?cancel_upload=1&csrf=<?= csrfToken() ?>" class="btn-modal btn-modal-cancel">Cancel</a>
+                <form method="POST" style="display: inline;">
+                    <?= csrfField() ?>
+                    <button type="submit" name="confirm_overwrite" value="1" class="btn-modal btn-modal-danger">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Replace Theme
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Delete Modal -->
 <div class="modal-overlay" id="deleteModal" onclick="if(event.target === this) this.classList.remove('open')">

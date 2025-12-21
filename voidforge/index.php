@@ -61,6 +61,9 @@ User::startSession();
 // Fire init action
 Plugin::doAction('init');
 
+// Initialize frontend admin bar
+init_admin_bar();
+
 // Get the base path from SITE_URL config
 $siteUrlPath = parse_url(SITE_URL, PHP_URL_PATH);
 $basePath = $siteUrlPath ? rtrim($siteUrlPath, '/') : '';

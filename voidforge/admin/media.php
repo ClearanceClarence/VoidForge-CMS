@@ -94,6 +94,76 @@ if (isset($_GET['action']) && $_GET['action'] === 'regenerate_thumbnails') {
     exit;
 }
 
+// AJAX: Upload file
+if (isset($_GET['ajax']) && isset($_GET['action']) && $_GET['action'] === 'upload') {
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        // Verify CSRF
+        if (!verifyCsrf()) {
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+            exit;
+        }
+        
+        // Check for file
+        if (empty($_FILES['file'])) {
+            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+            exit;
+        }
+        
+        $file = $_FILES['file'];
+        
+        // Check for upload errors
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $errors = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
+                UPLOAD_ERR_PARTIAL => 'File only partially uploaded',
+                UPLOAD_ERR_NO_FILE => 'No file uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temp folder',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file',
+                UPLOAD_ERR_EXTENSION => 'Upload blocked by extension',
+            ];
+            $errorMsg = $errors[$file['error']] ?? 'Unknown upload error';
+            echo json_encode(['success' => false, 'error' => $errorMsg]);
+            exit;
+        }
+        
+        // Get folder ID if provided
+        $folderId = isset($_POST['folder_id']) && $_POST['folder_id'] !== '' ? (int)$_POST['folder_id'] : 0;
+        
+        // Get current user ID
+        $userId = User::current()['id'] ?? null;
+        
+        // Upload via Media class - returns array with success, id, media
+        $result = Media::upload($file, $userId, $folderId);
+        
+        if ($result && !empty($result['success'])) {
+            $mediaItem = $result['media'] ?? null;
+            $mediaId = $result['id'] ?? 0;
+            
+            if ($mediaItem) {
+                echo json_encode([
+                    'success' => true,
+                    'id' => $mediaId,
+                    'url' => $mediaItem['url'] ?? Media::getUrl($mediaItem),
+                    'filename' => $mediaItem['filename'] ?? '',
+                    'mime_type' => $mediaItem['mime_type'] ?? ''
+                ]);
+            } else {
+                echo json_encode(['success' => true, 'id' => $mediaId]);
+            }
+        } else {
+            $error = $result['error'] ?? 'Upload failed';
+            echo json_encode(['success' => false, 'error' => $error]);
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrf()) {

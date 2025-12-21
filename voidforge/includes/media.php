@@ -358,13 +358,13 @@ class Media
         $id = Database::insert(Database::table('media'), [
             'filename' => $filename,
             'filepath' => $filepath,
+            'url' => UPLOADS_URL . '/' . $filepath,
             'mime_type' => $mimeType,
-            'filesize' => $file['size'],
+            'size' => $file['size'],
             'width' => $width,
             'height' => $height,
-            'title' => pathinfo($file['name'], PATHINFO_FILENAME),
-            'alt_text' => '',
-            'folder_id' => $folderId > 0 ? $folderId : null,
+            'alt_text' => pathinfo($file['name'], PATHINFO_FILENAME),
+            'folder' => $folderId > 0 ? (string)$folderId : 'uncategorized',
             'uploaded_by' => $userId,
             'created_at' => date('Y-m-d H:i:s'),
         ]);

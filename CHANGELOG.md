@@ -7,23 +7,225 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.4] - 2025-12-20
+## [0.2.4.1] - 2025-12-21
+
+### 🎨 Flavor Theme Redesign
+
+Complete overhaul of the Flavor theme's header, footer, home page, and 404 page with modern design patterns and improved user experience.
+
+---
+
+### 🏠 Home Page Redesign
+
+A completely new home page with engaging visuals and useful content sections.
+
+#### Hero Section
+- **Animated gradient background** — Glowing orbs and grid pattern
+- **Pulsing badge** — "Introducing VoidForge CMS" with animated dot
+- **Gradient animated text** — Shimmer effect on "stand out"
+- **Stats bar** — <50ms page load, ~350KB size, 100% open source
+- **Browser mockup** — Animated admin interface preview
+- **Dual CTAs** — "Start Building Free" + "Watch Demo" buttons
+
+#### Technology Logos
+- PHP, Open Source, MySQL, JavaScript, CSS3 icons
+- "Built with technologies you trust" label
+
+#### Features Grid
+- **Large featured card** — Visual block editor demo with animated blocks
+- **5 feature cards** — Block Editor, Live Editing, Custom Fields, REST API, Plugin System, Lightning Fast
+- **Hover effects** — Purple border glow on interaction
+
+#### How It Works
+- **3-step visual flow** — Upload & Install → Create Content → Publish & Share
+- Numbered steps with connecting arrows
+- Icon illustrations for each step
+
+#### Code Showcase (replaces testimonials)
+- **Tabbed code editor** — Dark theme with syntax highlighting
+- **3 code examples**: single.php, loop example, custom fields
+- **Feature checklist** — Standard PHP templates, WordPress-style functions, No build step
+- **"Read the Docs" CTA**
+
+#### Comparison Table
+- **VoidForge vs Traditional CMS**
+- 6 comparison points with highlighted advantages
+- Install Size, Page Load, Dependencies, Learning Curve, Template Language, Cost
+
+#### FAQ Section
+- 6 common questions with answers
+- 2-column responsive grid
+
+---
+
+### 📄 Header Redesign
+
+Modern header with search, mobile menu, and call-to-action button.
+
+#### New Features
+- **Search overlay** — Full-screen modal with blur backdrop
+- **CTA button** — "Get Started" with gradient and arrow animation (desktop)
+- **Animated hamburger** — 3-line icon transforms to X when open
+- **Mobile menu** — Slides from right with touch-friendly links
+
+#### Improvements
+- Centered navigation with balanced layout
+- Active nav items have purple background highlight
+- Improved glassmorphism on scroll
+- Keyboard support (Escape to close search)
+
+---
+
+### 🦶 Footer Redesign
+
+Professional footer with pre-footer CTA, newsletter signup, and better organization.
+
+#### Pre-Footer CTA
+- Full-width gradient section with pattern overlay
+- "Ready to get started?" messaging
+- Action button
+
+#### Main Footer
+- **4-column grid** — Brand, Navigation, Resources, Newsletter
+- **Newsletter signup** — Email input with arrow button
+- **Social icons** — X/Twitter, GitHub, LinkedIn, YouTube (filled icons)
+- Proper heading hierarchy
+
+#### Footer Bottom
+- Copyright + Legal links (Privacy, Terms, Cookies)
+- Divider dots between links
+- Responsive stacking
+
+---
+
+### ❌ 404 Page Redesign
+
+Engaging error page with animation and helpful guidance.
+
+#### Visual Design
+- **Animated SVG illustration** — Large "404" with floating shapes
+- **Pulsing background circles** — Depth effect
+- **Twinkling sparkles** — Star animations
+- **Floating geometric shapes** — Circles and squares with float animation
+- **Broken link animation** — Gap in chain visual
+
+#### Content
+- "Page Not Found" heading with gradient
+- Friendly error message
+- **Two action buttons** — "Go Home" (primary) + "Go Back" (outline)
+- **Suggestions card** — Helpful tips for users
+
+---
+
+### 🔧 Bug Fixes
+
+- **Admin Bar Z-Index** — Sticky headers now properly offset by 32px when admin bar is active. Added CSS rules for `.site-header`, `header.sticky`, and inline sticky elements
+- **Footer Logo Consistency** — Footer was using old hardcoded SVG (lines icon). Now uses same logo logic as header with `has_site_logo()` check, displaying custom uploaded logo or default stacked layers icon with "VoidForge" text
+- **Nested Block Settings** — Fixed settings panel not showing for blocks inside columns (z-index/overflow issues)
+
+---
+
+### 🎨 CSS Enhancements
+
+#### New Component Styles
+- **Pre-footer CTA** — Full-width gradient section with pattern background overlay
+- **Newsletter form** — Dark input with focus states and arrow submit button
+- **Social links** — 36px circular icons with hover lift effect
+- **Search overlay** — Full-screen blur backdrop with centered search form
+- **Mobile menu** — Slide-in panel with touch-friendly navigation
+- **Code showcase** — Tabbed interface with syntax-highlighted code blocks
+- **Comparison table** — Responsive grid with highlighted column
+
+#### Animation Keyframes
+- `glow-pulse` — Glowing orb effect for hero background
+- `pulse` — Badge dot animation
+- `gradient-shift` — Animated gradient text
+- `float` — Floating geometric shapes
+- `twinkle` — Sparkling star effect
+- `broken-link` — Animated broken chain
+
+#### Responsive Breakpoints
+- 1024px — Code section grid stacks, feature cards 2-column
+- 768px — Mobile menu activates, hero stats stack, comparison table compact
+- 640px — Footer columns stack, FAQ single column
+
+---
+
+### 🖼️ Default Branding Updates
+
+- **Header logo** — Stacked layers icon with gradient + "VoidForge" text (dark "Void", purple gradient "Forge")
+- **Footer logo** — Same stacked layers icon with white "Void" text for dark background
+- **Consistent iconography** — Both header and footer use matching layered diamond design
+
+---
+
+### 📝 Blog Section
+
+- **Section header row** — Title left-aligned with "View All" button right-aligned
+- **3-column post grid** — Responsive cards with image, meta, title, excerpt
+- **Image hover zoom** — 1.05 scale on card hover
+- **Placeholder images** — SVG icon for posts without featured images
+- **Read article links** — Arrow icon with hover animation
+
+---
+
+### 🔌 JavaScript Additions
+
+- **Header interactions** — Scroll effect, mobile menu toggle, search overlay open/close
+- **Code tabs** — Tab switching for code showcase panels
+- **Keyboard support** — Escape key closes search overlay
+- **Admin bar dropdowns** — Hover and keyboard accessible dropdown menus
+
+---
 
 ### ✨ New Features
 
+- **Frontend Admin Bar** — WordPress-style admin bar for logged-in users with quick access to Dashboard, New content dropdown, Edit current page, Comments (with pending badge), and user profile/logout
+- **Site Identity Settings** — New customizer tab for setting site logo and favicon with media library integration, dimension controls, and live preview
 - **Anvil Live Page Settings** — New Page tab with content width, padding, and margin controls
 - **Preview Button** — View content without editor UI, auto-saves before previewing
 - **Per-Post Comments Toggle** — Enable/disable comments on individual posts
 - **Theme Entry Header Controls** — Show/hide entry title and meta in theme settings
 
-### 🐛 Bug Fixes
-
-- **Nested Block Settings** — Fixed settings panel not showing for blocks inside columns (z-index/overflow issues)
+---
 
 ### 🔧 Improvements
 
 - **Modular JS Architecture** — Started splitting anvil-live.js into logical modules for maintainability
 - **Theme Settings** — Added "Show Entry Title" and "Show Entry Meta" toggles to Flavor theme
+- **Admin Bar Replaces Floating Edit Bar** — The floating Anvil Live edit button is now hidden when admin bar is active to avoid redundancy
+- **Logo/Favicon Helper Functions** — Updated `get_site_logo()`, `get_site_favicon()`, `the_site_logo()`, `the_favicon()`, `has_site_logo()` to support URL-based storage with dimension settings
+
+---
+
+### 📁 Files Modified
+
+```
+themes/flavor/
+├── home.php           # Complete redesign with 8 sections
+├── header.php         # Search overlay, mobile menu, CTA button
+├── footer.php         # Pre-footer CTA, newsletter, 4-column layout
+├── style.css          # New header/footer/home page styles
+├── 404.php            # Animated SVG illustration
+├── functions.php      # Updated comment rendering
+
+includes/
+├── functions.php      # Admin bar system, logo/favicon helpers, sticky header offset
+├── anvil-live.php     # Page settings tab, preview functionality
+
+admin/
+├── customize.php      # Site Identity tab with logo/favicon upload
+├── post-edit.php      # Per-post comments toggle
+├── theme-settings.php # Entry header visibility controls
+```
+
+---
+
+## [0.2.4] - 2025-12-20
+
+### ✨ New Features
+
+- **Anvil Live Enhancements** — Various improvements to the visual frontend editor
 
 ---
 
@@ -2240,7 +2442,8 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.2.4 | 2025-12-20 | Page settings, preview button, per-post comments, entry header controls |
+| 0.2.4.1 | 2025-12-21 | Frontend admin bar, site identity settings, Flavor theme redesign (home, header, footer, 404), code showcase, comparison table |
+| 0.2.4 | 2025-12-20 | Anvil Live enhancements |
 | 0.2.3.1 | 2025-12-19 | Orphaned comments cleanup, frontend comments redesign, styled error pages, installer step redesign, dashboard theme colors |
 | 0.2.3 | 2025-12-19 | Elementor-style visual editor with typography, colors, borders, shadows, backgrounds, animations, transforms |
 | 0.2.2 | 2025-12-16 | Anvil Live visual frontend editor, drag-drop blocks, inline editing, columns support |
