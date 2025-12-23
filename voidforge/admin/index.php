@@ -94,7 +94,12 @@ $stats = [
 $recentPosts = Post::query(['post_type' => 'post', 'status' => ['published', 'draft'], 'limit' => 5]);
 $recentPages = Post::query(['post_type' => 'page', 'status' => ['published', 'draft'], 'limit' => 5]);
 $recentComments = Comment::query(['limit' => 4]);
-$recentMedia = Media::query(['limit' => 6]);
+$recentMedia = Media::query(['limit' => 32]);
+
+// Get user's media column preference
+$mediaColumns = (int)getOption('dashboard_media_columns', 6);
+if ($mediaColumns < 4) $mediaColumns = 6;
+if ($mediaColumns > 16) $mediaColumns = 16;
 
 // Greeting
 $hour = (int)date('G');
@@ -473,29 +478,122 @@ include ADMIN_PATH . '/includes/header.php';
 /* Media Grid */
 .media-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(var(--media-cols, 4), 1fr);
+    gap: 0.625rem;
     padding: 1rem 1.25rem;
 }
 .media-thumb {
     aspect-ratio: 1;
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
     background: var(--bg-body);
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--border-color);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.media-thumb:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--forge-primary);
 }
 .media-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.media-thumb:hover img {
+    transform: scale(1.05);
 }
 .media-thumb svg {
     width: 24px;
     height: 24px;
     color: var(--text-muted);
+}
+.media-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 60%, rgba(0,0,0,0.6));
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.media-thumb:hover .media-thumb-overlay {
+    opacity: 1;
+}
+
+/* Media Settings Popover */
+.media-settings-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+.media-settings-btn:hover {
+    background: var(--bg-body);
+    color: var(--text-primary);
+}
+.media-settings-btn svg {
+    width: 16px;
+    height: 16px;
+}
+.media-settings-dropdown {
+    position: fixed;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    min-width: 200px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+    z-index: 9999;
+    display: none;
+}
+.media-settings-dropdown.show {
+    display: block;
+}
+.media-settings-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.media-columns-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.375rem;
+}
+.media-col-btn {
+    padding: 0.5rem 0.25rem;
+    background: var(--bg-card-header);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+.media-col-btn:hover {
+    border-color: var(--forge-primary);
+    color: var(--text-primary);
+}
+.media-col-btn.active {
+    background: var(--forge-primary);
+    border-color: var(--forge-primary);
+    color: #fff;
 }
 
 /* Info Card */
@@ -782,20 +880,39 @@ include ADMIN_PATH . '/includes/header.php';
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         Media
                     </h2>
-                    <a href="<?= ADMIN_URL ?>/media.php" class="link-all">
-                        Library
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <div style="position:relative;">
+                            <button type="button" class="media-settings-btn" onclick="toggleMediaSettings(event)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                </svg>
+                            </button>
+                            <div class="media-settings-dropdown" id="mediaSettingsDropdown">
+                                <div class="media-settings-label">Columns</div>
+                                <div class="media-columns-options">
+                                    <?php for ($col = 4; $col <= 16; $col++): ?>
+                                    <button type="button" class="media-col-btn <?= $mediaColumns === $col ? 'active' : '' ?>" onclick="setMediaColumns(<?= $col ?>)"><?= $col ?></button>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="<?= ADMIN_URL ?>/media.php" class="link-all">
+                            Library
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
                 </div>
-                <div class="media-grid">
+                <div class="media-grid" style="--media-cols: <?= $mediaColumns ?>;">
                     <?php foreach ($recentMedia as $item): ?>
-                        <div class="media-thumb">
+                        <a href="<?= ADMIN_URL ?>/media.php" class="media-thumb">
                             <?php if (strpos($item['mime_type'], 'image/') === 0): ?>
-                                <img src="<?= esc($item['url']) ?>" alt="">
+                                <img src="<?= esc($item['url']) ?>" alt="" loading="lazy">
+                                <div class="media-thumb-overlay"></div>
                             <?php else: ?>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             <?php endif; ?>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -828,5 +945,66 @@ include ADMIN_PATH . '/includes/header.php';
     </div>
 
 </div>
+
+<script>
+// Media settings dropdown
+function toggleMediaSettings(e) {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var dropdown = document.getElementById('mediaSettingsDropdown');
+    var isOpen = dropdown.classList.contains('show');
+    
+    if (!isOpen) {
+        // Position the dropdown relative to the button
+        var rect = btn.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 6) + 'px';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+    }
+    
+    dropdown.classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    var dropdown = document.getElementById('mediaSettingsDropdown');
+    if (dropdown && !e.target.closest('.media-settings-btn') && !e.target.closest('.media-settings-dropdown')) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// Close dropdown on scroll
+window.addEventListener('scroll', function() {
+    var dropdown = document.getElementById('mediaSettingsDropdown');
+    if (dropdown) dropdown.classList.remove('show');
+}, true);
+
+// Set media columns
+function setMediaColumns(cols) {
+    // Update grid immediately
+    var grid = document.querySelector('.media-grid');
+    if (grid) {
+        grid.style.setProperty('--media-cols', cols);
+    }
+    
+    // Update active button
+    document.querySelectorAll('.media-col-btn').forEach(function(btn) {
+        btn.classList.toggle('active', parseInt(btn.textContent) === cols);
+    });
+    
+    // Save preference via AJAX
+    fetch('<?= ADMIN_URL ?>/settings.php?action=save_option&ajax=1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'option_name=dashboard_media_columns&option_value=' + cols + '&csrf_token=<?= csrfToken() ?>'
+    }).catch(function(err) {
+        console.log('Failed to save preference');
+    });
+    
+    // Close dropdown
+    document.getElementById('mediaSettingsDropdown').classList.remove('show');
+}
+</script>
 
 <?php include ADMIN_PATH . '/includes/footer.php'; ?>

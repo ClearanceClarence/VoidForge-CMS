@@ -72,18 +72,37 @@ $adminTheme = getOption('admin_theme', [
 
 // Color schemes - all use dark sidebar gradients for good text contrast
 $colorSchemes = [
-    'default' => ['name' => 'Indigo', 'primary' => '#6366f1', 'secondary' => '#8b5cf6', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)', 'preview' => ['#6366f1', '#8b5cf6', '#1e1b4b']],
-    'ocean' => ['name' => 'Ocean', 'primary' => '#0ea5e9', 'secondary' => '#06b6d4', 'sidebar_bg' => 'linear-gradient(180deg, #0c1929 0%, #0c4a6e 50%, #164e63 100%)', 'preview' => ['#0ea5e9', '#06b6d4', '#0c4a6e']],
-    'emerald' => ['name' => 'Emerald', 'primary' => '#10b981', 'secondary' => '#14b8a6', 'sidebar_bg' => 'linear-gradient(180deg, #022c22 0%, #064e3b 50%, #065f46 100%)', 'preview' => ['#10b981', '#14b8a6', '#064e3b']],
-    'rose' => ['name' => 'Rose', 'primary' => '#f43f5e', 'secondary' => '#ec4899', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a10 0%, #4c0519 50%, #701a2e 100%)', 'preview' => ['#f43f5e', '#ec4899', '#4c0519']],
-    'amber' => ['name' => 'Amber', 'primary' => '#f59e0b', 'secondary' => '#fbbf24', 'sidebar_bg' => 'linear-gradient(180deg, #1a1207 0%, #451a03 50%, #5c2a0a 100%)', 'preview' => ['#f59e0b', '#fbbf24', '#451a03']],
-    'slate' => ['name' => 'Slate', 'primary' => '#64748b', 'secondary' => '#94a3b8', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 'preview' => ['#64748b', '#94a3b8', '#1e293b']],
-    'violet' => ['name' => 'Violet', 'primary' => '#8b5cf6', 'secondary' => '#a78bfa', 'sidebar_bg' => 'linear-gradient(180deg, #1e1033 0%, #2e1065 50%, #4c1d95 100%)', 'preview' => ['#8b5cf6', '#a78bfa', '#2e1065']],
-    'crimson' => ['name' => 'Crimson', 'primary' => '#dc2626', 'secondary' => '#ef4444', 'sidebar_bg' => 'linear-gradient(180deg, #1a0505 0%, #450a0a 50%, #7f1d1d 100%)', 'preview' => ['#dc2626', '#ef4444', '#450a0a']],
-    'lime' => ['name' => 'Lime', 'primary' => '#84cc16', 'secondary' => '#a3e635', 'sidebar_bg' => 'linear-gradient(180deg, #0a1a00 0%, #1a2e05 50%, #365314 100%)', 'preview' => ['#84cc16', '#a3e635', '#1a2e05']],
-    'sky' => ['name' => 'Sky', 'primary' => '#38bdf8', 'secondary' => '#7dd3fc', 'sidebar_bg' => 'linear-gradient(180deg, #0a1929 0%, #082f49 50%, #0369a1 100%)', 'preview' => ['#38bdf8', '#7dd3fc', '#082f49']],
-    'fuchsia' => ['name' => 'Fuchsia', 'primary' => '#d946ef', 'secondary' => '#e879f9', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a1e 0%, #4a044e 50%, #701a75 100%)', 'preview' => ['#d946ef', '#e879f9', '#4a044e']],
-    'midnight' => ['name' => 'Midnight', 'primary' => '#3b82f6', 'secondary' => '#60a5fa', 'sidebar_bg' => 'linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e293b 100%)', 'preview' => ['#3b82f6', '#60a5fa', '#0f172a']],
+    // Blues & Purples
+    'default' => ['name' => 'Indigo', 'primary' => '#6366f1', 'secondary' => '#8b5cf6', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)', 'preview' => ['#6366f1', '#8b5cf6', '#1e1b4b'], 'category' => 'blue'],
+    'ocean' => ['name' => 'Ocean', 'primary' => '#0ea5e9', 'secondary' => '#06b6d4', 'sidebar_bg' => 'linear-gradient(180deg, #0c1929 0%, #0c4a6e 50%, #164e63 100%)', 'preview' => ['#0ea5e9', '#06b6d4', '#0c4a6e'], 'category' => 'blue'],
+    'violet' => ['name' => 'Violet', 'primary' => '#8b5cf6', 'secondary' => '#a78bfa', 'sidebar_bg' => 'linear-gradient(180deg, #1e1033 0%, #2e1065 50%, #4c1d95 100%)', 'preview' => ['#8b5cf6', '#a78bfa', '#2e1065'], 'category' => 'blue'],
+    'midnight' => ['name' => 'Midnight', 'primary' => '#3b82f6', 'secondary' => '#60a5fa', 'sidebar_bg' => 'linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e293b 100%)', 'preview' => ['#3b82f6', '#60a5fa', '#0f172a'], 'category' => 'blue'],
+    'sky' => ['name' => 'Sky', 'primary' => '#38bdf8', 'secondary' => '#7dd3fc', 'sidebar_bg' => 'linear-gradient(180deg, #0a1929 0%, #082f49 50%, #0369a1 100%)', 'preview' => ['#38bdf8', '#7dd3fc', '#082f49'], 'category' => 'blue'],
+    'fuchsia' => ['name' => 'Fuchsia', 'primary' => '#d946ef', 'secondary' => '#e879f9', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a1e 0%, #4a044e 50%, #701a75 100%)', 'preview' => ['#d946ef', '#e879f9', '#4a044e'], 'category' => 'blue'],
+    'cobalt' => ['name' => 'Cobalt', 'primary' => '#2563eb', 'secondary' => '#3b82f6', 'sidebar_bg' => 'linear-gradient(180deg, #0a1628 0%, #1e3a5f 50%, #1d4ed8 100%)', 'preview' => ['#2563eb', '#3b82f6', '#1e3a5f'], 'category' => 'blue'],
+    'lavender' => ['name' => 'Lavender', 'primary' => '#a855f7', 'secondary' => '#c084fc', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a2e 0%, #3b0764 50%, #581c87 100%)', 'preview' => ['#a855f7', '#c084fc', '#3b0764'], 'category' => 'blue'],
+    // Greens & Teals
+    'emerald' => ['name' => 'Emerald', 'primary' => '#10b981', 'secondary' => '#14b8a6', 'sidebar_bg' => 'linear-gradient(180deg, #022c22 0%, #064e3b 50%, #065f46 100%)', 'preview' => ['#10b981', '#14b8a6', '#064e3b'], 'category' => 'green'],
+    'lime' => ['name' => 'Lime', 'primary' => '#84cc16', 'secondary' => '#a3e635', 'sidebar_bg' => 'linear-gradient(180deg, #0a1a00 0%, #1a2e05 50%, #365314 100%)', 'preview' => ['#84cc16', '#a3e635', '#1a2e05'], 'category' => 'green'],
+    'teal' => ['name' => 'Teal', 'primary' => '#14b8a6', 'secondary' => '#2dd4bf', 'sidebar_bg' => 'linear-gradient(180deg, #042f2e 0%, #115e59 50%, #0f766e 100%)', 'preview' => ['#14b8a6', '#2dd4bf', '#115e59'], 'category' => 'green'],
+    'mint' => ['name' => 'Mint', 'primary' => '#34d399', 'secondary' => '#6ee7b7', 'sidebar_bg' => 'linear-gradient(180deg, #022c22 0%, #047857 50%, #059669 100%)', 'preview' => ['#34d399', '#6ee7b7', '#047857'], 'category' => 'green'],
+    'forest' => ['name' => 'Forest', 'primary' => '#22c55e', 'secondary' => '#4ade80', 'sidebar_bg' => 'linear-gradient(180deg, #052e16 0%, #14532d 50%, #166534 100%)', 'preview' => ['#22c55e', '#4ade80', '#14532d'], 'category' => 'green'],
+    // Reds & Pinks
+    'rose' => ['name' => 'Rose', 'primary' => '#f43f5e', 'secondary' => '#ec4899', 'sidebar_bg' => 'linear-gradient(180deg, #1a0a10 0%, #4c0519 50%, #701a2e 100%)', 'preview' => ['#f43f5e', '#ec4899', '#4c0519'], 'category' => 'red'],
+    'crimson' => ['name' => 'Crimson', 'primary' => '#dc2626', 'secondary' => '#ef4444', 'sidebar_bg' => 'linear-gradient(180deg, #1a0505 0%, #450a0a 50%, #7f1d1d 100%)', 'preview' => ['#dc2626', '#ef4444', '#450a0a'], 'category' => 'red'],
+    'cherry' => ['name' => 'Cherry', 'primary' => '#e11d48', 'secondary' => '#f43f5e', 'sidebar_bg' => 'linear-gradient(180deg, #1c0a12 0%, #500724 50%, #881337 100%)', 'preview' => ['#e11d48', '#f43f5e', '#500724'], 'category' => 'red'],
+    'coral' => ['name' => 'Coral', 'primary' => '#fb7185', 'secondary' => '#fda4af', 'sidebar_bg' => 'linear-gradient(180deg, #1f0a0e 0%, #500724 50%, #9f1239 100%)', 'preview' => ['#fb7185', '#fda4af', '#500724'], 'category' => 'red'],
+    'pink' => ['name' => 'Pink', 'primary' => '#ec4899', 'secondary' => '#f472b6', 'sidebar_bg' => 'linear-gradient(180deg, #1f0a18 0%, #500724 50%, #9d174d 100%)', 'preview' => ['#ec4899', '#f472b6', '#500724'], 'category' => 'red'],
+    // Oranges & Yellows
+    'amber' => ['name' => 'Amber', 'primary' => '#f59e0b', 'secondary' => '#fbbf24', 'sidebar_bg' => 'linear-gradient(180deg, #1a1207 0%, #451a03 50%, #5c2a0a 100%)', 'preview' => ['#f59e0b', '#fbbf24', '#451a03'], 'category' => 'orange'],
+    'orange' => ['name' => 'Orange', 'primary' => '#f97316', 'secondary' => '#fb923c', 'sidebar_bg' => 'linear-gradient(180deg, #1a0f05 0%, #431407 50%, #7c2d12 100%)', 'preview' => ['#f97316', '#fb923c', '#431407'], 'category' => 'orange'],
+    'tangerine' => ['name' => 'Tangerine', 'primary' => '#ea580c', 'secondary' => '#f97316', 'sidebar_bg' => 'linear-gradient(180deg, #1c0a03 0%, #5c2a0a 50%, #9a3412 100%)', 'preview' => ['#ea580c', '#f97316', '#5c2a0a'], 'category' => 'orange'],
+    'gold' => ['name' => 'Gold', 'primary' => '#eab308', 'secondary' => '#facc15', 'sidebar_bg' => 'linear-gradient(180deg, #1a1505 0%, #422006 50%, #713f12 100%)', 'preview' => ['#eab308', '#facc15', '#422006'], 'category' => 'orange'],
+    // Neutrals
+    'slate' => ['name' => 'Slate', 'primary' => '#64748b', 'secondary' => '#94a3b8', 'sidebar_bg' => 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 'preview' => ['#64748b', '#94a3b8', '#1e293b'], 'category' => 'neutral'],
+    'graphite' => ['name' => 'Graphite', 'primary' => '#525252', 'secondary' => '#737373', 'sidebar_bg' => 'linear-gradient(180deg, #0a0a0a 0%, #171717 50%, #262626 100%)', 'preview' => ['#525252', '#737373', '#171717'], 'category' => 'neutral'],
+    'zinc' => ['name' => 'Zinc', 'primary' => '#71717a', 'secondary' => '#a1a1aa', 'sidebar_bg' => 'linear-gradient(180deg, #09090b 0%, #18181b 50%, #27272a 100%)', 'preview' => ['#71717a', '#a1a1aa', '#18181b'], 'category' => 'neutral'],
+    'stone' => ['name' => 'Stone', 'primary' => '#78716c', 'secondary' => '#a8a29e', 'sidebar_bg' => 'linear-gradient(180deg, #0c0a09 0%, #1c1917 50%, #292524 100%)', 'preview' => ['#78716c', '#a8a29e', '#1c1917'], 'category' => 'neutral'],
 ];
 
 // Load saved custom schemes
@@ -114,7 +133,7 @@ $fonts = [
     'inter' => ['name' => 'Inter', 'family' => "'Inter', sans-serif", 'google' => 'Inter:wght@400;500;600;700;800', 'category' => 'sans', 'desc' => 'Clean & readable'],
     'poppins' => ['name' => 'Poppins', 'family' => "'Poppins', sans-serif", 'google' => 'Poppins:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Geometric & friendly'],
     'nunito' => ['name' => 'Nunito', 'family' => "'Nunito', sans-serif", 'google' => 'Nunito:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Rounded & soft'],
-    'roboto' => ['name' => 'Roboto', 'family' => "'Roboto', sans-serif", 'google' => 'Roboto:wght@400;500;700', 'category' => 'sans', 'desc' => 'Google\'s classic'],
+    'roboto' => ['name' => 'Roboto', 'family' => "'Roboto', sans-serif", 'google' => 'Roboto:wght@400;500;700', 'category' => 'sans', 'desc' => 'Google classic'],
     'dm-sans' => ['name' => 'DM Sans', 'family' => "'DM Sans', sans-serif", 'google' => 'DM+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Low contrast'],
     'outfit' => ['name' => 'Outfit', 'family' => "'Outfit', sans-serif", 'google' => 'Outfit:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Modern geometric'],
     'plus-jakarta' => ['name' => 'Plus Jakarta Sans', 'family' => "'Plus Jakarta Sans', sans-serif", 'google' => 'Plus+Jakarta+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Professional'],
@@ -123,15 +142,39 @@ $fonts = [
     'work-sans' => ['name' => 'Work Sans', 'family' => "'Work Sans', sans-serif", 'google' => 'Work+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Open & clear'],
     'figtree' => ['name' => 'Figtree', 'family' => "'Figtree', sans-serif", 'google' => 'Figtree:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Warm & inviting'],
     'sora' => ['name' => 'Sora', 'family' => "'Sora', sans-serif", 'google' => 'Sora:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Contemporary'],
-    // Source fonts
     'source-sans' => ['name' => 'Source Sans 3', 'family' => "'Source Sans 3', sans-serif", 'google' => 'Source+Sans+3:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Adobe open source'],
+    'open-sans' => ['name' => 'Open Sans', 'family' => "'Open Sans', sans-serif", 'google' => 'Open+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Highly readable'],
+    'lato' => ['name' => 'Lato', 'family' => "'Lato', sans-serif", 'google' => 'Lato:wght@400;700;900', 'category' => 'sans', 'desc' => 'Semi-rounded'],
+    'montserrat' => ['name' => 'Montserrat', 'family' => "'Montserrat', sans-serif", 'google' => 'Montserrat:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Urban & modern'],
+    'raleway' => ['name' => 'Raleway', 'family' => "'Raleway', sans-serif", 'google' => 'Raleway:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Elegant thin'],
+    'quicksand' => ['name' => 'Quicksand', 'family' => "'Quicksand', sans-serif", 'google' => 'Quicksand:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Rounded display'],
+    'rubik' => ['name' => 'Rubik', 'family' => "'Rubik', sans-serif", 'google' => 'Rubik:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Slightly rounded'],
+    'karla' => ['name' => 'Karla', 'family' => "'Karla', sans-serif", 'google' => 'Karla:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Grotesque style'],
+    'barlow' => ['name' => 'Barlow', 'family' => "'Barlow', sans-serif", 'google' => 'Barlow:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Grotesk inspired'],
+    'mulish' => ['name' => 'Mulish', 'family' => "'Mulish', sans-serif", 'google' => 'Mulish:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Minimalist'],
+    'cabin' => ['name' => 'Cabin', 'family' => "'Cabin', sans-serif", 'google' => 'Cabin:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Humanist'],
+    'albert-sans' => ['name' => 'Albert Sans', 'family' => "'Albert Sans', sans-serif", 'google' => 'Albert+Sans:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Geometric neo'],
+    'be-vietnam' => ['name' => 'Be Vietnam Pro', 'family' => "'Be Vietnam Pro', sans-serif", 'google' => 'Be+Vietnam+Pro:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Vietnamese optimized'],
+    'red-hat' => ['name' => 'Red Hat Display', 'family' => "'Red Hat Display', sans-serif", 'google' => 'Red+Hat+Display:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Brand-friendly'],
+    'lexend' => ['name' => 'Lexend', 'family' => "'Lexend', sans-serif", 'google' => 'Lexend:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Reading optimized'],
+    'urbanist' => ['name' => 'Urbanist', 'family' => "'Urbanist', sans-serif", 'google' => 'Urbanist:wght@400;500;600;700', 'category' => 'sans', 'desc' => 'Low-contrast geo'],
     // Serif fonts
     'lora' => ['name' => 'Lora', 'family' => "'Lora', serif", 'google' => 'Lora:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Contemporary serif'],
     'merriweather' => ['name' => 'Merriweather', 'family' => "'Merriweather', serif", 'google' => 'Merriweather:wght@400;700', 'category' => 'serif', 'desc' => 'Reading-friendly'],
     'source-serif' => ['name' => 'Source Serif 4', 'family' => "'Source Serif 4', serif", 'google' => 'Source+Serif+4:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Adobe serif'],
+    'playfair' => ['name' => 'Playfair Display', 'family' => "'Playfair Display', serif", 'google' => 'Playfair+Display:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'High contrast'],
+    'libre-baskerville' => ['name' => 'Libre Baskerville', 'family' => "'Libre Baskerville', serif", 'google' => 'Libre+Baskerville:wght@400;700', 'category' => 'serif', 'desc' => 'Classic book'],
+    'crimson-pro' => ['name' => 'Crimson Pro', 'family' => "'Crimson Pro', serif", 'google' => 'Crimson+Pro:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Elegant old-style'],
+    'bitter' => ['name' => 'Bitter', 'family' => "'Bitter', serif", 'google' => 'Bitter:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Slab serif'],
+    'dm-serif' => ['name' => 'DM Serif Display', 'family' => "'DM Serif Display', serif", 'google' => 'DM+Serif+Display:wght@400', 'category' => 'serif', 'desc' => 'Display serif'],
+    'spectral' => ['name' => 'Spectral', 'family' => "'Spectral', serif", 'google' => 'Spectral:wght@400;500;600;700', 'category' => 'serif', 'desc' => 'Screen serif'],
     // Mono fonts
     'jetbrains' => ['name' => 'JetBrains Mono', 'family' => "'JetBrains Mono', monospace", 'google' => 'JetBrains+Mono:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'For developers'],
     'fira-code' => ['name' => 'Fira Code', 'family' => "'Fira Code', monospace", 'google' => 'Fira+Code:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'Ligatures support'],
+    'source-code' => ['name' => 'Source Code Pro', 'family' => "'Source Code Pro', monospace", 'google' => 'Source+Code+Pro:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'Adobe monospace'],
+    'ibm-plex-mono' => ['name' => 'IBM Plex Mono', 'family' => "'IBM Plex Mono', monospace", 'google' => 'IBM+Plex+Mono:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'Corporate mono'],
+    'roboto-mono' => ['name' => 'Roboto Mono', 'family' => "'Roboto Mono', monospace", 'google' => 'Roboto+Mono:wght@400;500;600;700', 'category' => 'mono', 'desc' => 'Google mono'],
+    'space-mono' => ['name' => 'Space Mono', 'family' => "'Space Mono', monospace", 'google' => 'Space+Mono:wght@400;700', 'category' => 'mono', 'desc' => 'Editorial mono'],
 ];
 
 $iconStyles = [

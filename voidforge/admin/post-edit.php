@@ -12,11 +12,9 @@ require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
-require_once CMS_ROOT . '/includes/anvil.php';
-require_once CMS_ROOT . '/includes/anvil-live.php';
 
 Post::init();
-Anvil::init();
+Plugin::init(); // This loads the Anvil plugin if active
 Taxonomy::init();
 
 User::startSession();
@@ -606,7 +604,7 @@ include ADMIN_PATH . '/includes/header.php';
             // Get content - convert blocks to HTML if needed for display
             $editorContent = $post['content'] ?? $_POST['content'] ?? '';
             $hasBlockContent = false;
-            if (!empty($editorContent)) {
+            if (!empty($editorContent) && class_exists('Anvil')) {
                 $trimmed = trim($editorContent);
                 if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
                     $blocks = json_decode($editorContent, true);
@@ -624,7 +622,7 @@ include ADMIN_PATH . '/includes/header.php';
             ?>
             
             <!-- Edit with Anvil Button (prominent, above editor) -->
-            <?php if ($post): ?>
+            <?php if ($anvilLiveAvailable && $post): ?>
             <div class="anvil-editor-cta" style="margin-bottom: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: var(--border-radius-lg);">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">

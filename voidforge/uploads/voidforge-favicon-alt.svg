@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="fav1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+    <linearGradient id="fav2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="2" y="2" width="28" height="28" rx="6" fill="url(#fav2)"/>
+  
+  <!-- Stacked layers -->
+  <g transform="translate(4, 4)">
+    <!-- Bottom layer -->
+    <path d="M12 22 L2 16 L12 12 L22 16 Z" fill="#4f46e5"/>
+    <!-- Middle layer -->
+    <path d="M12 18 L2 12 L12 8 L22 12 Z" fill="#6366f1"/>
+    <!-- Top layer -->
+    <path d="M12 14 L2 8 L12 4 L22 8 Z" fill="#c4b5fd"/>
+  </g>
+  
+  <!-- Spark -->
+  <circle cx="16" cy="5" r="1.5" fill="#fff"/>
+</svg>

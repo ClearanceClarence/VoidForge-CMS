@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" width="180" height="40">
+  <defs>
+    <linearGradient id="altGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="50%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+    <linearGradient id="altIconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+  </defs>
+  <!-- Anvil icon -->
+  <g transform="translate(2, 4)">
+    <!-- Anvil base -->
+    <path d="M4 28L10 24L26 24L32 28L28 32L8 32Z" fill="#4f46e5" opacity="0.7"/>
+    <!-- Anvil body -->
+    <path d="M9 24L9 16C9 13 12 11 18 11C24 11 27 13 27 16L27 24Z" fill="url(#altIconGrad)"/>
+    <!-- Anvil horn -->
+    <path d="M27 17L35 15L35 19L27 21Z" fill="url(#altIconGrad)"/>
+    <!-- Sparks -->
+    <circle cx="18" cy="5" r="2" fill="#c4b5fd"/>
+    <circle cx="12" cy="3" r="1.2" fill="#a78bfa" opacity="0.8"/>
+    <circle cx="24" cy="2" r="1.5" fill="#818cf8" opacity="0.7"/>
+  </g>
+  <!-- VoidForge text -->
+  <text x="44" y="26" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="700" letter-spacing="-0.5">
+    <tspan fill="#1e293b">Void</tspan><tspan fill="url(#altGrad)">Forge</tspan>
+  </text>
+</svg>

@@ -2,7 +2,7 @@
 
 A modern, lightweight content management system built with pure PHP. No frameworks, no bloat — just powerful features and clean code.
 
-![Version](https://img.shields.io/badge/version-0.2.4.1-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.2.5-6366f1?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)
 
@@ -24,7 +24,7 @@ A modern, lightweight content management system built with pure PHP. No framewor
 
 ### Anvil Block Editor
 
-A powerful block-based content editor with 21 block types:
+A powerful block-based content editor with 21 block types, now available as a bundled plugin:
 
 - **Text**: Paragraph, Heading, List, Quote, Code, Table
 - **Media**: Image, Gallery, Video
@@ -32,6 +32,16 @@ A powerful block-based content editor with 21 block types:
 - **Content**: Testimonial, Icon Box, Social Links, HTML, Embed
 
 Features include drag-and-drop reordering, inline settings panel, undo/redo (50 levels), and media library integration.
+
+#### Block Style Variants
+Each block supports multiple style variants through the settings panel:
+- **Button**: Primary, Secondary, Outline, Ghost
+- **Alert**: Info, Success, Warning, Error
+- **Card**: Default, Bordered, Flat
+- **Testimonial**: Default, Bordered, Filled, Minimal
+- **Accordion**: Default, Bordered, Minimal
+- **Icon Box**: Default, Boxed, Bordered
+- **Social Links**: Default, Filled, Outline
 
 ### Anvil Live Editor
 
@@ -86,12 +96,18 @@ Frontend visual editing with real-time preview:
 voidforge/
 ├── admin/              # Admin panel pages and assets
 ├── includes/           # Core PHP classes
-│   ├── anvil/          # Block editor classes
-│   ├── anvil-live/     # Live editor assets
-│   └── *.php           # Core classes (Post, Media, User, etc.)
+│   └── *.php           # Core classes (Post, Media, User, Plugin, etc.)
 ├── themes/             # Theme files
 │   └── flavor/         # Default theme
 ├── plugins/            # Plugin files
+│   └── anvil/          # Bundled Anvil block editor plugin
+│       ├── includes/   # Block editor classes and 21 block types
+│       ├── assets/
+│       │   ├── css/
+│       │   │   ├── anvil-live.css      # Editor UI styles
+│       │   │   └── anvil-frontend.css  # Frontend block styles
+│       │   └── js/     # Editor JavaScript modules
+│       └── admin/      # Editor UI templates
 ├── uploads/            # Media uploads
 └── docs/               # HTML documentation
 ```

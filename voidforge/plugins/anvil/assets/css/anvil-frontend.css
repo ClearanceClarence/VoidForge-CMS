@@ -1,0 +1,658 @@
+/**
+ * Anvil Frontend Styles
+ * Clean, minimal design for all blocks
+ */
+
+/* Base */
+.anvil-block {
+    margin-bottom: 1.5em;
+}
+
+/* 1. Heading */
+.anvil-block-heading {
+    margin: 0 0 0.75em;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #111827;
+}
+
+/* 2. Paragraph */
+.anvil-block-paragraph {
+    margin: 0 0 1em;
+    line-height: 1.8;
+    color: #374151;
+}
+
+.anvil-block-paragraph.size-small { font-size: 0.875em; }
+.anvil-block-paragraph.size-large { font-size: 1.125em; }
+
+.anvil-block-paragraph.has-drop-cap::first-letter {
+    float: left;
+    font-size: 3.5em;
+    font-weight: 700;
+    line-height: 0.85;
+    margin: 0 0.1em 0 0;
+    color: #6366f1;
+}
+
+/* 3. Image */
+.anvil-block-image {
+    margin: 0 0 1.5em;
+}
+
+.anvil-block-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.anvil-block-image figcaption {
+    margin-top: 0.5em;
+    font-size: 0.875em;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* 4. Video */
+.anvil-block-video {
+    margin: 0 0 1.5em;
+}
+
+.anvil-video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.anvil-video-wrapper iframe,
+.anvil-video-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* 5. Button */
+.anvil-block-button {
+    margin-bottom: 1.5em;
+}
+
+.anvil-button {
+    display: inline-block;
+    padding: 12px 28px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.anvil-button-primary {
+    background: #6366f1;
+    color: #fff;
+}
+.anvil-button-primary:hover {
+    background: #4f46e5;
+}
+
+.anvil-button-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+.anvil-button-secondary:hover {
+    background: #e5e7eb;
+}
+
+.anvil-button-outline {
+    background: transparent;
+    color: #6366f1;
+    box-shadow: inset 0 0 0 2px #6366f1;
+}
+.anvil-button-outline:hover {
+    background: #6366f1;
+    color: #fff;
+}
+
+.anvil-button-ghost {
+    background: transparent;
+    color: #374151;
+}
+.anvil-button-ghost:hover {
+    background: #f3f4f6;
+}
+
+/* 6. List */
+.anvil-block-list {
+    margin: 0 0 1.5em;
+    padding-left: 1.25em;
+    line-height: 1.8;
+}
+
+.anvil-block-list li {
+    margin-bottom: 0.375em;
+}
+
+/* 7. Quote */
+.anvil-block-quote {
+    margin: 1.5em 0;
+    padding: 1.5em 2em;
+    background: #f9fafb;
+    border-left: 4px solid #6366f1;
+    border-radius: 0 8px 8px 0;
+}
+
+.anvil-block-quote p {
+    margin: 0;
+    font-size: 1.125em;
+    font-style: italic;
+    line-height: 1.7;
+    color: #374151;
+}
+
+.anvil-block-quote cite {
+    display: block;
+    margin-top: 1em;
+    font-size: 0.9375em;
+    font-style: normal;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+/* 8. Code */
+.anvil-block-code {
+    margin: 1.5em 0;
+    padding: 1.25em 1.5em;
+    background: #1e293b;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 0.875em;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+
+.anvil-block-code code {
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    color: inherit;
+}
+
+/* 9. Separator */
+.anvil-block-separator {
+    margin: 2em 0;
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+.anvil-block-separator.separator-wide { width: 100%; }
+.anvil-block-separator.separator-short { width: 80px; margin-left: auto; margin-right: auto; }
+.anvil-block-separator.separator-dotted { border-top-style: dotted; }
+.anvil-block-separator.separator-dashed { border-top-style: dashed; }
+
+/* 10. Spacer - height set inline */
+.anvil-block-spacer {
+    display: block;
+}
+
+/* 11. Columns */
+.anvil-block-columns {
+    display: grid;
+    gap: 2em;
+}
+
+.anvil-column > *:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .anvil-block-columns {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* 12. Card */
+.anvil-block-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.anvil-card-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.anvil-card-body {
+    padding: 1.5em;
+}
+
+.anvil-card-title {
+    margin: 0 0 0.5em;
+    font-size: 1.25em;
+    font-weight: 700;
+    color: #111827;
+}
+
+.anvil-card-content {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* 13. Alert */
+.anvil-block-alert {
+    display: flex;
+    gap: 1em;
+    padding: 1em 1.25em;
+    border-radius: 8px;
+    margin-bottom: 1.5em;
+}
+
+.anvil-alert-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.anvil-alert-body {
+    flex: 1;
+}
+
+.anvil-alert-title {
+    font-weight: 600;
+    margin-bottom: 0.25em;
+}
+
+.anvil-alert-content {
+    line-height: 1.5;
+}
+
+.anvil-alert--info {
+    background: #eff6ff;
+    color: #1e40af;
+}
+.anvil-alert--info .anvil-alert-icon { color: #3b82f6; }
+
+.anvil-alert--success {
+    background: #f0fdf4;
+    color: #166534;
+}
+.anvil-alert--success .anvil-alert-icon { color: #22c55e; }
+
+.anvil-alert--warning {
+    background: #fffbeb;
+    color: #92400e;
+}
+.anvil-alert--warning .anvil-alert-icon { color: #f59e0b; }
+
+.anvil-alert--error {
+    background: #fef2f2;
+    color: #991b1b;
+}
+.anvil-alert--error .anvil-alert-icon { color: #ef4444; }
+
+/* 14. Table */
+.anvil-block-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+}
+
+.anvil-block-table th,
+.anvil-block-table td {
+    padding: 0.75em 1em;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.anvil-block-table th {
+    font-weight: 600;
+    background: #f9fafb;
+}
+
+.anvil-table--striped tbody tr:nth-child(odd) {
+    background: #f9fafb;
+}
+
+.anvil-table--bordered th,
+.anvil-table--bordered td {
+    border: 1px solid #e5e7eb;
+}
+
+/* 15. Accordion */
+.anvil-block-accordion {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5em;
+}
+
+.anvil-accordion-item {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.anvil-accordion-item:last-child {
+    border-bottom: 0;
+}
+
+.anvil-accordion-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1em 1.25em;
+    background: #fff;
+    border: 0;
+    font-size: 1em;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    list-style: none;
+}
+
+.anvil-accordion-title::-webkit-details-marker {
+    display: none;
+}
+
+.anvil-accordion-title:hover {
+    background: #f9fafb;
+}
+
+.anvil-accordion-icon {
+    transition: transform 0.2s;
+}
+
+.anvil-accordion-item[open] .anvil-accordion-icon {
+    transform: rotate(180deg);
+}
+
+.anvil-accordion-content {
+    padding: 1em 1.25em;
+    background: #f9fafb;
+    line-height: 1.6;
+    color: #4b5563;
+}
+
+/* 16. Testimonial */
+.anvil-block-testimonial {
+    padding: 2em;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-bottom: 1.5em;
+}
+
+/* Testimonial Style Variants */
+.anvil-testimonial--default {
+    background: #f9fafb;
+}
+
+.anvil-testimonial--bordered {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+}
+
+.anvil-testimonial--filled {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+}
+
+.anvil-testimonial--filled .anvil-testimonial-quote,
+.anvil-testimonial--filled .anvil-testimonial-name {
+    color: #fff;
+}
+
+.anvil-testimonial--filled .anvil-testimonial-meta,
+.anvil-testimonial--filled .anvil-testimonial-quote-icon {
+    color: rgba(255,255,255,0.7);
+}
+
+.anvil-testimonial--minimal {
+    background: transparent;
+    padding: 0;
+}
+
+/* Stars */
+.anvil-testimonial-stars {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 1em;
+    color: #fbbf24;
+}
+
+.anvil-star {
+    width: 18px;
+    height: 18px;
+}
+
+.anvil-star--empty {
+    color: #e5e7eb;
+}
+
+/* Quote */
+.anvil-testimonial-quote {
+    margin: 0 0 1.5em;
+    font-size: 1.125em;
+    font-style: italic;
+    line-height: 1.7;
+    color: #374151;
+    border: none;
+    padding: 0;
+    background: none;
+}
+
+.anvil-testimonial-quote-icon {
+    color: #e5e7eb;
+    margin-bottom: 0.75em;
+    display: block;
+}
+
+/* Author */
+.anvil-testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.anvil-testimonial-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e5e7eb;
+    flex-shrink: 0;
+}
+
+.anvil-testimonial-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.anvil-testimonial-avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25em;
+    font-weight: 600;
+    color: #6b7280;
+    background: #e5e7eb;
+}
+
+.anvil-testimonial--filled .anvil-testimonial-avatar--placeholder {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+
+.anvil-testimonial-author-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.anvil-testimonial-name {
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    display: block;
+}
+
+.anvil-testimonial-meta {
+    font-size: 0.875em;
+    color: #6b7280;
+    margin: 0;
+    display: block;
+}
+
+/* 17. Gallery */
+.anvil-block-gallery {
+    display: grid;
+    margin-bottom: 1.5em;
+}
+
+.anvil-gallery-item {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.anvil-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 18. Icon Box */
+.anvil-block-iconbox {
+    padding: 1.5em;
+    margin-bottom: 1.5em;
+}
+
+.anvil-iconbox--align-center { text-align: center; }
+.anvil-iconbox--align-left { text-align: left; }
+.anvil-iconbox--align-right { text-align: right; }
+
+.anvil-iconbox-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1em;
+    background: #eef2ff;
+    border-radius: 12px;
+}
+
+.anvil-iconbox-title {
+    margin: 0 0 0.5em;
+    font-size: 1.125em;
+    font-weight: 700;
+    color: #111827;
+}
+
+.anvil-iconbox-content {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.anvil-iconbox--boxed {
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.anvil-iconbox--bordered {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+/* 19. Social Links */
+.anvil-block-sociallinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75em;
+    margin-bottom: 1.5em;
+}
+
+.anvil-sociallinks--align-center { justify-content: center; }
+.anvil-sociallinks--align-left { justify-content: flex-start; }
+.anvil-sociallinks--align-right { justify-content: flex-end; }
+
+.anvil-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.anvil-social-link:hover {
+    background: var(--social-color, #6366f1);
+    color: #fff;
+}
+
+.anvil-sociallinks--size-small .anvil-social-link { width: 32px; height: 32px; }
+.anvil-sociallinks--size-large .anvil-social-link { width: 48px; height: 48px; }
+
+.anvil-sociallinks--filled .anvil-social-link {
+    background: var(--social-color, #6366f1);
+    color: #fff;
+}
+
+.anvil-sociallinks--outline .anvil-social-link {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--social-color, #6366f1);
+    color: var(--social-color, #6366f1);
+}
+
+/* 20. Embed */
+.anvil-block-embed {
+    margin-bottom: 1.5em;
+}
+
+.anvil-embed-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.anvil-embed-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* 21. HTML */
+.anvil-block-html {
+    margin-bottom: 1.5em;
+}
+
+/* Alignment */
+.aligncenter { text-align: center; }
+.alignright { text-align: right; }
+.alignleft { text-align: left; }
+
+.anvil-block-image.alignleft { float: left; margin: 0 1.5em 1em 0; }
+.anvil-block-image.alignright { float: right; margin: 0 0 1em 1.5em; }
+
+/* Clearfix */
+.clearfix::after,
+.entry-content::after {
+    content: '';
+    display: table;
+    clear: both;
+}

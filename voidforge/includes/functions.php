@@ -1348,87 +1348,11 @@ function the_content(): string
     }
     
     // Apply Anvil Live page settings wrapper if this was Anvil content
-    if ($isAnvilContent && class_exists('AnvilLive') && !empty($post['id'])) {
+    if ($isAnvilContent && function_exists('anvil_wrap_content_with_page_settings') && !empty($post['id'])) {
         $content = anvil_wrap_content_with_page_settings($content, $post['id']);
     }
     
     return $content;
-}
-
-/**
- * Wrap content with Anvil Live page settings
- */
-function anvil_wrap_content_with_page_settings(string $content, int $postId): string
-{
-    $settings = AnvilLive::getPageSettings($postId);
-    
-    // Check contentWidthFull properly (can be bool, string, or int)
-    $isFull = $settings['contentWidthFull'] ?? false;
-    $isFullWidth = ($isFull === true || $isFull === 'true' || $isFull === '1' || $isFull === 1);
-    
-    // Check if we have any custom settings
-    $hasCustomSettings = $isFullWidth || 
-                         ($settings['contentWidth'] ?? '1200') !== '1200' ||
-                         ($settings['paddingTop'] ?? '0') !== '0' ||
-                         ($settings['paddingRight'] ?? '0') !== '0' ||
-                         ($settings['paddingBottom'] ?? '0') !== '0' ||
-                         ($settings['paddingLeft'] ?? '0') !== '0';
-    
-    if (!$hasCustomSettings) {
-        return $content;
-    }
-    
-    $styles = [];
-    $classes = ['anvil-content-wrapper'];
-    
-    // Content width
-    if ($isFullWidth) {
-        $classes[] = 'anvil-full-width';
-        // Full viewport width with breakout
-        $styles[] = 'width: 100vw';
-        $styles[] = 'position: relative';
-        $styles[] = 'left: 50%';
-        $styles[] = 'right: 50%';
-        $styles[] = 'margin-left: -50vw';
-        $styles[] = 'margin-right: -50vw';
-    } else {
-        $width = $settings['contentWidth'] ?? '1200';
-        $unit = $settings['contentWidthUnit'] ?? 'px';
-        $styles[] = 'max-width: ' . esc($width) . esc($unit);
-        $styles[] = 'width: 100%';
-        
-        // Margin for non-full-width
-        $mUnit = $settings['marginUnit'] ?? 'px';
-        $mTop = $settings['marginTop'] ?? '0';
-        $mRight = $settings['marginRight'] ?? 'auto';
-        $mBottom = $settings['marginBottom'] ?? '0';
-        $mLeft = $settings['marginLeft'] ?? 'auto';
-        
-        $mTopVal = $mTop === 'auto' ? 'auto' : esc($mTop) . esc($mUnit);
-        $mRightVal = $mRight === 'auto' ? 'auto' : esc($mRight) . esc($mUnit);
-        $mBottomVal = $mBottom === 'auto' ? 'auto' : esc($mBottom) . esc($mUnit);
-        $mLeftVal = $mLeft === 'auto' ? 'auto' : esc($mLeft) . esc($mUnit);
-        
-        $styles[] = 'margin: ' . $mTopVal . ' ' . $mRightVal . ' ' . $mBottomVal . ' ' . $mLeftVal;
-    }
-    
-    // Padding (applies to both full and non-full width)
-    $pUnit = $settings['paddingUnit'] ?? 'px';
-    $pTop = $settings['paddingTop'] ?? '0';
-    $pRight = $settings['paddingRight'] ?? '0';
-    $pBottom = $settings['paddingBottom'] ?? '0';
-    $pLeft = $settings['paddingLeft'] ?? '0';
-    
-    if ($pTop !== '0' || $pRight !== '0' || $pBottom !== '0' || $pLeft !== '0') {
-        $styles[] = 'padding: ' . esc($pTop) . esc($pUnit) . ' ' . esc($pRight) . esc($pUnit) . ' ' . esc($pBottom) . esc($pUnit) . ' ' . esc($pLeft) . esc($pUnit);
-    }
-    
-    $styles[] = 'box-sizing: border-box';
-    
-    $classAttr = implode(' ', $classes);
-    $styleAttr = implode('; ', $styles);
-    
-    return '<div class="' . $classAttr . '" style="' . $styleAttr . '">' . $content . '</div>';
 }
 
 /**
@@ -2044,67 +1968,5 @@ function init_admin_bar(): void
             echo render_admin_bar();
             echo render_admin_bar_scripts();
         }, 1);
-    }
-}
-
-// ============================================================================
-// Anvil Live Helper Functions
-// ============================================================================
-
-/**
- * Get the Anvil Live edit URL for a post
- */
-function get_anvil_live_edit_url($post): string
-{
-    if (!class_exists('AnvilLive')) {
-        return '';
-    }
-    
-    if (is_int($post)) {
-        $post = Post::find($post);
-    }
-    
-    if (!$post) {
-        return '';
-    }
-    
-    return AnvilLive::getEditUrl($post);
-}
-
-/**
- * Check if currently in Anvil Live editor mode
- */
-function is_anvil_live_editing(): bool
-{
-    return class_exists('AnvilLive') && AnvilLive::isEditorMode();
-}
-
-/**
- * Output the backend "Edit with Anvil Live" button
- */
-function anvil_live_backend_button($post): string
-{
-    if (!class_exists('AnvilLive')) {
-        return '';
-    }
-    
-    if (is_int($post)) {
-        $post = Post::find($post);
-    }
-    
-    if (!$post) {
-        return '';
-    }
-    
-    return AnvilLive::renderBackendButton($post);
-}
-
-/**
- * Output the frontend edit bar manually
- */
-function anvil_live_edit_bar(): void
-{
-    if (class_exists('AnvilLive')) {
-        AnvilLive::maybeRenderEditBar();
     }
 }

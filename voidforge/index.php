@@ -38,8 +38,6 @@ require_once CMS_ROOT . '/includes/theme.php';
 require_once CMS_ROOT . '/includes/menu.php';
 require_once CMS_ROOT . '/includes/comment.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
-require_once CMS_ROOT . '/includes/anvil.php';
-require_once CMS_ROOT . '/includes/anvil-live.php';
 require_once CMS_ROOT . '/includes/rest-api.php';
 
 // Initialize
@@ -48,8 +46,6 @@ Plugin::init();
 Theme::init();
 Menu::init();
 Taxonomy::init();
-Anvil::init();
-AnvilLive::init();
 RestAPI::init();
 
 // Load active theme functions
@@ -196,6 +192,30 @@ if (!is_array($customPostTypes)) {
     $customPostTypes = [];
 }
 
+// Helper function to check if a post can be viewed (including drafts for Anvil editing)
+function canViewPost($post) {
+    if (!$post) return false;
+    
+    // Published posts can always be viewed
+    if ($post['status'] === 'published') {
+        return true;
+    }
+    
+    // For non-published posts, check if in Anvil edit mode with proper permissions
+    if (isset($_GET['anvil-live']) && $_GET['anvil-live'] === 'edit') {
+        $user = User::current();
+        if ($user && in_array($user['role'], ['admin', 'editor', 'author'])) {
+            // Authors can only edit their own posts
+            if ($user['role'] === 'author' && ($post['author_id'] ?? 0) !== $user['id']) {
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 // Helper to include theme template
 function loadTemplate(string $template, array $data = []): void
 {
@@ -290,7 +310,7 @@ if (!empty($_GET['s'])) {
     $slug = $matches[1];
     $post = Post::findBySlug($slug, 'post');
     
-    if ($post && $post['status'] === 'published') {
+    if (canViewPost($post)) {
         loadTemplate('single', ['post' => $post]);
     } else {
         http_response_code(404);
@@ -306,7 +326,7 @@ if (!empty($_GET['s'])) {
         // Custom post type single
         $post = Post::findBySlug($slug, $postType);
         
-        if ($post && $post['status'] === 'published') {
+        if (canViewPost($post)) {
             // Try post-type specific template first
             if (Theme::hasTemplate('single-' . $postType)) {
                 loadTemplate('single-' . $postType, ['post' => $post, 'postType' => $postType]);
@@ -321,7 +341,7 @@ if (!empty($_GET['s'])) {
         // Not a custom post type, try as nested page slug
         $post = Post::findBySlug($path, 'page');
         
-        if ($post && $post['status'] === 'published') {
+        if (canViewPost($post)) {
             loadTemplate('page', ['post' => $post]);
         } else {
             http_response_code(404);
@@ -333,19 +353,19 @@ if (!empty($_GET['s'])) {
     // Try to find a post with this slug first (for simple URLs)
     $post = Post::findBySlug($path, 'post');
     
-    if ($post && $post['status'] === 'published') {
+    if (canViewPost($post)) {
         loadTemplate('single', ['post' => $post]);
     } else {
         // Try as a page
         $post = Post::findBySlug($path, 'page');
         
-        if ($post && $post['status'] === 'published') {
+        if (canViewPost($post)) {
             loadTemplate('page', ['post' => $post]);
         } else {
             // Check custom post types with direct slug access
             foreach ($customPostTypes as $type => $config) {
                 $post = Post::findBySlug($path, $type);
-                if ($post && $post['status'] === 'published') {
+                if (canViewPost($post)) {
                     if (Theme::hasTemplate('single-' . $type)) {
                         loadTemplate('single-' . $type, ['post' => $post, 'postType' => $type]);
                     } else {

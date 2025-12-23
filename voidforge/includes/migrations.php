@@ -92,12 +92,25 @@ try {
         CREATE TABLE IF NOT EXISTS {$foldersTable} (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
+            parent_id INT UNSIGNED DEFAULT NULL,
             created_at DATETIME NOT NULL,
-            INDEX idx_name (name)
+            INDEX idx_name (name),
+            INDEX idx_parent_id (parent_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 } catch (Exception $e) {
     // Table might already exist
+}
+
+// Add parent_id column to media_folders if it doesn't exist
+try {
+    $columns = Database::query("SHOW COLUMNS FROM {$foldersTable} LIKE 'parent_id'");
+    if (empty($columns)) {
+        Database::execute("ALTER TABLE {$foldersTable} ADD COLUMN parent_id INT UNSIGNED DEFAULT NULL AFTER name");
+        Database::execute("ALTER TABLE {$foldersTable} ADD INDEX idx_parent_id (parent_id)");
+    }
+} catch (Exception $e) {
+    // Column might already exist
 }
 
 // Add folder_id column to media table if it doesn't exist
@@ -307,3 +320,31 @@ if (getOption('comment_post_types') === null) {
 if (getOption('comment_max_depth') === null) {
     setOption('comment_max_depth', '3');
 }
+
+// v0.2.5: Migrate to Anvil plugin
+// Remove hello-world and add anvil as an active plugin
+try {
+    $activePlugins = getOption('active_plugins', []);
+    if (!is_array($activePlugins)) {
+        $activePlugins = [];
+    }
+    
+    // Remove hello-world if present
+    $activePlugins = array_filter($activePlugins, function($p) {
+        return $p !== 'hello-world';
+    });
+    
+    // Add anvil plugin if not already present
+    if (!in_array('anvil', $activePlugins)) {
+        $activePlugins[] = 'anvil';
+    }
+    
+    // Re-index array and save
+    setOption('active_plugins', array_values($activePlugins));
+} catch (Exception $e) {
+    // Ignore errors - plugin will need to be activated manually
+}
+
+// Update version in options
+setOption('cms_version', '0.2.5');
+setOption('last_update', date('Y-m-d H:i:s'));

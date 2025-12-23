@@ -7,6 +7,14 @@
     <meta name="description" content="<?php echo esc(get_site_description()); ?>">
     <?php the_favicon(); ?>
     <link rel="stylesheet" href="<?php echo Theme::getUrl(); ?>/style.css">
+    <?php 
+    // Load Anvil frontend CSS if plugin is active
+    if (defined('ANVIL_URL')) {
+        echo '<link rel="stylesheet" href="' . ANVIL_URL . '/assets/css/anvil-frontend.css">' . "\n";
+    } elseif (file_exists(CMS_ROOT . '/plugins/anvil/assets/css/anvil-frontend.css')) {
+        echo '<link rel="stylesheet" href="' . SITE_URL . '/plugins/anvil/assets/css/anvil-frontend.css">' . "\n";
+    }
+    ?>
     <?php vf_head(); ?>
 </head>
 <body class="<?php echo body_class(); ?>">
@@ -107,19 +115,34 @@
             
             <!-- Search Overlay -->
             <div class="search-overlay" id="search-overlay">
-                <div class="search-overlay-inner">
-                    <form class="search-form" action="<?php echo site_url(); ?>" method="get">
-                        <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="M21 21l-4.35-4.35"/>
-                        </svg>
-                        <input type="search" name="s" placeholder="Search..." class="search-input" autocomplete="off">
+                <div class="search-overlay-backdrop"></div>
+                <div class="search-modal">
+                    <div class="search-modal-header">
+                        <h3>Search</h3>
                         <button type="button" class="search-close" id="search-close" aria-label="Close search">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M18 6L6 18M6 6l12 12"/>
                             </svg>
                         </button>
+                    </div>
+                    <form class="search-form" action="<?php echo site_url(); ?>" method="get">
+                        <div class="search-input-wrapper">
+                            <svg class="search-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            <input type="search" name="s" placeholder="Type to search..." class="search-input" autocomplete="off" id="search-input">
+                            <kbd class="search-kbd">ESC</kbd>
+                        </div>
                     </form>
+                    <div class="search-hints">
+                        <span class="search-hint">
+                            <kbd>↵</kbd> to search
+                        </span>
+                        <span class="search-hint">
+                            <kbd>ESC</kbd> to close
+                        </span>
+                    </div>
                 </div>
             </div>
             
@@ -157,7 +180,7 @@
     const searchToggle = document.getElementById('search-toggle');
     const searchOverlay = document.getElementById('search-overlay');
     const searchClose = document.getElementById('search-close');
-    const searchInput = searchOverlay ? searchOverlay.querySelector('.search-input') : null;
+    const searchInput = document.getElementById('search-input');
     
     // Scroll effect
     let lastScroll = 0;
@@ -183,29 +206,53 @@
     }
     
     // Search overlay
-    if (searchToggle && searchOverlay) {
-        searchToggle.addEventListener('click', function() {
+    function openSearch() {
+        if (searchOverlay) {
             searchOverlay.classList.add('active');
-            if (searchInput) searchInput.focus();
-        });
-        
-        if (searchClose) {
-            searchClose.addEventListener('click', function() {
-                searchOverlay.classList.remove('active');
-            });
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                if (searchInput) searchInput.focus();
+            }, 100);
         }
-        
-        // Close on escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && searchOverlay.classList.contains('active')) {
-                searchOverlay.classList.remove('active');
+    }
+    
+    function closeSearch() {
+        if (searchOverlay) {
+            searchOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            if (searchInput) searchInput.value = '';
+        }
+    }
+    
+    if (searchToggle) {
+        searchToggle.addEventListener('click', openSearch);
+    }
+    
+    if (searchClose) {
+        searchClose.addEventListener('click', closeSearch);
+    }
+    
+    // Close on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('active')) {
+            closeSearch();
+        }
+        // Ctrl/Cmd + K to open search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (searchOverlay && searchOverlay.classList.contains('active')) {
+                closeSearch();
+            } else {
+                openSearch();
             }
-        });
-        
-        // Close on overlay click
+        }
+    });
+    
+    // Close on backdrop click
+    if (searchOverlay) {
         searchOverlay.addEventListener('click', function(e) {
-            if (e.target === searchOverlay) {
-                searchOverlay.classList.remove('active');
+            if (e.target.classList.contains('search-overlay-backdrop')) {
+                closeSearch();
             }
         });
     }

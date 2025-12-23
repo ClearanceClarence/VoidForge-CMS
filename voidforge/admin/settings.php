@@ -18,6 +18,35 @@ Post::init();
 User::startSession();
 User::requireRole('admin');
 
+// AJAX: Save single option
+if (isset($_GET['action']) && $_GET['action'] === 'save_option' && isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $csrfToken = $_POST['csrf_token'] ?? '';
+        if (!verifyCsrf($csrfToken)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid token']);
+            exit;
+        }
+        
+        $optionName = $_POST['option_name'] ?? '';
+        $optionValue = $_POST['option_value'] ?? '';
+        
+        // Whitelist of options that can be saved via AJAX
+        $allowedOptions = ['dashboard_media_columns'];
+        
+        if (in_array($optionName, $allowedOptions)) {
+            setOption($optionName, $optionValue);
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Option not allowed']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Invalid method']);
+    }
+    exit;
+}
+
 $currentPage = 'settings';
 $pageTitle = 'Settings';
 

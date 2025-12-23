@@ -477,7 +477,7 @@ class Media
     /**
      * Create folder
      */
-    public static function createFolder(string $name): array
+    public static function createFolder(string $name, ?int $parentId = null): array
     {
         $name = trim($name);
         if (empty($name)) {
@@ -485,19 +485,34 @@ class Media
         }
 
         $table = Database::table('media_folders');
-        $existing = Database::queryOne(
-            "SELECT id FROM {$table} WHERE name = ?",
-            [$name]
-        );
+        
+        // Check for duplicate name within same parent
+        if ($parentId) {
+            $existing = Database::queryOne(
+                "SELECT id FROM {$table} WHERE name = ? AND parent_id = ?",
+                [$name, $parentId]
+            );
+        } else {
+            $existing = Database::queryOne(
+                "SELECT id FROM {$table} WHERE name = ? AND (parent_id IS NULL OR parent_id = 0)",
+                [$name]
+            );
+        }
 
         if ($existing) {
             return ['success' => false, 'error' => 'A folder with this name already exists'];
         }
 
-        $id = Database::insert(Database::table('media_folders'), [
+        $data = [
             'name' => $name,
             'created_at' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+        
+        if ($parentId) {
+            $data['parent_id'] = $parentId;
+        }
+
+        $id = Database::insert(Database::table('media_folders'), $data);
 
         return ['success' => true, 'id' => $id];
     }
@@ -507,15 +522,85 @@ class Media
      */
     public static function deleteFolder(int $id): array
     {
-        // Move all media in folder to root
+        $table = Database::table('media_folders');
         $mediaTable = Database::table('media');
+        
+        // Move all media in folder to parent or root
+        $folder = Database::queryOne("SELECT parent_id FROM {$table} WHERE id = ?", [$id]);
+        $newParent = $folder ? ($folder['parent_id'] ?: null) : null;
+        
         Database::execute(
-            "UPDATE {$mediaTable} SET folder_id = NULL WHERE folder_id = ?",
-            [$id]
+            "UPDATE {$mediaTable} SET folder_id = ? WHERE folder_id = ?",
+            [$newParent, $id]
+        );
+        
+        // Move subfolders to parent
+        Database::execute(
+            "UPDATE {$table} SET parent_id = ? WHERE parent_id = ?",
+            [$newParent, $id]
         );
 
-        Database::delete(Database::table('media_folders'), 'id = ?', [$id]);
+        Database::delete($table, 'id = ?', [$id]);
         return ['success' => true];
+    }
+    
+    /**
+     * Move media to folder
+     */
+    public static function moveToFolder(int $mediaId, ?int $folderId): array
+    {
+        $mediaTable = Database::table('media');
+        
+        try {
+            Database::execute(
+                "UPDATE {$mediaTable} SET folder_id = ? WHERE id = ?",
+                [$folderId, $mediaId]
+            );
+            return ['success' => true];
+        } catch (Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Get folders as tree structure
+     */
+    public static function getFolderTree(?int $parentId = null): array
+    {
+        $table = Database::table('media_folders');
+        $mediaTable = Database::table('media');
+        
+        try {
+            if ($parentId === null) {
+                $folders = Database::query(
+                    "SELECT f.*, (SELECT COUNT(*) FROM {$mediaTable} WHERE folder_id = f.id) as count 
+                     FROM {$table} f 
+                     WHERE f.parent_id IS NULL OR f.parent_id = 0 
+                     ORDER BY f.name"
+                );
+            } else {
+                $folders = Database::query(
+                    "SELECT f.*, (SELECT COUNT(*) FROM {$mediaTable} WHERE folder_id = f.id) as count 
+                     FROM {$table} f 
+                     WHERE f.parent_id = ? 
+                     ORDER BY f.name",
+                    [$parentId]
+                );
+            }
+            
+            if (!is_array($folders)) {
+                return [];
+            }
+            
+            // Recursively get children
+            foreach ($folders as &$folder) {
+                $folder['children'] = self::getFolderTree((int)$folder['id']);
+            }
+            
+            return $folders;
+        } catch (Throwable $e) {
+            return [];
+        }
     }
 
     /**

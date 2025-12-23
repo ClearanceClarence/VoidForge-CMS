@@ -32,7 +32,7 @@ class Anvil
         }
         
         // Load the base block class
-        require_once CMS_ROOT . '/includes/anvil/AnvilBlock.php';
+        require_once ANVIL_PATH . '/includes/AnvilBlock.php';
         
         // Register default categories
         self::registerDefaultCategories();
@@ -83,7 +83,7 @@ class Anvil
      */
     private static function loadDefaultBlocks(): void
     {
-        $blocksDir = CMS_ROOT . '/includes/anvil/blocks';
+        $blocksDir = ANVIL_PATH . '/includes/blocks';
         
         if (!is_dir($blocksDir)) {
             return;
@@ -264,6 +264,11 @@ class Anvil
      */
     public static function renderBlocks(array $blocks): string
     {
+        // Ensure blocks are initialized
+        if (!self::$initialized) {
+            self::init();
+        }
+        
         $html = '';
         
         foreach ($blocks as $block) {

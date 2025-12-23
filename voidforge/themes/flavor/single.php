@@ -15,7 +15,7 @@ $thumbnail = Post::featuredImage($post);
 
 // Comments
 $commentsEnabled = Comment::areOpen($post);
-$comments = $commentsEnabled ? Comment::getByPost($post['id']) : [];
+$comments = $commentsEnabled ? Comment::getForPost($post['id']) : [];
 $commentCount = count($comments);
 ?>
 
@@ -124,11 +124,11 @@ $commentCount = count($comments);
             </div>
             
             <form class="comment-form" method="post" action="<?php echo site_url('/comments/submit'); ?>">
-                <input type="hidden" name="csrf_token" value="<?php echo getCsrfToken(); ?>">
+                <input type="hidden" name="csrf_token" value="<?php echo csrfToken(); ?>">
                 <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
                 <input type="hidden" name="parent_id" id="comment-parent-id" value="0">
                 
-                <?php if (!is_logged_in()): ?>
+                <?php if (!User::isLoggedIn()): ?>
                 <div class="form-grid">
                     <div class="form-row">
                         <label for="comment-name">Name *</label>

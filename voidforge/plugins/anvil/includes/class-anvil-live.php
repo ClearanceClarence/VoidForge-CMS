@@ -153,7 +153,7 @@ class AnvilLive
             return;
         }
         
-        $baseUrl = SITE_URL . '/includes/anvil-live/assets';
+        $baseUrl = ANVIL_URL . '/assets';
         
         // Output editor styles
         echo '<link rel="stylesheet" href="' . esc($baseUrl) . '/css/anvil-live.css?v=' . self::VERSION . '">' . "\n";
@@ -424,10 +424,10 @@ class AnvilLive
         }
         
         // Include the editor UI template
-        include CMS_ROOT . '/includes/anvil-live/editor-ui.php';
+        include ANVIL_PATH . '/admin/editor-ui.php';
         
         // Load editor JavaScript
-        $baseUrl = SITE_URL . '/includes/anvil-live/assets';
+        $baseUrl = ANVIL_URL . '/assets';
         echo '<script src="' . esc($baseUrl) . '/js/anvil-live.js?v=' . self::VERSION . '"></script>' . "\n";
     }
     

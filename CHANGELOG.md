@@ -7,6 +7,152 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2025-12-23
+
+### 🔌 Anvil Block Editor Plugin
+
+The Anvil block editor and Anvil Live frontend editor have been moved from core to a bundled plugin. This architectural change improves maintainability, reduces core footprint, and allows the block editor to be updated independently.
+
+---
+
+### ✨ New Plugin Architecture
+
+#### Anvil Plugin (`/plugins/anvil/`)
+- **Self-contained plugin** — All Anvil functionality is now modular
+- **21 block types** — Paragraph, Heading, List, Quote, Code, Table, Image, Gallery, Video, Columns, Spacer, Separator, Button, Accordion, Alert, Card, Testimonial, Icon Box, Social Links, HTML, Embed
+- **Frontend visual editor** — Anvil Live for drag-and-drop editing on the live site
+- **Plugin constants** — `ANVIL_PATH` and `ANVIL_URL` for easy path resolution
+- **Template helper functions** — `get_anvil_live_edit_url()`, `is_anvil_live_editing()`, `anvil_live_backend_button()`, `anvil_live_edit_bar()`, `anvil_wrap_content_with_page_settings()`
+
+#### Plugin File Structure
+```
+plugins/anvil/
+├── anvil.php              # Main plugin file with hooks
+├── includes/
+│   ├── class-anvil.php    # Block editor class
+│   ├── class-anvil-live.php # Frontend editor class
+│   ├── AnvilBlock.php     # Base block class
+│   └── blocks/            # 21 block type classes
+├── assets/
+│   ├── css/
+│   │   ├── anvil-live.css     # Editor UI styles
+│   │   └── anvil-frontend.css # Frontend block styles (NEW)
+│   └── js/                # Editor JavaScript + modules
+└── admin/
+    └── editor-ui.php      # Editor UI template
+```
+
+---
+
+### 🎨 Frontend Block Styles
+
+**New comprehensive CSS file** (`anvil-frontend.css`) for styling all 21 block types on the frontend.
+
+#### All 21 Blocks Styled
+- **Paragraph** — Line height, size variants (small/large), drop cap support
+- **Heading** — Font weights, margin, heading levels h1-h6
+- **Image** — Border radius, captions, alignment (left/center/right float)
+- **Video** — Responsive 16:9 wrapper, captions
+- **Button** — 4 styles (primary, secondary, outline, ghost) with hover states
+- **List** — Ordered/unordered, custom marker colors
+- **Quote** — Left border accent, citation styling, background
+- **Code** — Dark theme, monospace font, syntax colors
+- **Separator** — Solid/dotted/dashed, width variants
+- **Spacer** — Height controlled via inline style
+- **Columns** — CSS Grid with gap, responsive stacking
+- **Card** — Shadow, hover lift, image cover, style variants (bordered/flat)
+- **Alert** — 4 types (info/success/warning/error) with icons and colors
+- **Table** — Header styling, striped/bordered variants
+- **Accordion** — HTML5 `<details>/<summary>`, open state icon rotation, style variants
+- **Testimonial** — 4 styles (default/bordered/filled/minimal), star ratings, avatar placeholder
+- **Gallery** — Grid layout, hover zoom, responsive columns
+- **Icon Box** — Icon background, alignment, style variants (boxed/bordered)
+- **Social Links** — Circular icons, size/style variants, brand color on hover
+- **Embed** — Responsive iframe wrapper
+- **HTML** — Clean container styling
+
+#### CSS Loading
+- **Theme integration** — CSS loaded via `header.php` before content renders
+- **Automatic detection** — Checks `ANVIL_URL` constant, falls back to file path
+- **No hook dependency** — Removed unreliable `vf_head` hook approach
+
+---
+
+### 🔧 Bug Fixes
+
+#### Frontend CSS Not Loading
+- **Problem**: Anvil blocks rendered unstyled on frontend pages
+- **Cause**: `vf_head` hook timing issues prevented CSS from loading
+- **Solution**: Direct CSS loading in theme `header.php` with plugin detection
+
+#### Testimonial Block Styles
+- **Problem**: Style dropdown (default/bordered/filled/minimal) had no effect
+- **Solution**: Added all 4 style variant CSS rules:
+  - `.anvil-testimonial--default` — Light gray background
+  - `.anvil-testimonial--bordered` — White with border
+  - `.anvil-testimonial--filled` — Purple gradient with white text
+  - `.anvil-testimonial--minimal` — Transparent, no padding
+
+#### Accordion HTML5 Support
+- Fixed styles for native `<details>/<summary>` elements
+- Added `::-webkit-details-marker { display: none }` to hide default arrow
+- Icon rotation on `[open]` attribute instead of `.active` class
+
+#### Missing CSS Classes
+- Added `.anvil-testimonial-meta` for role/company text
+- Added `.anvil-testimonial-avatar--placeholder` for initials display
+- Added `.anvil-star` and `.anvil-star--empty` for ratings
+- Added alignment classes (`.aligncenter`, `.alignleft`, `.alignright`)
+
+---
+
+### 🗑️ Removed
+
+- **hello-world plugin** — Removed the example plugin from bundled plugins
+- **Core Anvil files** — Moved from `/includes/anvil/` and `/includes/anvil-live/` to plugin
+
+---
+
+### 🔧 Core Changes
+
+#### Graceful Degradation
+- Core now checks `class_exists('Anvil')` before using block editor features
+- Core now checks `class_exists('AnvilLive')` before using frontend editor features
+- Content displays as raw text if Anvil plugin is deactivated
+- Admin post editor hides Anvil CTA when plugin is inactive
+
+#### Migration
+- Automatic migration adds `anvil` to active plugins on update
+- Automatic migration removes `hello-world` from active plugins
+
+---
+
+### 📁 Files Modified
+
+```
+includes/
+├── config.php         # Version updated to 0.2.5
+├── functions.php      # Removed Anvil helper functions (now in plugin)
+├── migrations.php     # Added v0.2.5 migration for plugin activation
+└── (removed anvil.php, anvil-live.php, anvil/, anvil-live/)
+
+admin/
+└── post-edit.php      # Made Anvil features conditional
+
+index.php              # Removed Anvil requires and initialization
+
+themes/flavor/
+└── header.php         # Added Anvil CSS loading with plugin detection
+
+plugins/
+├── (removed hello-world/)
+└── anvil/
+    └── assets/css/
+        └── anvil-frontend.css  # NEW: Complete frontend block styles
+```
+
+---
+
 ## [0.2.4.1] - 2025-12-21
 
 ### 🎨 Flavor Theme Redesign
@@ -2442,6 +2588,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.2.5 | 2025-12-23 | Anvil plugin architecture, frontend block CSS for all 21 blocks, testimonial style variants, accordion HTML5 fixes, CSS loading via theme |
 | 0.2.4.1 | 2025-12-21 | Frontend admin bar, site identity settings, Flavor theme redesign (home, header, footer, 404), code showcase, comparison table |
 | 0.2.4 | 2025-12-20 | Anvil Live enhancements |
 | 0.2.3.1 | 2025-12-19 | Orphaned comments cleanup, frontend comments redesign, styled error pages, installer step redesign, dashboard theme colors |
