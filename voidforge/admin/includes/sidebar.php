@@ -281,6 +281,14 @@ $postTypes = Post::getTypes();
                 endforeach; 
                 ?>
 
+                <a href="<?= ADMIN_URL ?>/seo-settings.php" class="nav-item <?= $currentPage === 'seo-settings' ? 'active' : '' ?>">
+                    <div class="nav-icon">
+                        <?= getAdminMenuIcon('search') ?>
+                    </div>
+                    <span class="nav-label">SEO</span>
+                    <?php if ($currentPage === 'seo-settings'): ?><div class="nav-indicator"></div><?php endif; ?>
+                </a>
+
                 <a href="<?= ADMIN_URL ?>/settings.php" class="nav-item <?= $currentPage === 'settings' ? 'active' : '' ?>">
                     <div class="nav-icon">
                         <?= getAdminMenuIcon('settings') ?>

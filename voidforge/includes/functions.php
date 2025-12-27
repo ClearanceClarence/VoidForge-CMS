@@ -1264,6 +1264,13 @@ function get_page_title(): string
 {
     global $post;
     
+    // Use SEO class if available
+    if (class_exists('SEO')) {
+        $pageType = (isset($post) && !empty($post['id'])) ? 'single' : 'home';
+        return SEO::generateTitle($post, $pageType);
+    }
+    
+    // Fallback if SEO class not loaded
     $siteName = get_site_name();
     $separator = ' — ';
     

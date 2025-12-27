@@ -345,6 +345,32 @@ try {
     // Ignore errors - plugin will need to be activated manually
 }
 
+// v0.3.0: Initialize SEO default settings
+if (getOption('seo_title_separator') === null) {
+    setOption('seo_title_separator', '|');
+}
+if (getOption('seo_title_format') === null) {
+    setOption('seo_title_format', 'post_first');
+}
+if (getOption('seo_sitemap_enabled') === null) {
+    setOption('seo_sitemap_enabled', true);
+}
+if (getOption('seo_sitemap_post_types') === null) {
+    setOption('seo_sitemap_post_types', ['post', 'page']);
+}
+if (getOption('seo_sitemap_taxonomies') === null) {
+    setOption('seo_sitemap_taxonomies', true);
+}
+if (getOption('seo_twitter_card_type') === null) {
+    setOption('seo_twitter_card_type', 'summary_large_image');
+}
+if (getOption('seo_schema_org_type') === null) {
+    setOption('seo_schema_org_type', 'Organization');
+}
+if (getOption('seo_locale') === null) {
+    setOption('seo_locale', 'en_US');
+}
+
 // Update version in options
-setOption('cms_version', '0.2.5');
+setOption('cms_version', '0.3.0');
 setOption('last_update', date('Y-m-d H:i:s'));

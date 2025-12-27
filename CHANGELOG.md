@@ -7,6 +7,139 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2025-12-27
+
+### 🔍 SEO Tools
+
+Comprehensive SEO system for optimizing your content for search engines and social media.
+
+---
+
+### ✨ New Features
+
+#### SEO Class (`/includes/seo.php`)
+- **Complete SEO management** — New `SEO` class handles all SEO functionality
+- **Meta tag generation** — Automatic meta description, keywords, and robots tags
+- **Open Graph support** — Full Facebook/social sharing optimization
+- **Twitter Cards** — Summary and large image card types
+- **JSON-LD Schema** — Structured data for rich search results
+- **XML Sitemap** — Automatic sitemap generation at `/sitemap.xml`
+- **Robots.txt** — Customizable robots.txt at `/robots.txt`
+- **SEO Analysis** — Real-time content scoring with actionable suggestions
+
+#### Post Editor SEO Meta Box
+- **Google Preview** — Live preview of search result appearance
+- **Focus Keyword** — Target keyword tracking and analysis
+- **SEO Title** — Custom title with character counter (60 char limit)
+- **Meta Description** — Custom description with character counter (160 char limit)
+- **Canonical URL** — Override canonical URLs when needed
+- **Robots Control** — Per-page index/noindex and follow/nofollow
+- **Open Graph Override** — Custom OG title, description, and image
+- **Twitter Override** — Custom Twitter card content
+- **SEO Score** — Visual score indicator (0-100) with color coding
+
+#### SEO Settings Page (`/admin/seo-settings.php`)
+- **General Tab** — Title separator, format, homepage SEO, search visibility
+- **Social Media Tab** — Default OG image, Twitter card type, site username
+- **Schema Tab** — Organization/Person type, name, logo for JSON-LD
+- **Sitemap Tab** — Enable/disable, post type selection, taxonomy inclusion
+- **Robots.txt Tab** — Custom robots.txt editor with preview
+
+---
+
+### 🔧 Technical Details
+
+#### SEO Meta Storage
+Uses existing `postmeta` table with prefixed keys:
+- `_seo_title` — Custom page title
+- `_seo_description` — Meta description
+- `_seo_keywords` — Meta keywords
+- `_seo_canonical` — Canonical URL override
+- `_seo_robots_index` — Index/noindex setting
+- `_seo_robots_follow` — Follow/nofollow setting
+- `_seo_og_title` — Open Graph title
+- `_seo_og_description` — Open Graph description
+- `_seo_og_image` — Open Graph image ID
+- `_seo_focus_keyword` — Target keyword for analysis
+
+#### Global SEO Options
+- `seo_title_separator` — Character between title and site name
+- `seo_title_format` — Post Title | Site Name or Site Name | Post Title
+- `seo_home_title` — Custom homepage title
+- `seo_home_description` — Homepage meta description
+- `seo_og_default_image` — Default image for social sharing
+- `seo_twitter_card_type` — Summary or summary_large_image
+- `seo_twitter_site` — Twitter @username
+- `seo_schema_org_type` — Organization, Person, LocalBusiness
+- `seo_sitemap_enabled` — Enable/disable XML sitemap
+- `seo_sitemap_post_types` — Post types to include in sitemap
+- `seo_robots_txt` — Custom robots.txt content
+
+#### JSON-LD Schema Types
+- **WebSite** — Site-wide with SearchAction
+- **Organization/Person** — Based on schema settings
+- **Article** — For blog posts with author, dates, publisher
+- **BreadcrumbList** — Navigation path for all content
+
+#### SEO Debug Tools
+- **Debug Panel** — Add `?seo_debug=1` to any frontend URL to see SEO data overlay (admin only)
+- **SEO Test Page** — `/admin/seo-test.php` for comprehensive SEO analysis of any page
+
+---
+
+### 📁 New Files
+
+```
+includes/
+└── seo.php                    # Core SEO class (800+ lines)
+
+admin/
+├── seo-settings.php           # SEO settings page (5 tabs)
+├── seo-test.php               # SEO diagnostic tool
+└── includes/
+    └── seo-metabox.php        # Post editor SEO section
+```
+
+---
+
+### 📝 Modified Files
+
+```
+includes/
+├── config.php                 # Version updated to 0.3.0
+├── functions.php              # get_page_title() now uses SEO class
+├── migrations.php             # Added v0.3.0 SEO defaults
+
+admin/
+├── post-edit.php              # Added SEO meta box integration
+└── includes/
+    └── sidebar.php            # Added SEO settings menu item
+
+themes/flavor/
+└── header.php                 # Removed static meta description (now via vf_head hook)
+
+index.php                      # Added sitemap.xml and robots.txt routes
+```
+
+---
+
+### 🎯 SEO Analysis Checks
+
+The SEO analyzer evaluates content based on:
+- **Title presence and length** — Required, under 60 characters
+- **Meta description** — Recommended 120-160 characters
+- **Content length** — Minimum 300 words recommended
+- **Focus keyword usage** — In title, description, content, URL
+- **Keyword density** — Optimal range 0.5-3%
+- **Featured image** — Recommended for all content
+
+Score ranges:
+- **80-100** — Good (green)
+- **50-79** — Needs improvement (orange)
+- **0-49** — Poor (red)
+
+---
+
 ## [0.2.5] - 2025-12-23
 
 ### 🔌 Anvil Block Editor Plugin
@@ -2588,6 +2721,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.3.0 | 2025-12-27 | Complete SEO tools: meta tags, Open Graph, Twitter Cards, JSON-LD schema, XML sitemap, robots.txt, SEO analysis with scoring |
 | 0.2.5 | 2025-12-23 | Anvil plugin architecture, frontend block CSS for all 21 blocks, testimonial style variants, accordion HTML5 fixes, CSS loading via theme |
 | 0.2.4.1 | 2025-12-21 | Frontend admin bar, site identity settings, Flavor theme redesign (home, header, footer, 404), code showcase, comparison table |
 | 0.2.4 | 2025-12-20 | Anvil Live enhancements |

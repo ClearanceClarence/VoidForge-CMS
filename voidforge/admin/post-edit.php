@@ -12,6 +12,7 @@ require_once CMS_ROOT . '/includes/post.php';
 require_once CMS_ROOT . '/includes/media.php';
 require_once CMS_ROOT . '/includes/plugin.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
+require_once CMS_ROOT . '/includes/seo.php';
 
 Post::init();
 Plugin::init(); // This loads the Anvil plugin if active
@@ -208,6 +209,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrf()) {
         $commentsEnabled = isset($_POST['comments_enabled']) ? '1' : '0';
         Post::setMeta($savedPostId, '_comments_enabled', $commentsEnabled);
         
+        // Save SEO meta data
+        SEO::savePostMeta($savedPostId, [
+            'seo_title' => $_POST['seo_title'] ?? '',
+            'seo_description' => $_POST['seo_description'] ?? '',
+            'seo_keywords' => $_POST['seo_keywords'] ?? '',
+            'seo_canonical' => $_POST['seo_canonical'] ?? '',
+            'seo_robots_index' => $_POST['seo_robots_index'] ?? 'index',
+            'seo_robots_follow' => $_POST['seo_robots_follow'] ?? 'follow',
+            'seo_og_title' => $_POST['seo_og_title'] ?? '',
+            'seo_og_description' => $_POST['seo_og_description'] ?? '',
+            'seo_og_image' => (int)($_POST['seo_og_image'] ?? 0),
+            'seo_twitter_title' => $_POST['seo_twitter_title'] ?? '',
+            'seo_twitter_description' => $_POST['seo_twitter_description'] ?? '',
+            'seo_focus_keyword' => $_POST['seo_focus_keyword'] ?? '',
+        ]);
+        
         redirect(ADMIN_URL . '/post-edit.php?id=' . $savedPostId);
     }
 }
@@ -244,6 +261,12 @@ if ($post && $post['id']) {
         $postTermsData[$taxSlug] = Taxonomy::getPostTermIds($post['id'], $taxSlug);
     }
     $customFieldsValues = get_all_custom_fields($post['id']);
+}
+
+// Load SEO meta data
+$seoMeta = [];
+if ($post && $post['id']) {
+    $seoMeta = SEO::getPostMeta($post['id']);
 }
 
 $permalinkBase = SITE_URL . '/';
@@ -770,6 +793,9 @@ include ADMIN_PATH . '/includes/header.php';
                 </div>
             </div>
             <?php endif; ?>
+            
+            <!-- SEO Section -->
+            <?php include CMS_ROOT . '/admin/includes/seo-metabox.php'; ?>
         </div>
         
         <div class="editor-sidebar">

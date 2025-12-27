@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo esc(get_page_title()); ?></title>
-    <meta name="description" content="<?php echo esc(get_site_description()); ?>">
     <?php the_favicon(); ?>
     <link rel="stylesheet" href="<?php echo Theme::getUrl(); ?>/style.css">
     <?php 

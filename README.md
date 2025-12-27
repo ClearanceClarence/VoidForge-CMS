@@ -2,7 +2,7 @@
 
 A modern, lightweight content management system built with pure PHP. No frameworks, no bloat — just powerful features and clean code.
 
-![Version](https://img.shields.io/badge/version-0.2.5-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.3.0-6366f1?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)
 
@@ -21,6 +21,20 @@ A modern, lightweight content management system built with pure PHP. No framewor
 5. Log in to the admin panel at `/admin`
 
 ## Features
+
+### SEO Tools
+
+Comprehensive search engine optimization built into every page:
+
+- **Meta Tags** — Custom title, description, and keywords per page
+- **Open Graph** — Facebook and social media sharing optimization
+- **Twitter Cards** — Optimized Twitter/X sharing with image support
+- **JSON-LD Schema** — Structured data for rich search results (WebSite, Organization, Article, BreadcrumbList)
+- **XML Sitemap** — Automatic Google-compatible sitemap at `/sitemap.xml`
+- **Robots.txt** — Customizable robots.txt at `/robots.txt`
+- **SEO Analysis** — Real-time scoring (0-100) with actionable suggestions
+- **Google Preview** — Live preview of search result appearance in editor
+- **Debug Tools** — Add `?seo_debug=1` to any page URL to inspect SEO output (admin only)
 
 ### Anvil Block Editor
 
@@ -95,8 +109,13 @@ Frontend visual editing with real-time preview:
 ```
 voidforge/
 ├── admin/              # Admin panel pages and assets
+│   ├── seo-settings.php    # SEO configuration (5 tabs)
+│   ├── seo-test.php        # SEO diagnostic tool
+│   └── includes/
+│       └── seo-metabox.php # Post editor SEO section
 ├── includes/           # Core PHP classes
-│   └── *.php           # Core classes (Post, Media, User, Plugin, etc.)
+│   ├── seo.php             # SEO class (meta, sitemap, schema)
+│   └── *.php               # Core classes (Post, Media, User, Plugin, etc.)
 ├── themes/             # Theme files
 │   └── flavor/         # Default theme
 ├── plugins/            # Plugin files

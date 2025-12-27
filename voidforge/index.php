@@ -39,6 +39,7 @@ require_once CMS_ROOT . '/includes/menu.php';
 require_once CMS_ROOT . '/includes/comment.php';
 require_once CMS_ROOT . '/includes/taxonomy.php';
 require_once CMS_ROOT . '/includes/rest-api.php';
+require_once CMS_ROOT . '/includes/seo.php';
 
 // Initialize
 Post::init();
@@ -47,6 +48,7 @@ Theme::init();
 Menu::init();
 Taxonomy::init();
 RestAPI::init();
+SEO::init();
 
 // Load active theme functions
 Theme::loadFunctions();
@@ -108,6 +110,29 @@ if (preg_match('#^api/(.+)$#', $path, $apiMatches)) {
     http_response_code(404);
     header('Content-Type: application/json');
     echo json_encode(['error' => 'API endpoint not found', 'path' => $apiPath]);
+    exit;
+}
+
+// SEO Routes - sitemap.xml and robots.txt
+if ($path === 'sitemap.xml') {
+    require_once CMS_ROOT . '/includes/seo.php';
+    SEO::init();
+    
+    if (getOption('seo_sitemap_enabled', true)) {
+        header('Content-Type: application/xml; charset=utf-8');
+        header('X-Robots-Tag: noindex');
+        echo SEO::generateSitemap();
+    } else {
+        http_response_code(404);
+        echo '<?xml version="1.0" encoding="UTF-8"?><error>Sitemap is disabled</error>';
+    }
+    exit;
+}
+
+if ($path === 'robots.txt') {
+    require_once CMS_ROOT . '/includes/seo.php';
+    header('Content-Type: text/plain; charset=utf-8');
+    echo SEO::generateRobotsTxt();
     exit;
 }
 
