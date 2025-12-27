@@ -446,6 +446,7 @@
             <div class="nav-group">
                 <div class="nav-group-title">Advanced</div>
                 <a href="#hooks">Theme Hooks</a>
+                <a href="#seo">SEO Integration</a>
                 <a href="#cpt">Custom Post Types</a>
                 <a href="#best-practices">Best Practices</a>
             </div>
@@ -807,6 +808,43 @@ Author: Your Name
                         </tbody>
                     </table>
                 </div>
+            </section>
+            
+            <!-- SEO Integration -->
+            <section id="seo">
+                <h2>SEO Integration</h2>
+                <p>VoidForge includes a built-in SEO system that automatically outputs meta tags when themes use the <code>vf_head</code> hook.</p>
+                
+                <h3>Required Theme Setup</h3>
+                <p>Your <code>header.php</code> must include the <code>vf_head</code> hook inside the <code>&lt;head&gt;</code> tag:</p>
+<pre><code><span class="t">&lt;head&gt;</span>
+    <span class="t">&lt;meta charset="UTF-8"&gt;</span>
+    <span class="t">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+    <span class="t">&lt;title&gt;</span><span class="k">&lt;?=</span> <span class="f">get_page_title</span>() <span class="k">?&gt;</span><span class="t">&lt;/title&gt;</span>
+    <span class="k">&lt;?php</span> <span class="f">Plugin::doAction</span>(<span class="s">'vf_head'</span>); <span class="k">?&gt;</span>
+<span class="t">&lt;/head&gt;</span></code></pre>
+                
+                <h3>What Gets Output</h3>
+                <p>The SEO system automatically outputs:</p>
+                <ul>
+                    <li><strong>Meta description</strong> — From post SEO settings or auto-generated from excerpt</li>
+                    <li><strong>Canonical URL</strong> — Prevents duplicate content issues</li>
+                    <li><strong>Robots meta</strong> — Index/noindex, follow/nofollow directives</li>
+                    <li><strong>Open Graph tags</strong> — For Facebook, LinkedIn, etc.</li>
+                    <li><strong>Twitter Cards</strong> — Optimized Twitter/X sharing</li>
+                    <li><strong>JSON-LD Schema</strong> — Structured data for rich search results</li>
+                </ul>
+                
+                <h3>Page Title Function</h3>
+                <p>Use <code>get_page_title()</code> for SEO-optimized titles:</p>
+<pre><code><span class="c">// Returns formatted title based on SEO settings</span>
+<span class="c">// Example: "Post Title | Site Name"</span>
+<span class="t">&lt;title&gt;</span><span class="k">&lt;?=</span> <span class="f">get_page_title</span>() <span class="k">?&gt;</span><span class="t">&lt;/title&gt;</span></code></pre>
+                
+                <h3>Debug Mode</h3>
+                <p>Add <code>?seo_debug=1</code> to any frontend URL to see SEO output (admin only):</p>
+<pre><code><span class="c">// View SEO data for any page</span>
+https://yoursite.com/your-post?seo_debug=1</code></pre>
             </section>
             
             <!-- Custom Post Types -->
