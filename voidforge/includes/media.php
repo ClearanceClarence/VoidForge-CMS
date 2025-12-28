@@ -364,7 +364,7 @@ class Media
             'width' => $width,
             'height' => $height,
             'alt_text' => pathinfo($file['name'], PATHINFO_FILENAME),
-            'folder' => $folderId > 0 ? (string)$folderId : 'uncategorized',
+            'folder_id' => $folderId > 0 ? $folderId : null,
             'uploaded_by' => $userId,
             'created_at' => date('Y-m-d H:i:s'),
         ]);

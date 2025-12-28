@@ -187,8 +187,9 @@ function flavor_render_comment(array $comment, int $depth = 0): void
 {
     $maxDepth = (int) getOption('comment_max_depth', 3);
     $authorName = Comment::getAuthorName($comment);
-    $gravatar = Comment::getGravatar($comment, 48);
+    $gravatar = Comment::getGravatar($comment, 52);
     $depthClass = $depth > 0 ? ' reply depth-' . min($depth, 3) : '';
+    $timeAgo = flavor_time_ago($comment['created_at']);
     ?>
     <div class="comment<?= $depthClass ?>" id="comment-<?= $comment['id'] ?>">
         <div class="comment-inner">
@@ -199,11 +200,11 @@ function flavor_render_comment(array $comment, int $depth = 0): void
                 <div class="comment-meta">
                     <span class="comment-author"><?= esc($authorName) ?></span>
                     <span class="comment-date">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        <?= flavor_date($comment['created_at']) ?>
+                        <?= $timeAgo ?>
                     </span>
                 </div>
                 <div class="comment-content">
@@ -227,5 +228,30 @@ function flavor_render_comment(array $comment, int $depth = 0): void
         foreach ($comment['replies'] as $reply) {
             flavor_render_comment($reply, $depth + 1);
         }
+    }
+}
+
+/**
+ * Format time ago
+ */
+function flavor_time_ago(string $datetime): string
+{
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) {
+        return 'Just now';
+    } elseif ($diff < 3600) {
+        $mins = floor($diff / 60);
+        return $mins . ' min' . ($mins > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 604800) {
+        $days = floor($diff / 86400);
+        return $days . ' day' . ($days > 1 ? 's' : '') . ' ago';
+    } else {
+        return flavor_date($datetime);
     }
 }

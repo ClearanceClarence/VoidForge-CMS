@@ -3,7 +3,7 @@
  * Home Page Template
  * 
  * @package Flavor
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 get_header();
@@ -20,130 +20,102 @@ $recentPosts = Post::query([
 
 <!-- Hero Section -->
 <section class="hero">
-    <div class="hero-bg">
-        <div class="hero-gradient"></div>
-        <div class="hero-grid"></div>
-        <div class="hero-glow hero-glow-1"></div>
-        <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-decoration">
+        <div class="hero-blob hero-blob-1"></div>
+        <div class="hero-blob hero-blob-2"></div>
+        <div class="hero-blob hero-blob-3"></div>
+        <div class="hero-grid-pattern"></div>
     </div>
     
-    <div class="hero-content">
-        <div class="hero-badge animate-fade-in">
-            <span class="badge-dot"></span>
-            <span>Introducing VoidForge CMS</span>
-        </div>
-        
-        <h1 class="hero-title animate-fade-in" style="animation-delay: 0.1s">
-            Build websites that<br>
-            <span class="gradient-text">stand out</span>
-        </h1>
-        
-        <p class="hero-description animate-fade-in" style="animation-delay: 0.2s">
-            A lightweight, blazing-fast content management system built for creators who refuse to compromise. No bloat, no complexity—just pure performance.
-        </p>
-        
-        <div class="hero-actions animate-fade-in" style="animation-delay: 0.3s">
-            <a href="<?php echo site_url('/admin'); ?>" class="btn btn-primary btn-xl">
-                Start Building Free
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-            </a>
-            <a href="#demo" class="btn btn-ghost btn-xl">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
-                </svg>
-                Watch Demo
-            </a>
-        </div>
-        
-        <div class="hero-stats animate-fade-in" style="animation-delay: 0.4s">
-            <div class="hero-stat">
-                <span class="stat-value">&lt;50ms</span>
-                <span class="stat-label">Page Load</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="hero-stat">
-                <span class="stat-value">~350KB</span>
-                <span class="stat-label">Total Size</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="hero-stat">
-                <span class="stat-value">100%</span>
-                <span class="stat-label">Open Source</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Hero Visual -->
-    <div class="hero-visual animate-fade-in" style="animation-delay: 0.5s">
-        <div class="hero-browser">
-            <div class="browser-header">
-                <div class="browser-dots">
-                    <span></span><span></span><span></span>
-                </div>
-                <div class="browser-url">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    <span>voidforge.dev/admin</span>
-                </div>
-            </div>
-            <div class="browser-content">
-                <div class="mock-sidebar">
-                    <div class="mock-logo"></div>
-                    <div class="mock-nav">
-                        <div class="mock-nav-item active"></div>
-                        <div class="mock-nav-item"></div>
-                        <div class="mock-nav-item"></div>
-                        <div class="mock-nav-item"></div>
-                        <div class="mock-nav-item"></div>
-                    </div>
-                </div>
-                <div class="mock-main">
-                    <div class="mock-header"></div>
-                    <div class="mock-cards">
-                        <div class="mock-card"></div>
-                        <div class="mock-card"></div>
-                        <div class="mock-card"></div>
-                    </div>
-                    <div class="mock-table">
-                        <div class="mock-row"></div>
-                        <div class="mock-row"></div>
-                        <div class="mock-row"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Logos Section -->
-<section class="logos-section">
     <div class="container">
-        <p class="logos-label">Built with technologies you trust</p>
-        <div class="logos-grid">
-            <div class="logo-item">
-                <svg viewBox="0 0 128 128" fill="currentColor"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64c11.2 0 21.7-2.9 30.8-7.9L48.4 55.3v36.6h-6.8V41.8h6.8l50.5 75.8C116.4 106.2 128 86.5 128 64c0-35.3-28.7-64-64-64zm22.1 84.6l-7.5-11.3V41.8h7.5v42.8z"/></svg>
-                <span>PHP</span>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                </span>
+                <span>VoidForge CMS v0.3.1</span>
+                <span class="badge-new">New</span>
             </div>
-            <div class="logo-item">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                <span>Open Source</span>
+            
+            <h1 class="hero-title">
+                The CMS that gets<br>
+                <span class="gradient-text">out of your way</span>
+            </h1>
+            
+            <p class="hero-description">
+                A lightweight, blazing-fast content management system for creators who value simplicity. 
+                No bloat, no complexity—just pure performance and complete control.
+            </p>
+            
+            <div class="hero-actions">
+                <a href="<?php echo site_url('/admin'); ?>" class="btn btn-primary btn-xl">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Open Dashboard
+                </a>
+                <a href="#features" class="btn btn-secondary btn-xl">
+                    Explore Features
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
-            <div class="logo-item">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.036 4.966h.072c2.612.011 5.043 1.312 6.47 3.46.172.259.072.609-.199.76l-2.07 1.153a.557.557 0 01-.722-.166c-.939-1.271-2.412-2.014-3.994-2.014h-.042c-1.598.009-3.068.765-3.999 2.065a.556.556 0 01-.722.167L4.693 9.238c-.272-.151-.374-.5-.203-.76C5.914 6.31 8.351 4.989 10.966 4.966h.998zm.033 4.508c1.655 0 3.007 1.352 3.007 3.007s-1.352 3.007-3.007 3.007-3.007-1.352-3.007-3.007 1.352-3.007 3.007-3.007zm-5.63 4.018c-.308 0-.557.249-.557.557v4.462c0 .308.249.557.557.557h11.259c.308 0 .557-.249.557-.557v-4.462a.557.557 0 00-.557-.557H6.367z"/></svg>
-                <span>MySQL</span>
+        </div>
+        
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">&lt;50ms</span>
+                    <span class="stat-label">Page Load</span>
+                </div>
             </div>
-            <div class="logo-item">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.405-.6-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/></svg>
-                <span>JavaScript</span>
+            <div class="hero-stat">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">~400KB</span>
+                    <span class="stat-label">Total Size</span>
+                </div>
             </div>
-            <div class="logo-item">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg>
-                <span>CSS3</span>
+            <div class="hero-stat">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">21+</span>
+                    <span class="stat-label">Block Types</span>
+                </div>
+            </div>
+            <div class="hero-stat">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">100%</span>
+                    <span class="stat-label">Open Source</span>
+                </div>
             </div>
         </div>
     </div>
@@ -153,123 +125,135 @@ $recentPosts = Post::query([
 <section class="features-section" id="features">
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">Features</span>
-            <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
-            <p class="section-description">
-                Powerful tools designed with simplicity in mind. Build faster, ship sooner.
-            </p>
+            <span class="section-label">Features</span>
+            <h2 class="section-title">Everything you need to build amazing websites</h2>
+            <p class="section-subtitle">Powerful tools designed with simplicity in mind. Build faster, ship sooner.</p>
         </div>
         
         <div class="features-grid">
-            <!-- Feature 1 -->
-            <div class="feature-card feature-card-large">
-                <div class="feature-visual">
-                    <div class="blocks-demo">
-                        <div class="block-item block-heading">
-                            <div class="block-handle"></div>
-                            <div class="block-content-mock"></div>
-                        </div>
-                        <div class="block-item block-para">
-                            <div class="block-handle"></div>
-                            <div class="block-content-mock"></div>
-                            <div class="block-content-mock short"></div>
-                        </div>
-                        <div class="block-item block-image">
-                            <div class="block-handle"></div>
-                            <div class="block-img-mock"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="feature-info">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"/>
-                            <rect x="14" y="3" width="7" height="7"/>
-                            <rect x="14" y="14" width="7" height="7"/>
-                            <rect x="3" y="14" width="7" height="7"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Visual Block Editor</h3>
-                    <p class="feature-description">
-                        21+ customizable blocks with drag-and-drop editing. Build beautiful layouts without touching code.
-                    </p>
-                    <a href="#" class="feature-link">
-                        Learn more
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Feature 2 -->
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                        <circle cx="11" cy="11" r="2"/>
+            <!-- Feature 1: Visual Editor -->
+            <div class="feature-card feature-primary">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
                     </svg>
                 </div>
-                <h3 class="feature-title">Live Frontend Editing</h3>
-                <p class="feature-description">
-                    Edit content directly on your live site. See changes in real-time without switching contexts.
-                </p>
+                <div class="feature-content">
+                    <h3 class="feature-title">Anvil Block Editor</h3>
+                    <p class="feature-description">21+ customizable blocks with drag-and-drop editing. Headings, images, galleries, accordions, tables, and more—all visually editable.</p>
+                    <ul class="feature-list">
+                        <li>Drag-and-drop reordering</li>
+                        <li>Inline rich text editing</li>
+                        <li>Live frontend editing mode</li>
+                    </ul>
+                </div>
             </div>
             
-            <!-- Feature 3 -->
+            <!-- Feature 2: SEO Tools -->
+            <div class="feature-card feature-new">
+                <span class="feature-badge">New in v0.3</span>
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Complete SEO Suite</h3>
+                    <p class="feature-description">Built-in SEO tools that rival premium plugins. Optimize your content without extra dependencies.</p>
+                    <ul class="feature-list">
+                        <li>Meta tags & Open Graph</li>
+                        <li>JSON-LD structured data</li>
+                        <li>XML sitemap generation</li>
+                        <li>Real-time SEO analysis</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Feature 3: Custom Fields -->
             <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                     </svg>
                 </div>
-                <h3 class="feature-title">16+ Custom Fields</h3>
-                <p class="feature-description">
-                    Text, media, repeaters, relationships, and more. Create any content structure you need.
-                </p>
+                <div class="feature-content">
+                    <h3 class="feature-title">16+ Custom Field Types</h3>
+                    <p class="feature-description">Text, media, repeaters, relationships, color pickers, and more. Create any content structure you need.</p>
+                </div>
             </div>
             
-            <!-- Feature 4 -->
+            <!-- Feature 4: REST API -->
             <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="16 18 22 12 16 6"/>
                         <polyline points="8 6 2 12 8 18"/>
                     </svg>
                 </div>
-                <h3 class="feature-title">REST API</h3>
-                <p class="feature-description">
-                    Full CRUD operations with token authentication. Build headless or integrate with anything.
-                </p>
+                <div class="feature-content">
+                    <h3 class="feature-title">REST API</h3>
+                    <p class="feature-description">Full CRUD operations with token authentication and rate limiting. Build headless or integrate with anything.</p>
+                </div>
             </div>
             
-            <!-- Feature 5 -->
+            <!-- Feature 5: Plugin System -->
             <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                         <path d="M2 17l10 5 10-5"/>
                         <path d="M2 12l10 5 10-5"/>
                     </svg>
                 </div>
-                <h3 class="feature-title">Plugin System</h3>
-                <p class="feature-description">
-                    WordPress-compatible hooks with 90+ actions. Extend functionality without core modifications.
-                </p>
+                <div class="feature-content">
+                    <h3 class="feature-title">Plugin Architecture</h3>
+                    <p class="feature-description">WordPress-compatible hooks with 90+ actions and filters. Extend functionality without modifying core files.</p>
+                </div>
             </div>
             
-            <!-- Feature 6 -->
+            <!-- Feature 6: Media Library -->
             <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Media Library</h3>
+                    <p class="feature-description">Organize uploads with folders, drag-and-drop management, automatic thumbnails, and quick editing.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 7: Comments -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Comment System</h3>
+                    <p class="feature-description">Built-in threaded comments with moderation, Gravatar support, and spam protection options.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 8: Performance -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
                 </div>
-                <h3 class="feature-title">Lightning Fast</h3>
-                <p class="feature-description">
-                    Sub-50ms page loads. No bloated frameworks, no unnecessary dependencies. Pure speed.
-                </p>
+                <div class="feature-content">
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="feature-description">Sub-50ms page loads. No bloated frameworks, no unnecessary dependencies. Framework-free PHP for pure speed.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -279,177 +263,123 @@ $recentPosts = Post::query([
 <section class="how-section">
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">How It Works</span>
+            <span class="section-label">How It Works</span>
             <h2 class="section-title">Up and running in minutes</h2>
-            <p class="section-description">
-                From zero to published in three simple steps.
-            </p>
         </div>
         
         <div class="steps-grid">
             <div class="step-card">
-                <div class="step-number">01</div>
-                <div class="step-content">
-                    <h3 class="step-title">Upload & Install</h3>
-                    <p class="step-description">
-                        Drop the files on your server and run the installer. Database configured automatically.
-                    </p>
-                </div>
-                <div class="step-visual">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <div class="step-number">1</div>
+                <div class="step-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                 </div>
+                <h3 class="step-title">Upload & Install</h3>
+                <p class="step-description">Drop files on your server and run the one-click installer. Database configured automatically.</p>
             </div>
             
-            <div class="step-connector">
-                <svg viewBox="0 0 100 20" fill="none">
-                    <path d="M0 10h100" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/>
-                    <path d="M90 5l10 5-10 5" fill="currentColor"/>
-                </svg>
-            </div>
+            <div class="step-connector"></div>
             
             <div class="step-card">
-                <div class="step-number">02</div>
-                <div class="step-content">
-                    <h3 class="step-title">Create Content</h3>
-                    <p class="step-description">
-                        Use the visual editor to craft pages and posts. Drag blocks, add media, style with ease.
-                    </p>
-                </div>
-                <div class="step-visual">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <div class="step-number">2</div>
+                <div class="step-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                 </div>
+                <h3 class="step-title">Create Content</h3>
+                <p class="step-description">Use the visual editor to craft pages and posts. Drag blocks, add media, configure SEO.</p>
             </div>
             
-            <div class="step-connector">
-                <svg viewBox="0 0 100 20" fill="none">
-                    <path d="M0 10h100" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/>
-                    <path d="M90 5l10 5-10 5" fill="currentColor"/>
-                </svg>
-            </div>
+            <div class="step-connector"></div>
             
             <div class="step-card">
-                <div class="step-number">03</div>
-                <div class="step-content">
-                    <h3 class="step-title">Publish & Share</h3>
-                    <p class="step-description">
-                        Hit publish and your content is live. Fast, secure, and ready for the world.
-                    </p>
-                </div>
-                <div class="step-visual">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <div class="step-number">3</div>
+                <div class="step-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M2 12h20"/>
                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                     </svg>
                 </div>
+                <h3 class="step-title">Publish</h3>
+                <p class="step-description">Hit publish and your content is live. Fast, secure, and optimized for search engines.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Code Showcase Section -->
+<!-- Code Section -->
 <section class="code-section">
     <div class="container">
-        <div class="code-section-grid">
-            <div class="code-section-content">
-                <span class="section-badge">Developer Friendly</span>
+        <div class="code-grid">
+            <div class="code-content">
+                <span class="section-label">Developer Friendly</span>
                 <h2 class="section-title">Simple theming.<br>Zero magic.</h2>
-                <p class="section-description">
-                    No proprietary template language to learn. Just PHP, HTML, and CSS—the tools you already know. Create a theme in minutes, not days.
+                <p class="code-description">
+                    No proprietary template language to learn. Just PHP, HTML, and CSS—the tools you already know. 
+                    Create custom themes in minutes, not days.
                 </p>
                 
                 <ul class="code-features">
                     <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>Standard PHP templates</span>
+                        Standard PHP templates
                     </li>
                     <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>WordPress-style functions</span>
+                        WordPress-style functions
                     </li>
                     <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>No build step required</span>
+                        No build step required
                     </li>
                     <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>Full access to all data</span>
+                        Full documentation included
                     </li>
                 </ul>
                 
-                <a href="<?php echo site_url(); ?>/docs" class="btn btn-primary">
-                    Read the Docs
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                <a href="<?php echo site_url(); ?>/docs/theme-development.html" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                     </svg>
+                    Read Documentation
                 </a>
             </div>
             
             <div class="code-showcase">
-                <div class="code-tabs">
-                    <button class="code-tab active" data-tab="single">single.php</button>
-                    <button class="code-tab" data-tab="loop">loop example</button>
-                    <button class="code-tab" data-tab="custom">custom fields</button>
-                </div>
-                <div class="code-panels">
-                    <div class="code-panel active" id="panel-single">
-                        <pre><code><span class="code-php">&lt;?php</span> <span class="code-fn">get_header</span>(); <span class="code-php">?&gt;</span>
-
-<span class="code-tag">&lt;article</span> <span class="code-attr">class</span>=<span class="code-str">"post"</span><span class="code-tag">&gt;</span>
-  <span class="code-tag">&lt;h1&gt;</span><span class="code-php">&lt;?php</span> <span class="code-kw">echo</span> <span class="code-fn">esc</span>(<span class="code-var">$post</span>[<span class="code-str">'title'</span>]); <span class="code-php">?&gt;</span><span class="code-tag">&lt;/h1&gt;</span>
-  
-  <span class="code-tag">&lt;div</span> <span class="code-attr">class</span>=<span class="code-str">"content"</span><span class="code-tag">&gt;</span>
-    <span class="code-php">&lt;?php</span> <span class="code-fn">the_content</span>(); <span class="code-php">?&gt;</span>
-  <span class="code-tag">&lt;/div&gt;</span>
-<span class="code-tag">&lt;/article&gt;</span>
-
-<span class="code-php">&lt;?php</span> <span class="code-fn">get_footer</span>(); <span class="code-php">?&gt;</span></code></pre>
+                <div class="code-window">
+                    <div class="code-header">
+                        <div class="code-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="code-filename">single.php</span>
                     </div>
-                    <div class="code-panel" id="panel-loop">
-                        <pre><code><span class="code-php">&lt;?php</span>
-<span class="code-var">$posts</span> = <span class="code-class">Post</span>::<span class="code-fn">query</span>([
-  <span class="code-str">'post_type'</span> => <span class="code-str">'post'</span>,
-  <span class="code-str">'status'</span>    => <span class="code-str">'published'</span>,
-  <span class="code-str">'limit'</span>     => <span class="code-num">10</span>
-]);
+                    <pre class="code-block"><code><span class="c-php">&lt;?php</span> <span class="c-fn">get_header</span>(); <span class="c-php">?&gt;</span>
 
-<span class="code-kw">foreach</span> (<span class="code-var">$posts</span> <span class="code-kw">as</span> <span class="code-var">$post</span>):
-<span class="code-php">?&gt;</span>
-  <span class="code-tag">&lt;a</span> <span class="code-attr">href</span>=<span class="code-str">"<span class="code-php">&lt;?php</span> <span class="code-kw">echo</span> <span class="code-class">Post</span>::<span class="code-fn">permalink</span>(<span class="code-var">$post</span>); <span class="code-php">?&gt;</span>"</span><span class="code-tag">&gt;</span>
-    <span class="code-php">&lt;?php</span> <span class="code-kw">echo</span> <span class="code-fn">esc</span>(<span class="code-var">$post</span>[<span class="code-str">'title'</span>]); <span class="code-php">?&gt;</span>
-  <span class="code-tag">&lt;/a&gt;</span>
-<span class="code-php">&lt;?php</span> <span class="code-kw">endforeach</span>; <span class="code-php">?&gt;</span></code></pre>
-                    </div>
-                    <div class="code-panel" id="panel-custom">
-                        <pre><code><span class="code-comment">// Get a custom field value</span>
-<span class="code-var">$price</span> = <span class="code-fn">get_field</span>(<span class="code-str">'price'</span>, <span class="code-var">$post</span>[<span class="code-str">'id'</span>]);
+<span class="c-tag">&lt;article</span> <span class="c-attr">class</span>=<span class="c-str">"post"</span><span class="c-tag">&gt;</span>
+    <span class="c-tag">&lt;h1&gt;</span><span class="c-php">&lt;?=</span> <span class="c-fn">esc</span>(<span class="c-var">$post</span>[<span class="c-str">'title'</span>]) <span class="c-php">?&gt;</span><span class="c-tag">&lt;/h1&gt;</span>
+    
+    <span class="c-tag">&lt;div</span> <span class="c-attr">class</span>=<span class="c-str">"content"</span><span class="c-tag">&gt;</span>
+        <span class="c-php">&lt;?php</span> <span class="c-fn">the_content</span>(); <span class="c-php">?&gt;</span>
+    <span class="c-tag">&lt;/div&gt;</span>
+<span class="c-tag">&lt;/article&gt;</span>
 
-<span class="code-comment">// Get a repeater field</span>
-<span class="code-var">$features</span> = <span class="code-fn">get_field</span>(<span class="code-str">'features'</span>, <span class="code-var">$post</span>[<span class="code-str">'id'</span>]);
-
-<span class="code-kw">foreach</span> (<span class="code-var">$features</span> <span class="code-kw">as</span> <span class="code-var">$item</span>):
-<span class="code-php">?&gt;</span>
-  <span class="code-tag">&lt;div</span> <span class="code-attr">class</span>=<span class="code-str">"feature"</span><span class="code-tag">&gt;</span>
-    <span class="code-tag">&lt;h3&gt;</span><span class="code-php">&lt;?php</span> <span class="code-kw">echo</span> <span class="code-fn">esc</span>(<span class="code-var">$item</span>[<span class="code-str">'title'</span>]); <span class="code-php">?&gt;</span><span class="code-tag">&lt;/h3&gt;</span>
-    <span class="code-tag">&lt;p&gt;</span><span class="code-php">&lt;?php</span> <span class="code-kw">echo</span> <span class="code-fn">esc</span>(<span class="code-var">$item</span>[<span class="code-str">'desc'</span>]); <span class="code-php">?&gt;</span><span class="code-tag">&lt;/p&gt;</span>
-  <span class="code-tag">&lt;/div&gt;</span>
-<span class="code-php">&lt;?php</span> <span class="code-kw">endforeach</span>; <span class="code-php">?&gt;</span></code></pre>
-                    </div>
+<span class="c-php">&lt;?php</span> <span class="c-fn">get_footer</span>(); <span class="c-php">?&gt;</span></code></pre>
                 </div>
             </div>
         </div>
@@ -460,80 +390,52 @@ $recentPosts = Post::query([
 <section class="comparison-section">
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">Why VoidForge</span>
+            <span class="section-label">Why VoidForge</span>
             <h2 class="section-title">The lightweight alternative</h2>
-            <p class="section-description">
-                See how VoidForge compares to traditional content management systems.
-            </p>
+            <p class="section-subtitle">See how VoidForge compares to traditional content management systems.</p>
         </div>
         
         <div class="comparison-table">
             <div class="comparison-header">
                 <div class="comparison-cell"></div>
-                <div class="comparison-cell highlight">
-                    <span class="comparison-logo">VoidForge</span>
-                </div>
+                <div class="comparison-cell highlight">VoidForge</div>
                 <div class="comparison-cell">Traditional CMS</div>
             </div>
             
             <div class="comparison-row">
                 <div class="comparison-cell label">Install Size</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">~350 KB</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">50+ MB</span>
-                </div>
+                <div class="comparison-cell highlight"><span class="badge-good">~400 KB</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">50+ MB</span></div>
             </div>
             
             <div class="comparison-row">
-                <div class="comparison-cell label">Page Load Time</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">&lt;50ms</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">200-500ms</span>
-                </div>
+                <div class="comparison-cell label">Page Load</div>
+                <div class="comparison-cell highlight"><span class="badge-good">&lt;50ms</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">200-500ms</span></div>
             </div>
             
             <div class="comparison-row">
                 <div class="comparison-cell label">Dependencies</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">PHP + MySQL</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">Multiple</span>
-                </div>
+                <div class="comparison-cell highlight"><span class="badge-good">PHP + MySQL</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">Multiple</span></div>
             </div>
             
             <div class="comparison-row">
                 <div class="comparison-cell label">Learning Curve</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">Minutes</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">Days/Weeks</span>
-                </div>
+                <div class="comparison-cell highlight"><span class="badge-good">Minutes</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">Days/Weeks</span></div>
             </div>
             
             <div class="comparison-row">
-                <div class="comparison-cell label">Template Language</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">Plain PHP</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">Proprietary</span>
-                </div>
+                <div class="comparison-cell label">SEO Tools</div>
+                <div class="comparison-cell highlight"><span class="badge-good">Built-in</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">Plugin Required</span></div>
             </div>
             
             <div class="comparison-row">
                 <div class="comparison-cell label">Cost</div>
-                <div class="comparison-cell highlight">
-                    <span class="value good">Free Forever</span>
-                </div>
-                <div class="comparison-cell">
-                    <span class="value">Free / Paid</span>
-                </div>
+                <div class="comparison-cell highlight"><span class="badge-good">Free Forever</span></div>
+                <div class="comparison-cell"><span class="badge-neutral">Free / Paid</span></div>
             </div>
         </div>
     </div>
@@ -544,12 +446,12 @@ $recentPosts = Post::query([
 <section class="posts-section">
     <div class="container">
         <div class="section-header-row">
-            <div class="section-header-left">
-                <span class="section-badge">Blog</span>
-                <h2 class="section-title">Latest from the blog</h2>
+            <div>
+                <span class="section-label">Latest Posts</span>
+                <h2 class="section-title">From the blog</h2>
             </div>
-            <a href="<?php echo site_url('/posts'); ?>" class="btn btn-outline">
-                View All
+            <a href="<?php echo site_url('/blog'); ?>" class="btn btn-outline">
+                View All Posts
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
@@ -557,56 +459,42 @@ $recentPosts = Post::query([
         </div>
         
         <div class="posts-grid">
-            <?php foreach ($recentPosts as $index => $post): 
+            <?php foreach ($recentPosts as $post): 
                 $author = User::find($post['author_id']);
                 $thumbnail = Post::featuredImage($post);
             ?>
-            <article class="post-card <?php echo $index === 0 ? 'post-card-featured' : ''; ?>">
-                <?php if ($thumbnail): ?>
+            <article class="post-card">
                 <div class="post-image">
                     <a href="<?php echo Post::permalink($post); ?>">
-                        <img src="<?php echo esc($thumbnail); ?>" alt="<?php echo esc($post['title']); ?>" loading="lazy">
+                        <?php if ($thumbnail): ?>
+                            <img src="<?php echo esc($thumbnail); ?>" alt="<?php echo esc($post['title']); ?>" loading="lazy">
+                        <?php else: ?>
+                            <div class="post-placeholder">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                        <?php endif; ?>
                     </a>
                 </div>
-                <?php else: ?>
-                <div class="post-image post-image-placeholder">
-                    <a href="<?php echo Post::permalink($post); ?>">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <circle cx="8.5" cy="8.5" r="1.5"/>
-                            <polyline points="21 15 16 10 5 21"/>
-                        </svg>
-                    </a>
-                </div>
-                <?php endif; ?>
-                
                 <div class="post-content">
                     <div class="post-meta">
                         <time datetime="<?php echo $post['created_at']; ?>">
                             <?php echo date('M j, Y', strtotime($post['created_at'])); ?>
                         </time>
                         <?php if ($author): ?>
-                        <span class="meta-sep">&middot;</span>
-                        <span class="post-author"><?php echo esc($author['display_name'] ?? $author['username']); ?></span>
+                        <span>&middot;</span>
+                        <span><?php echo esc($author['display_name'] ?? $author['username']); ?></span>
                         <?php endif; ?>
                     </div>
-                    
                     <h3 class="post-title">
                         <a href="<?php echo Post::permalink($post); ?>">
                             <?php echo esc($post['title']); ?>
                         </a>
                     </h3>
-                    
-                    <p class="post-excerpt">
-                        <?php echo esc(flavor_excerpt($post, $index === 0 ? 180 : 100)); ?>
-                    </p>
-                    
-                    <a href="<?php echo Post::permalink($post); ?>" class="post-link">
-                        Read article
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </a>
+                    <p class="post-excerpt"><?php echo esc(flavor_excerpt($post, 120)); ?></p>
                 </div>
             </article>
             <?php endforeach; ?>
@@ -619,39 +507,62 @@ $recentPosts = Post::query([
 <section class="faq-section">
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">FAQ</span>
-            <h2 class="section-title">Questions? Answers.</h2>
+            <span class="section-label">FAQ</span>
+            <h2 class="section-title">Common questions</h2>
         </div>
         
         <div class="faq-grid">
             <div class="faq-item">
                 <h3 class="faq-question">Is VoidForge really free?</h3>
-                <p class="faq-answer">Yes, 100% free and open source under the MIT license. Use it for personal or commercial projects without restrictions.</p>
+                <p class="faq-answer">Yes, 100% free and open source under the MIT license. Use it for personal or commercial projects without any restrictions.</p>
             </div>
             
             <div class="faq-item">
                 <h3 class="faq-question">What are the server requirements?</h3>
-                <p class="faq-answer">PHP 8.0+, MySQL 5.7+ or MariaDB 10.3+, and a web server (Apache/Nginx). That's it—no complex dependencies.</p>
+                <p class="faq-answer">PHP 8.0+, MySQL 5.7+ or MariaDB 10.3+, and a web server (Apache/Nginx). No complex dependencies or build tools needed.</p>
             </div>
             
             <div class="faq-item">
                 <h3 class="faq-question">Can I migrate from WordPress?</h3>
-                <p class="faq-answer">Yes! Export your WordPress content and use our import tools. The hook system is WordPress-compatible for easy plugin adaptation.</p>
+                <p class="faq-answer">Yes! The hook system is WordPress-compatible, making plugin adaptation straightforward. Export your content and rebuild with familiar patterns.</p>
+            </div>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">Do I need SEO plugins?</h3>
+                <p class="faq-answer">No—VoidForge v0.3 includes a complete SEO suite with meta tags, Open Graph, JSON-LD schema, sitemaps, and real-time content analysis built-in.</p>
             </div>
             
             <div class="faq-item">
                 <h3 class="faq-question">How do I create custom themes?</h3>
-                <p class="faq-answer">Themes are simple PHP templates. If you know HTML and basic PHP, you can build anything. Check our documentation for guides.</p>
-            </div>
-            
-            <div class="faq-item">
-                <h3 class="faq-question">Is there multi-language support?</h3>
-                <p class="faq-answer">The admin interface is English, but you can create content in any language. Full i18n support is on our roadmap.</p>
+                <p class="faq-answer">Themes are simple PHP templates. If you know HTML and basic PHP, you can build anything. Check our documentation for step-by-step guides.</p>
             </div>
             
             <div class="faq-item">
                 <h3 class="faq-question">Where can I get support?</h3>
-                <p class="faq-answer">Check our documentation, browse GitHub issues, or join our community Discord. We're here to help.</p>
+                <p class="faq-answer">Check our comprehensive documentation, browse GitHub issues, or reach out to the community. We're always happy to help.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to build something amazing?</h2>
+                <p class="cta-description">Start creating with VoidForge today. No credit card required, no strings attached.</p>
+                <div class="cta-actions">
+                    <a href="<?php echo site_url('/admin'); ?>" class="btn btn-white btn-xl">
+                        Get Started Free
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="<?php echo site_url(); ?>/docs" class="btn btn-ghost-white btn-xl">
+                        View Documentation
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -659,705 +570,636 @@ $recentPosts = Post::query([
 
 <style>
 /* ========================================
+   Variables & Base
+   ======================================== */
+:root {
+    --home-primary: #6366f1;
+    --home-primary-dark: #4f46e5;
+    --home-primary-light: #818cf8;
+    --home-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+/* ========================================
    Hero Section
    ======================================== */
 .hero {
     position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: var(--space-20) 0 var(--space-12);
+    padding: 8rem 0 6rem;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.hero-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
     overflow: hidden;
 }
 
-.hero-bg {
+.hero-blob {
     position: absolute;
-    inset: 0;
-    z-index: -1;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
 }
 
-.hero-gradient {
-    position: absolute;
-    inset: 0;
-    background: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
-        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.1), transparent);
+.hero-blob-1 {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+    top: -200px;
+    right: -100px;
 }
 
-.hero-grid {
+.hero-blob-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    bottom: -100px;
+    left: -100px;
+}
+
+.hero-blob-3 {
+    width: 300px;
+    height: 300px;
+    background: rgba(99, 102, 241, 0.08);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.hero-grid-pattern {
     position: absolute;
     inset: 0;
     background-image: 
         linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black, transparent);
 }
 
-.hero-glow {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.5;
-    animation: glow-pulse 8s ease-in-out infinite;
-}
-
-.hero-glow-1 {
-    width: 400px;
-    height: 400px;
-    background: rgba(99, 102, 241, 0.3);
-    top: 10%;
-    left: 20%;
-}
-
-.hero-glow-2 {
-    width: 300px;
-    height: 300px;
-    background: rgba(139, 92, 246, 0.25);
-    top: 40%;
-    right: 15%;
-    animation-delay: 4s;
-}
-
-@keyframes glow-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.1); }
+.hero .container {
+    position: relative;
+    z-index: 1;
 }
 
 .hero-content {
-    max-width: var(--container-max);
+    max-width: 720px;
     margin: 0 auto;
-    padding: 0 var(--space-6);
     text-align: center;
 }
 
 .hero-badge {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    background: rgba(99, 102, 241, 0.1);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 0.5rem 0.75rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 100px;
+    font-size: 0.875rem;
     font-weight: 500;
-    color: var(--color-primary);
-    margin-bottom: var(--space-6);
+    color: #334155;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.badge-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--color-primary);
+.badge-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--home-gradient);
     border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
+    color: #fff;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+.badge-icon svg {
+    width: 12px;
+    height: 12px;
+}
+
+.badge-new {
+    padding: 0.125rem 0.5rem;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 100px;
 }
 
 .hero-title {
-    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-size: 3.5rem;
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.03em;
-    margin-bottom: var(--space-6);
-    color: var(--color-text);
+    color: #0f172a;
+    margin: 0 0 1.5rem;
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #6366f1 100%);
-    background-size: 200% auto;
+    background: var(--home-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradient-shift 3s ease-in-out infinite;
-}
-
-@keyframes gradient-shift {
-    0%, 100% { background-position: 0% center; }
-    50% { background-position: 100% center; }
 }
 
 .hero-description {
-    max-width: 640px;
-    margin: 0 auto var(--space-8);
-    font-size: var(--text-xl);
-    color: var(--color-text-secondary);
-    line-height: 1.6;
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: #64748b;
+    margin: 0 0 2rem;
 }
 
 .hero-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-4);
-    margin-bottom: var(--space-10);
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-xl {
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--text-base);
+    padding: 1rem 1.75rem;
+    font-size: 1rem;
 }
 
-.btn-ghost {
+.btn-primary {
+    background: var(--home-gradient);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary {
+    background: #fff;
+    color: #334155;
+    border: 1.5px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    border-color: var(--home-primary);
+    color: var(--home-primary);
+}
+
+.btn-outline {
     background: transparent;
-    color: var(--color-text);
-    border: none;
+    color: #334155;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
 }
 
-.btn-ghost:hover {
-    background: var(--color-bg-muted);
+.btn-outline:hover {
+    border-color: var(--home-primary);
+    color: var(--home-primary);
 }
 
+.btn-white {
+    background: #fff;
+    color: var(--home-primary);
+}
+
+.btn-white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,255,255,0.3);
+}
+
+.btn-ghost-white {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.2);
+}
+
+.btn-ghost-white:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Hero Stats */
 .hero-stats {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
-    padding: var(--space-4) var(--space-8);
-    background: var(--color-bg);
-    border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-full);
-    box-shadow: var(--shadow-lg);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .hero-stat {
-    text-align: center;
-}
-
-.stat-value {
-    display: block;
-    font-size: var(--text-xl);
-    font-weight: 700;
-    color: var(--color-text);
-    font-family: var(--font-mono);
-}
-
-.stat-label {
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.stat-divider {
-    width: 1px;
-    height: 32px;
-    background: var(--color-border);
-}
-
-/* Hero Visual */
-.hero-visual {
-    max-width: 900px;
-    margin: var(--space-12) auto 0;
-    padding: 0 var(--space-6);
-}
-
-.hero-browser {
-    background: var(--color-bg-dark);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: 
-        0 0 0 1px rgba(255,255,255,0.1),
-        0 20px 50px -10px rgba(0,0,0,0.4),
-        0 0 100px rgba(99, 102, 241, 0.1);
-}
-
-.browser-header {
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    background: rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.browser-dots {
+.stat-icon {
     display: flex;
-    gap: 6px;
-}
-
-.browser-dots span {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.15);
-}
-
-.browser-dots span:first-child { background: #ff5f57; }
-.browser-dots span:nth-child(2) { background: #febc2e; }
-.browser-dots span:last-child { background: #28c840; }
-
-.browser-url {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-md);
-    font-size: var(--text-xs);
-    color: rgba(255,255,255,0.5);
-}
-
-.browser-url svg {
-    color: #28c840;
-}
-
-.browser-content {
-    display: flex;
-    height: 320px;
-}
-
-.mock-sidebar {
-    width: 200px;
-    background: rgba(255,255,255,0.03);
-    border-right: 1px solid rgba(255,255,255,0.05);
-    padding: var(--space-4);
-}
-
-.mock-logo {
-    height: 32px;
-    background: linear-gradient(90deg, rgba(99,102,241,0.5), rgba(139,92,246,0.5));
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-6);
-}
-
-.mock-nav {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.mock-nav-item {
-    height: 36px;
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-md);
-}
-
-.mock-nav-item.active {
-    background: rgba(99,102,241,0.3);
-}
-
-.mock-main {
-    flex: 1;
-    padding: var(--space-4);
-}
-
-.mock-header {
-    height: 40px;
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-4);
-}
-
-.mock-cards {
-    display: flex;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-}
-
-.mock-card {
-    flex: 1;
-    height: 80px;
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-md);
-}
-
-.mock-table {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.mock-row {
-    height: 44px;
-    background: rgba(255,255,255,0.03);
-    border-radius: var(--radius-sm);
-}
-
-/* Logos Section */
-.logos-section {
-    padding: var(--space-12) 0;
-    border-bottom: 1px solid var(--color-border-light);
-}
-
-.logos-label {
-    text-align: center;
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-6);
-}
-
-.logos-grid {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-10);
-    flex-wrap: wrap;
-}
-
-.logo-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-    font-weight: 500;
-}
-
-.logo-item svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Features Section */
-.features-section {
-    padding: var(--space-24) 0;
-}
-
-.section-header {
-    text-align: center;
-    max-width: 640px;
-    margin: 0 auto var(--space-16);
-}
-
-.section-badge {
-    display: inline-block;
-    padding: var(--space-1) var(--space-3);
-    background: var(--color-primary-subtle);
-    color: var(--color-primary);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: var(--radius-full);
-    margin-bottom: var(--space-4);
-}
-
-.section-title {
-    font-size: var(--text-4xl);
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: var(--space-4);
-}
-
-.section-description {
-    font-size: var(--text-lg);
-    color: var(--color-text-secondary);
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
-}
-
-.feature-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-xl);
-    padding: var(--space-8);
-    transition: all var(--duration-normal) var(--ease-out);
-}
-
-.feature-card:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 1px var(--color-primary), var(--shadow-lg);
-    transform: translateY(-2px);
-}
-
-.feature-card-large {
-    grid-column: span 3;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-8);
-    padding: var(--space-10);
-    background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-subtle) 100%);
-}
-
-.feature-visual {
-    background: var(--color-bg-dark);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.blocks-demo {
-    width: 100%;
-    max-width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
-
-.block-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.block-handle {
-    width: 4px;
-    height: 100%;
-    min-height: 20px;
-    background: var(--color-primary);
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.block-content-mock {
-    height: 12px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 2px;
-    flex: 1;
-}
-
-.block-content-mock.short {
-    width: 60%;
-    margin-top: var(--space-2);
-}
-
-.block-img-mock {
-    height: 60px;
-    background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
-    border-radius: var(--radius-sm);
-    flex: 1;
-}
-
-.feature-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.feature-icon {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 48px;
     height: 48px;
-    background: var(--color-primary-subtle);
-    color: var(--color-primary);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 12px;
+    color: var(--home-primary);
+    flex-shrink: 0;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.8125rem;
+    color: #64748b;
+}
+
+/* ========================================
+   Section Styles
+   ======================================== */
+.section-header {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 4rem;
+}
+
+.section-label {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    color: var(--home-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+}
+
+.section-subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.section-header-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+}
+
+.section-header-row .section-label {
+    margin-bottom: 0.5rem;
+}
+
+.section-header-row .section-title {
+    margin: 0;
+    font-size: 2rem;
+}
+
+/* ========================================
+   Features Section
+   ======================================== */
+.features-section {
+    padding: 6rem 0;
+    background: #fff;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.feature-card {
+    position: relative;
+    padding: 2rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    transition: all 0.3s;
+}
+
+.feature-card:hover {
+    background: #fff;
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+    transform: translateY(-4px);
+}
+
+.feature-card.feature-primary {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #f8fafc 0%, rgba(99, 102, 241, 0.05) 100%);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.feature-card.feature-new {
+    grid-column: span 2;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.feature-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.625rem;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 100px;
+}
+
+.feature-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: var(--home-gradient);
+    border-radius: 16px;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
 
 .feature-title {
-    font-size: var(--text-xl);
+    font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: var(--space-3);
+    color: #0f172a;
+    margin: 0 0 0.75rem;
 }
 
 .feature-description {
-    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    color: #64748b;
     line-height: 1.7;
-    margin-bottom: var(--space-4);
+    margin: 0;
 }
 
-.feature-link {
-    display: inline-flex;
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.feature-list li {
+    display: flex;
     align-items: center;
-    gap: var(--space-2);
-    color: var(--color-primary);
-    font-weight: 500;
-    font-size: var(--text-sm);
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #475569;
 }
 
-.feature-link:hover {
-    gap: var(--space-3);
+.feature-list li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--home-primary);
+    border-radius: 50%;
 }
 
-/* How It Works */
+/* ========================================
+   How It Works Section
+   ======================================== */
 .how-section {
-    padding: var(--space-24) 0;
-    background: var(--color-bg-subtle);
+    padding: 6rem 0;
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
 }
 
 .steps-grid {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    gap: var(--space-4);
+    gap: 2rem;
 }
 
 .step-card {
     flex: 1;
     max-width: 300px;
     text-align: center;
-    padding: var(--space-8);
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    position: relative;
 }
 
 .step-number {
-    font-size: var(--text-5xl);
-    font-weight: 800;
-    color: var(--color-primary);
-    opacity: 0.2;
-    line-height: 1;
-    margin-bottom: var(--space-4);
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    background: var(--home-gradient);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 20px;
+    color: var(--home-primary);
+    margin: 1rem auto 1.5rem;
 }
 
 .step-title {
-    font-size: var(--text-xl);
+    font-size: 1.125rem;
     font-weight: 700;
-    margin-bottom: var(--space-3);
+    color: #0f172a;
+    margin: 0 0 0.75rem;
 }
 
 .step-description {
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-    line-height: 1.7;
-    margin-bottom: var(--space-6);
-}
-
-.step-visual {
-    color: var(--color-primary);
+    font-size: 0.9375rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
 }
 
 .step-connector {
-    width: 100px;
-    color: var(--color-border);
-    flex-shrink: 0;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--home-primary) 0%, rgba(99, 102, 241, 0.2) 100%);
+    margin-top: 4rem;
+    border-radius: 2px;
 }
 
-/* Code Showcase Section */
+/* ========================================
+   Code Section
+   ======================================== */
 .code-section {
-    padding: var(--space-24) 0;
+    padding: 6rem 0;
+    background: #fff;
 }
 
-.code-section-grid {
+.code-grid {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
-    gap: var(--space-12);
+    gap: 4rem;
     align-items: center;
 }
 
-.code-section-content .section-badge {
-    margin-bottom: var(--space-4);
+.code-content .section-title {
+    text-align: left;
 }
 
-.code-section-content .section-title {
-    text-align: left;
-    margin-bottom: var(--space-4);
-}
-
-.code-section-content .section-description {
-    text-align: left;
-    margin-bottom: var(--space-6);
+.code-description {
+    font-size: 1.0625rem;
+    color: #64748b;
+    line-height: 1.7;
+    margin: 0 0 2rem;
 }
 
 .code-features {
     list-style: none;
-    margin: 0 0 var(--space-8);
     padding: 0;
+    margin: 0 0 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
 }
 
 .code-features li {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) 0;
-    color: var(--color-text-secondary);
+    gap: 0.75rem;
+    font-size: 1rem;
+    color: #334155;
+    font-weight: 500;
 }
 
 .code-features li svg {
-    color: var(--color-primary);
+    color: #22c55e;
     flex-shrink: 0;
 }
 
-.code-showcase {
-    background: var(--color-bg-dark);
-    border-radius: var(--radius-xl);
+.code-window {
+    background: #1e293b;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: var(--shadow-2xl);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
 
-.code-tabs {
+.code-header {
     display: flex;
-    background: rgba(255,255,255,0.05);
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #0f172a;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.code-tab {
-    padding: var(--space-3) var(--space-5);
-    background: transparent;
-    border: none;
-    color: rgba(255,255,255,0.5);
-    font-size: var(--text-sm);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition: all var(--duration-fast);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+.code-dots {
+    display: flex;
+    gap: 0.5rem;
 }
 
-.code-tab:hover {
-    color: rgba(255,255,255,0.8);
+.code-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
 }
 
-.code-tab.active {
-    color: var(--color-primary-light);
-    border-bottom-color: var(--color-primary);
-    background: rgba(99,102,241,0.1);
+.code-dots span:nth-child(1) { background: #ef4444; }
+.code-dots span:nth-child(2) { background: #eab308; }
+.code-dots span:nth-child(3) { background: #22c55e; }
+
+.code-filename {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
 }
 
-.code-panels {
-    padding: var(--space-6);
-}
-
-.code-panel {
-    display: none;
-}
-
-.code-panel.active {
-    display: block;
-}
-
-.code-panel pre {
+.code-block {
+    padding: 1.5rem;
     margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.7;
     overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.7;
 }
 
-.code-panel code {
+.code-block code {
     color: #e2e8f0;
 }
 
-.code-php { color: #f472b6; }
-.code-fn { color: #60a5fa; }
-.code-kw { color: #c084fc; }
-.code-var { color: #4ade80; }
-.code-str { color: #fbbf24; }
-.code-num { color: #f472b6; }
-.code-class { color: #22d3ee; }
-.code-tag { color: #f472b6; }
-.code-attr { color: #60a5fa; }
-.code-comment { color: #64748b; font-style: italic; }
+.c-php { color: #f472b6; }
+.c-fn { color: #60a5fa; }
+.c-tag { color: #f472b6; }
+.c-attr { color: #fbbf24; }
+.c-str { color: #4ade80; }
+.c-var { color: #c4b5fd; }
 
-/* Comparison Section */
+/* ========================================
+   Comparison Section
+   ======================================== */
 .comparison-section {
-    padding: var(--space-24) 0;
-    background: var(--color-bg-subtle);
+    padding: 6rem 0;
+    background: #f8fafc;
 }
 
 .comparison-table {
     max-width: 800px;
     margin: 0 auto;
-    background: var(--color-bg);
-    border-radius: var(--radius-xl);
+    background: #fff;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
 .comparison-header,
@@ -1367,240 +1209,267 @@ $recentPosts = Post::query([
 }
 
 .comparison-header {
-    background: var(--color-bg-dark);
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.comparison-cell {
+    padding: 1.25rem 1.5rem;
+    font-size: 0.9375rem;
+    color: #64748b;
 }
 
 .comparison-header .comparison-cell {
-    padding: var(--space-5) var(--space-6);
-    color: var(--color-text-inverse);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.comparison-cell.label {
     font-weight: 600;
-    font-size: var(--text-sm);
+    color: #334155;
 }
 
-.comparison-header .comparison-cell.highlight {
-    background: var(--color-primary);
-}
-
-.comparison-logo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+.comparison-cell.highlight {
+    background: rgba(99, 102, 241, 0.04);
 }
 
 .comparison-row {
-    border-bottom: 1px solid var(--color-border-light);
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .comparison-row:last-child {
     border-bottom: none;
 }
 
-.comparison-cell {
-    padding: var(--space-4) var(--space-6);
-    display: flex;
-    align-items: center;
-}
-
-.comparison-cell.label {
-    font-weight: 500;
-    color: var(--color-text);
-}
-
-.comparison-cell.highlight {
-    background: var(--color-primary-subtle);
-}
-
-.comparison-cell .value {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-}
-
-.comparison-cell .value.good {
-    color: var(--color-primary);
+.badge-good {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 0.8125rem;
     font-weight: 600;
+    border-radius: 100px;
 }
 
-/* Posts Section */
+.badge-neutral {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 100px;
+}
+
+/* ========================================
+   Posts Section
+   ======================================== */
 .posts-section {
-    padding: var(--space-24) 0;
-    background: var(--color-bg-subtle);
-}
-
-.section-header-row {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: var(--space-12);
-}
-
-.section-header-left .section-title {
-    margin-bottom: 0;
+    padding: 6rem 0;
+    background: #fff;
 }
 
 .posts-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
+    gap: 2rem;
 }
 
 .post-card {
-    background: var(--color-bg);
-    border-radius: var(--radius-xl);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid var(--color-border-light);
-    transition: all var(--duration-normal) var(--ease-out);
+    transition: all 0.3s;
 }
 
 .post-card:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
 }
 
 .post-image {
     aspect-ratio: 16/10;
     overflow: hidden;
+    background: #f8fafc;
 }
 
 .post-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--duration-normal);
+    transition: transform 0.3s;
 }
 
 .post-card:hover .post-image img {
     transform: scale(1.05);
 }
 
-.post-image-placeholder {
-    background: var(--color-bg-muted);
+.post-placeholder {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-text-muted);
+    color: #cbd5e1;
 }
 
 .post-content {
-    padding: var(--space-6);
+    padding: 1.5rem;
 }
 
 .post-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-3);
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    margin-bottom: 0.75rem;
 }
 
 .post-title {
-    font-size: var(--text-xl);
+    font-size: 1.125rem;
     font-weight: 700;
-    margin-bottom: var(--space-3);
-    line-height: 1.3;
+    line-height: 1.4;
+    margin: 0 0 0.75rem;
 }
 
 .post-title a {
-    color: var(--color-text);
+    color: #0f172a;
+    text-decoration: none;
 }
 
 .post-title a:hover {
-    color: var(--color-primary);
+    color: var(--home-primary);
 }
 
 .post-excerpt {
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-    line-height: 1.7;
-    margin-bottom: var(--space-4);
+    font-size: 0.9375rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
 }
 
-.post-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--color-primary);
-    font-weight: 500;
-    font-size: var(--text-sm);
-}
-
-.post-link:hover {
-    gap: var(--space-3);
-}
-
-/* FAQ Section */
+/* ========================================
+   FAQ Section
+   ======================================== */
 .faq-section {
-    padding: var(--space-24) 0;
+    padding: 6rem 0;
+    background: #f8fafc;
 }
 
 .faq-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-6);
+    gap: 1.5rem;
     max-width: 900px;
     margin: 0 auto;
 }
 
 .faq-item {
-    padding: var(--space-6);
-    background: var(--color-bg-subtle);
-    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+
+.faq-item:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
 .faq-question {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    margin-bottom: var(--space-3);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.75rem;
 }
 
 .faq-answer {
-    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    color: #64748b;
     line-height: 1.7;
     margin: 0;
 }
 
-/* Animations */
-.animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-    opacity: 0;
+/* ========================================
+   CTA Section
+   ======================================== */
+.cta-section {
+    padding: 6rem 0;
+    background: #fff;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.cta-card {
+    background: var(--home-gradient);
+    border-radius: 24px;
+    padding: 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Responsive */
+.cta-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    transform: rotate(-30deg);
+}
+
+.cta-content {
+    position: relative;
+    z-index: 1;
+}
+
+.cta-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 1rem;
+}
+
+.cta-description {
+    font-size: 1.125rem;
+    color: rgba(255,255,255,0.85);
+    margin: 0 0 2rem;
+}
+
+.cta-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
 @media (max-width: 1024px) {
     .features-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .feature-card-large {
+    .feature-card.feature-primary,
+    .feature-card.feature-new {
         grid-column: span 2;
     }
     
-    .steps-grid {
-        flex-wrap: wrap;
-    }
-    
-    .step-connector {
-        display: none;
-    }
-    
-    .code-section-grid {
+    .code-grid {
         grid-template-columns: 1fr;
-        gap: var(--space-8);
+        gap: 3rem;
     }
     
-    .code-section-content .section-title,
-    .code-section-content .section-description {
+    .code-content {
+        text-align: center;
+    }
+    
+    .code-content .section-title {
         text-align: center;
     }
     
@@ -1610,27 +1479,22 @@ $recentPosts = Post::query([
         margin-right: auto;
     }
     
-    .code-section-content {
-        text-align: center;
-    }
-    
     .posts-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
     .hero {
-        padding: var(--space-16) 0 var(--space-8);
-        min-height: auto;
+        padding: 5rem 0 4rem;
     }
     
     .hero-title {
-        font-size: var(--text-4xl);
+        font-size: 2.5rem;
     }
     
     .hero-description {
-        font-size: var(--text-lg);
+        font-size: 1.0625rem;
     }
     
     .hero-actions {
@@ -1638,42 +1502,46 @@ $recentPosts = Post::query([
     }
     
     .hero-stats {
-        flex-direction: column;
-        gap: var(--space-4);
-        padding: var(--space-6);
-        border-radius: var(--radius-xl);
-    }
-    
-    .stat-divider {
-        width: 100%;
-        height: 1px;
-    }
-    
-    .hero-visual {
-        display: none;
-    }
-    
-    .logos-grid {
-        gap: var(--space-6);
+        grid-template-columns: repeat(2, 1fr);
     }
     
     .features-grid {
         grid-template-columns: 1fr;
     }
     
-    .feature-card-large {
+    .feature-card.feature-primary,
+    .feature-card.feature-new {
         grid-column: span 1;
-        grid-template-columns: 1fr;
     }
     
-    .feature-visual {
-        order: -1;
+    .steps-grid {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .step-card {
+        max-width: 100%;
+    }
+    
+    .step-connector {
+        width: 2px;
+        height: 40px;
+        background: linear-gradient(180deg, var(--home-primary) 0%, rgba(99, 102, 241, 0.2) 100%);
+        margin: 0;
+    }
+    
+    .section-title {
+        font-size: 2rem;
     }
     
     .section-header-row {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--space-4);
+        gap: 1.5rem;
+    }
+    
+    .posts-grid {
+        grid-template-columns: 1fr;
     }
     
     .faq-grid {
@@ -1686,45 +1554,22 @@ $recentPosts = Post::query([
     }
     
     .comparison-cell {
-        padding: var(--space-3) var(--space-4);
-        font-size: var(--text-sm);
+        padding: 1rem;
+        font-size: 0.8125rem;
     }
     
-    .comparison-header .comparison-cell {
-        padding: var(--space-3) var(--space-4);
+    .cta-card {
+        padding: 3rem 2rem;
     }
     
-    .code-tabs {
-        overflow-x: auto;
+    .cta-title {
+        font-size: 1.75rem;
     }
     
-    .code-tab {
-        white-space: nowrap;
-        padding: var(--space-3) var(--space-4);
-        font-size: var(--text-xs);
-    }
-    
-    .section-title {
-        font-size: var(--text-3xl);
+    .cta-actions {
+        flex-direction: column;
     }
 }
 </style>
-
-<script>
-// Code tabs functionality
-document.querySelectorAll('.code-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        const tabId = this.dataset.tab;
-        
-        // Update tabs
-        document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Update panels
-        document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tabId).classList.add('active');
-    });
-});
-</script>
 
 <?php get_footer(); ?>

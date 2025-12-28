@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2025-12-28
+
+### 🐛 Bug Fixes
+
+#### Media Library
+- **Fixed folder assignment** — Files now correctly save to folders when uploading (was using wrong column name `folder` instead of `folder_id`)
+- **Fixed undefined variable** — Resolved `$folders` undefined error in media page header
+- **Added quick delete buttons** — Delete button now visible on hover for both grid and list views without needing to open the modal
+- **Improved delete UX** — Can delete files directly from the media grid with a confirmation dialog
+
+#### Comments System
+- **Fixed comment submission** — Comment form now posts to the correct URL (`/comment-submit` instead of `/comments/submit`)
+- **Added comments to pages** — Page template now supports comments (if enabled for pages in Settings → Comments)
+- **Added feedback messages** — Success and error messages now display after comment submission
+
+### 🎨 Design Overhaul
+
+#### Complete Home Page Redesign
+- **Light mode design** — Clean white/gray gradient background with soft purple accent blobs
+- **Subtle grid pattern** — Background texture for visual depth
+- **Hero section** — Version badge (v0.3.1), gradient headline, updated stats (21+ blocks, ~400KB)
+- **Features grid** — 8 feature cards including new "SEO Suite" with "New in v0.3" badge
+- **How it works** — 3-step cards with numbered badges and connectors
+- **Code section** — Dark syntax-highlighted code window with developer features checklist
+- **Comparison table** — VoidForge vs Traditional CMS with "SEO Tools: Built-in" row
+- **Blog section** — Recent posts grid with hover effects
+- **FAQ section** — Updated Q&A including SEO plugin question
+- **CTA section** — Gradient purple call-to-action card
+- **Responsive** — Full mobile optimization with breakpoints
+
+#### Complete Comments Redesign
+- **Comments header** — New design with accent bar and gradient count badge
+- **Comment cards** — Modern card design with hover effects and proper depth for replies  
+- **Avatar styling** — Larger avatars (52px) with subtle shadow and border
+- **Time ago format** — Comments now show relative time ("2 hours ago") instead of just date
+- **Reply button** — Redesigned with outline style that fills on hover
+- **Reply indicator** — Visual indicator when replying to a comment with cancel option
+- **Empty state** — Beautiful gradient background with decorative elements and icon
+- **Comment form** — Gradient header with icon, improved input styling, animated submit button
+- **Form labels** — Added icons to Name, Email, and Comment labels
+- **Mobile responsive** — Improved spacing and layout on smaller screens
+
+### 📁 Theme Updates
+
+```
+themes/flavor/
+├── home.php        # Complete redesign (v2.1.0) - Light mode, updated features
+├── single.php      # Comment section redesign
+├── page.php        # Comment section added (v2.0.1)
+├── functions.php   # Added flavor_time_ago() function
+└── style.css       # 200+ lines of new comment styles
+```
+
+---
+
 ## [0.3.0] - 2025-12-27
 
 ### 🔍 SEO Tools
@@ -2721,6 +2776,7 @@ admin/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.3.1 | 2025-12-28 | Home page redesign (light mode), complete comments overhaul, media library fixes, time-ago timestamps |
 | 0.3.0 | 2025-12-27 | Complete SEO tools: meta tags, Open Graph, Twitter Cards, JSON-LD schema, XML sitemap, robots.txt, SEO analysis with scoring |
 | 0.2.5 | 2025-12-23 | Anvil plugin architecture, frontend block CSS for all 21 blocks, testimonial style variants, accordion HTML5 fixes, CSS loading via theme |
 | 0.2.4.1 | 2025-12-21 | Frontend admin bar, site identity settings, Flavor theme redesign (home, header, footer, 404), code showcase, comparison table |

@@ -1130,6 +1130,42 @@ include ADMIN_PATH . '/includes/header.php';
     height: 14px;
 }
 
+/* Quick Delete Button */
+.media-quick-delete {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 28px;
+    height: 28px;
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s;
+    cursor: pointer;
+    color: #fff;
+}
+
+.media-quick-delete:hover {
+    background: #dc2626;
+    transform: scale(1.1) !important;
+}
+
+.media-card:hover .media-quick-delete {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.media-quick-delete svg {
+    width: 14px;
+    height: 14px;
+}
+
 /* ===== LIST VIEW ===== */
 .media-list {
     display: none;
@@ -1242,6 +1278,39 @@ include ADMIN_PATH . '/includes/header.php';
 .media-list-check svg {
     width: 14px;
     height: 14px;
+}
+
+/* List View Delete Button */
+.media-list-delete {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    opacity: 0;
+    margin-right: 0.5rem;
+}
+
+.media-list-item:hover .media-list-delete {
+    opacity: 1;
+}
+
+.media-list-delete:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #ef4444;
+}
+
+.media-list-delete svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* Empty State */
@@ -1737,15 +1806,8 @@ include ADMIN_PATH . '/includes/header.php';
                 <polyline points="21 15 16 10 5 21"/>
             </svg>
             Media Library
-            <?php if ($currentFolder): ?>
-            <span style="color: var(--text-muted); font-weight: 400;"> / <?php 
-                foreach ($folders as $f) {
-                    if ($f['id'] == $currentFolder) {
-                        echo esc($f['name']);
-                        break;
-                    }
-                }
-            ?></span>
+            <?php if ($currentFolder && $currentFolderInfo): ?>
+            <span style="color: var(--text-muted); font-weight: 400;"> / <?php echo esc($currentFolderInfo['name']); ?></span>
             <?php endif; ?>
         </h1>
         <div class="header-actions">
@@ -1990,6 +2052,12 @@ include ADMIN_PATH . '/includes/header.php';
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                 </div>
+                <button type="button" class="media-quick-delete" onclick="event.stopPropagation(); quickDeleteMedia(<?= $item['id'] ?>, '<?= esc(addslashes($item['filename'])) ?>')" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
                 <div class="media-thumb">
                     <?php if ($isImage): ?>
                         <img src="<?= esc($item['url']) ?>" alt="<?= esc($item['alt_text'] ?? '') ?>" loading="lazy" draggable="false">
@@ -2041,6 +2109,12 @@ include ADMIN_PATH . '/includes/header.php';
                         <span><?= date('M j, Y', strtotime($item['created_at'])) ?></span>
                     </div>
                 </div>
+                <button type="button" class="media-list-delete" onclick="event.stopPropagation(); quickDeleteMedia(<?= $item['id'] ?>, '<?= esc(addslashes($item['filename'])) ?>')" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
                 <div class="media-list-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <polyline points="20 6 9 17 4 12"/>
@@ -2479,6 +2553,12 @@ function copyUrl() {
 function deleteMedia() {
     if (!confirm('Delete this file permanently?')) return;
     document.getElementById('deleteMediaId').value = mediaItems[currentIndex].id;
+    document.getElementById('deleteForm').submit();
+}
+
+function quickDeleteMedia(id, filename) {
+    if (!confirm('Delete "' + filename + '" permanently?')) return;
+    document.getElementById('deleteMediaId').value = id;
     document.getElementById('deleteForm').submit();
 }
 

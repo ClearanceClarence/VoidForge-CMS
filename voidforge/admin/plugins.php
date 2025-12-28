@@ -153,32 +153,6 @@ include ADMIN_PATH . '/includes/header.php';
     color: var(--forge-primary);
 }
 
-.btn-add-new {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, var(--forge-primary) 0%, var(--forge-secondary) 100%);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.btn-add-new:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--forge-shadow-color);
-}
-
-.btn-add-new svg {
-    width: 18px;
-    height: 18px;
-}
-
 /* Subsubsub Navigation (WordPress-style filter links) */
 .subsubsub {
     display: flex;
@@ -924,7 +898,7 @@ include ADMIN_PATH . '/includes/header.php';
             </svg>
             Plugins
         </h1>
-        <button type="button" class="btn-add-new" onclick="openUploadModal()">
+        <button type="button" class="btn-primary-action" onclick="openUploadModal()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
@@ -966,7 +940,7 @@ include ADMIN_PATH . '/includes/header.php';
             </div>
             <h3>No plugins found</h3>
             <p>Upload a plugin to extend your site's functionality.</p>
-            <button type="button" class="btn-add-new" onclick="openUploadModal()">
+            <button type="button" class="btn-primary-action" onclick="openUploadModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>

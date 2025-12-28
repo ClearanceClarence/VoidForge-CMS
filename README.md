@@ -2,9 +2,18 @@
 
 A modern, lightweight content management system built with pure PHP. No frameworks, no bloat — just powerful features and clean code.
 
-![Version](https://img.shields.io/badge/version-0.3.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.3.1-6366f1?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)
+
+## Highlights
+
+- ⚡ **Blazing Fast** — Sub-50ms page loads, ~400KB total install size
+- 🎨 **Visual Block Editor** — 21+ block types with drag-and-drop and live frontend editing
+- 🔍 **Built-in SEO** — Meta tags, Open Graph, JSON-LD schema, XML sitemap (no plugins needed)
+- 🔌 **Extensible** — WordPress-compatible hooks with 90+ actions and filters
+- 📱 **Responsive Admin** — Modern interface with customizable themes
+- 🛡️ **Secure** — CSRF protection, XSS filtering, secure sessions
 
 ## Requirements
 
@@ -21,6 +30,13 @@ A modern, lightweight content management system built with pure PHP. No framewor
 5. Log in to the admin panel at `/admin`
 
 ## Features
+
+### What's New in v0.3.1
+
+- **Home Page Redesign** — Clean light mode design with gradient accents, updated feature grid, comparison table
+- **Comments Overhaul** — Modern card design, time-ago timestamps, reply indicators, beautiful empty states
+- **Media Library Fixes** — Folder assignment bug fixed, quick delete buttons on hover
+- **Comment Form Fixes** — Correct submission URL, success/error messages, page template support
 
 ### SEO Tools
 
